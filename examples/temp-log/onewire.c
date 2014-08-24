@@ -1,50 +1,9 @@
 #include <mchck.h>
 
-enum ow_bus_state {
-        OW_BUS_EMPTY,
-        OW_BUS_DEVICES,
-};
-
-enum ow_dir {
-        OW_RX,
-        OW_TX
-};
-
-enum ow_state {
-        OW_IDLE,
-        OW_RESET,
-        OW_ROM,
-        OW_FUNC,
-        OW_PAYLOAD,
-};
-
-struct ow_ctx;
-
-typedef void (*ow_data_cb_t)(struct ow_ctx *, void *, size_t, void *);
-
-struct ow_ctx {
-        struct uart_ctx *uart;
-        struct uart_trans_ctx tx;
-        struct uart_trans_ctx rx;
-
-        enum ow_bus_state bus_state : 1;
-        enum ow_dir dir : 1;
-        enum ow_state state;
-        uint8_t romcmd;
-        uint8_t funccmd;
-
-        ow_data_cb_t data_cb;
-        void *cbdata;
-        uint8_t *buf;
-        size_t buf_len;
-        size_t buf_pos;
-        uint8_t write_data[8];
-        uint8_t read_data[8];
-};
+#include "onewire.h"
 
 
-void ow_statemachine(struct ow_ctx *ctx);
-
+static void ow_statemachine(struct ow_ctx *ctx);
 
 static uint8_t
 ow_get_data(struct ow_ctx *ctx)
@@ -52,7 +11,7 @@ ow_get_data(struct ow_ctx *ctx)
         uint8_t val = 0;
 
         for (size_t i = 0; i < 8; ++i)
-                val = (val << 1) | (ctx->read_data[i] < 0xff);
+                val |= (ctx->read_data[i] == 0xff) << i;
         return (val);
 }
 
@@ -77,7 +36,7 @@ ow_queue_transact(struct ow_ctx *ctx, size_t len)
         uart_write(ctx->uart, &ctx->tx, ctx->write_data, len, NULL, NULL);
 }
 
-void
+static void
 ow_statemachine(struct ow_ctx *ctx)
 {
         size_t len = 0;
@@ -102,14 +61,9 @@ ow_statemachine(struct ow_ctx *ctx)
         case OW_FUNC:
                 if (ctx->buf_len == 0)
                         goto transact_done;
-
-                if (ctx->dir == OW_TX)
-                        ow_set_data(ctx, ctx->buf[ctx->buf_pos++]);
                 else
-                        ow_set_data(ctx, 0xff);
-                len = 8;
-                ctx->state = OW_PAYLOAD;
-                break;
+                        goto send_byte;
+                /* NOTREACHED */
         case OW_PAYLOAD:
                 if (ctx->dir == OW_RX)
                         ctx->buf[ctx->buf_pos++] = ow_get_data(ctx);
@@ -120,6 +74,7 @@ transact_done:
                                 ctx->data_cb(ctx, ctx->buf, ctx->buf_len, ctx->cbdata);
                         return;
                 }
+send_byte:
                 switch (ctx->dir) {
                 case OW_TX:
                         ow_set_data(ctx, ctx->buf[ctx->buf_pos++]);
@@ -128,6 +83,7 @@ transact_done:
                         ow_set_data(ctx, 0xff);
                         break;
                 }
+                ctx->state = OW_PAYLOAD;
                 len = 8;
                 break;
 
@@ -179,71 +135,4 @@ int
 ow_write(struct ow_ctx *ctx, uint8_t funccmd, const void *buf, size_t len, ow_data_cb_t cb, void *cbdata)
 {
         return (ow_transact(ctx, funccmd, (void *)buf, len, cb, cbdata, OW_TX));
-}
-
-
-struct ds18b20 {
-        uint16_t temp;
-        uint8_t th;
-        uint8_t tl;
-        struct ds18b20_config {
-                UNION_STRUCT_START(8);
-                uint8_t _reserved1 : 5;
-                enum ds18b20_config_res {
-                        DS18B20_9BIT = 0b00,
-                        DS18B20_10BIT = 0b01,
-                        DS18B20_11BIT = 0b10,
-                        DS18B20_12BIT = 0b11,
-                } res : 2;
-                uint8_t _reserved2 : 1;
-                UNION_STRUCT_END;
-        } config;
-        uint8_t _reserved1;
-        uint8_t _reserved2;
-        uint8_t _reserved3;
-        uint8_t crc;
-};
-
-static struct ow_ctx ow_ctx;
-static struct ds18b20 ds;
-
-
-static void probe_ow(void *cbdata);
-
-static void
-ds_data_received(struct ow_ctx *ctx, void *data, size_t len, void *cbdata)
-{
-        static struct timeout_ctx t;
-
-        onboard_led(ONBOARD_LED_ON);
-        timeout_add(&t, 1000, probe_ow, cbdata);
-}
-
-static void
-get_result(void *cbdata)
-{
-        ow_read(cbdata, 0xeb, &ds, sizeof(ds), ds_data_received, cbdata);
-}
-
-static void
-probe_ow(void *cbdata)
-{
-        static struct timeout_ctx t;
-
-        onboard_led(ONBOARD_LED_OFF);
-        ow_write(cbdata, 0x44, NULL, 0, NULL, NULL);
-        timeout_add(&t, 100, get_result, cbdata);
-}
-
-void
-main(void)
-{
-        pin_mode(PIN_PTC4, PIN_MODE_MUX_ALT3 | PIN_MODE_OPEN_DRAIN_ON);
-        pin_mode(PIN_PTC3, PIN_MODE_MUX_ALT3 | PIN_MODE_OPEN_DRAIN_ON);
-        ow_init(&ow_ctx, &uart1);
-
-        timeout_init();
-        probe_ow(&ow_ctx);
-
-        sys_yield_for_frogs();
 }
