@@ -253,7 +253,6 @@ cdc_data(uint8_t *buf, size_t len)
 void
 init_usb(int enable)
 {
-        onboard_led(ONBOARD_LED_ON);
         if (enable) {
                 cdc_init(cdc_data, cdc_sent, &cdc);
                 cdc_set_stdout(&cdc);

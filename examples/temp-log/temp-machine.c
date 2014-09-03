@@ -63,8 +63,6 @@ got_temp_data(struct ds18b20_ctx *ctx, int16_t temp, void *cbdata)
         /*        flash_total_size - flash_addr, */
         /*        temp >> 4, temp & 0xf); */
 
-        onboard_led(ONBOARD_LED_ON);
-
         templog_statemachine();
 }
 
@@ -86,10 +84,11 @@ templog_statemachine(void)
         switch (templog_state) {
         case TEMPLOG_IDLE:
         case TEMPLOG_SLEEPING:
+                onboard_led(ONBOARD_LED_ON);
                 timeout_add(&templog_timeout, templog_interval * 1000, read_temp_again, NULL);
-                onboard_led(ONBOARD_LED_OFF);
                 ds_read(&ds, got_temp_data, NULL);
                 templog_state = TEMPLOG_READING;
+                onboard_led(ONBOARD_LED_OFF);
                 break;
         case TEMPLOG_READING:
                 /* timeout was triggered before */
