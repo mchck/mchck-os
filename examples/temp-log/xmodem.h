@@ -47,3 +47,5 @@ struct xmodem_ctx {
         uint8_t curblock;
         struct xmodem_block data;
 };
+
+void xmodem_start_send(struct xmodem_ctx *ctx, const struct xmodem_xfer_funcs *xfer_funcs, void *xfer_ctx, xmodem_send_cb_t cb, void *cbdata);
