@@ -79,7 +79,7 @@ got_temp_data(struct ds18b20_ctx *ctx, int16_t temp, void *cbdata)
 
         last_temp = temp;
         if (page_space_available()) {
-                e.time = 1;
+                e.time = rtc_get_time();
                 e.temp = temp;
                 memcpy(&flash_page[flash_pagepos], &e, sizeof(e));
                 flash_pagepos += sizeof(e);
@@ -284,6 +284,32 @@ cdc_sent(size_t remaining)
                 send_cdc1(&cdc_send_ctx);
 }
 
+static int
+read_num(const char *line, const char *cmd, unsigned long *out)
+{
+        const char *num = line + strlen(cmd);
+
+        while (*num == ' ')
+                ++num;
+
+        if (*num == 0)
+                return (0);
+
+        char *ep = NULL;
+        unsigned long i = strtoul(num, &ep, 0);
+
+        while (*ep == ' ')
+                ++ep;
+        if (*ep != 0) {
+                printf("invalid number `%s'\r\n", ep);
+                return (0);
+        }
+
+        *out = i;
+
+        return (1);
+}
+
 
 static void
 handle_command(char *line)
@@ -302,31 +328,28 @@ handle_command(char *line)
                 }
                 crit_exit();
         } else if (strncmp(line, "interval", 8) == 0) {
-                char *num = line + 8;
+                unsigned long n;
 
-                while (*num == ' ')
-                        ++num;
-
-                if (*num == 0) {
-                        printf("syntax: interval <seconds>\r\n");
+                if (!read_num(line, "interval", &n)) {
+                        printf("syntax: interval  <seconds>\r\n");
                         return;
                 }
 
-                char *ep = NULL;
-                unsigned long i = strtoul(line + 8, &ep, 0);
-
-                while (*ep == ' ')
-                        ++ep;
-                if (*ep != 0) {
-                        printf("invalid number `%s'\r\n", ep);
-                        return;
-                }
-
-                if (i < templog_min_interval) {
+                if (n < templog_min_interval) {
                         printf("interval too small: minimum is %d\r\n", templog_min_interval);
                         return;
                 }
-                templog_interval = i;
+                templog_interval = n;
+        } else if (strncmp(line, "time", 4) == 0) {
+                unsigned long n;
+
+                if (!read_num(line, "time", &n)) {
+                        printf("syntax: time <seconds-since-epoch>\r\n");
+                        return;
+                }
+
+                rtc_set_time(n);
+                rtc_start_counter();
         } else {
                 printf("invalid command `%s'\r\n", line);
         }
@@ -347,7 +370,8 @@ print_prompt(void)
         else
                 statestr = "recording";
 
-        printf("%s, %d°C, %d free, %lus > ",
+        printf("%lu %s, %d°C, %d free, %lus > ",
+               rtc_get_time(),
                statestr,
                last_temp >> 4,
                (flash_total_size - flash_addr - flash_pagepos) / sizeof(struct templog_entry),
@@ -425,6 +449,7 @@ void
 main(void)
 {
         timeout_init();
+        rtc_init();
 
         pin_mode(PIN_PTC4, PIN_MODE_MUX_ALT3 | PIN_MODE_OPEN_DRAIN_ON);
         pin_mode(PIN_PTC3, PIN_MODE_MUX_ALT3 | PIN_MODE_OPEN_DRAIN_ON);
