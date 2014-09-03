@@ -1,5 +1,5 @@
 struct ds18b20_scratchpad {
-        uint16_t temp;
+        int16_t temp;
         uint8_t th;
         uint8_t tl;
         struct ds18b20_config {
@@ -22,7 +22,7 @@ struct ds18b20_scratchpad {
 
 struct ds18b20_ctx;
 
-typedef void (*temp_cb_t)(struct ds18b20_ctx *, uint16_t, void *);
+typedef void (*temp_cb_t)(struct ds18b20_ctx *, int16_t, void *);
 
 struct ds18b20_ctx {
         struct ow_ctx *ow_ctx;
