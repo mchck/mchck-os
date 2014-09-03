@@ -49,7 +49,7 @@ static struct ds18b20_ctx ds;
 
 static struct spiflash_transaction flash_trans;
 static uint8_t flash_page[SPIFLASH_PAGE_SIZE];
-static size_t flash_total_size = (1<<20); /* XXX read dynamically */
+static size_t flash_total_size = 0;
 
 static enum flash_state flash_state = FLASH_INIT;
 static size_t flash_addr;
@@ -173,14 +173,22 @@ flash_find_empty_sector(void *cbdata)
 }
 
 static void
+flash_got_id(void *cbdata, uint8_t manuf, uint8_t memtype, uint8_t capa)
+{
+        flash_total_size = 1 << capa;
+        flash_state_machine();
+}
+
+static void
 flash_state_machine(void)
 {
-again:
         switch (flash_state) {
         case FLASH_INIT:
                 /* XXX read size */
                 flash_state = FLASH_FIND_EMPTY_SECTOR;
-                goto again;
+                spiflash_get_id(&onboard_flash, &flash_trans,
+                                flash_got_id, NULL);
+                break;
         case FLASH_FIND_EMPTY_SECTOR:
                 spiflash_read_page(&onboard_flash, &flash_trans,
                                    flash_page, flash_addr, sizeof(flash_page),
