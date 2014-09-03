@@ -2,7 +2,7 @@ device(:cdc_device) {
   idVendor 0x2323
   idProduct 3
   iManufacturer "mchck.org"
-  iProduct "1wire test"
+  iProduct "temperature logger"
 
   config {
     initfun :init_usb
