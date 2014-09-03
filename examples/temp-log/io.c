@@ -127,6 +127,9 @@ handle_command(char *line)
 {
         if (strcmp(line, "") == 0) {
                 return;
+        } else if (strcmp(line, "?") == 0 ||
+                   strcmp(line, "help") == 0) {
+                printf("available commands: start, stop, interval, time, eraseall\r\n");
         } else if (strcmp(line, "stop") == 0) {
                 templog_stop();
         } else if (strcmp(line, "start") == 0) {
