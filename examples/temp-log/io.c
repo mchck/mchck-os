@@ -169,6 +169,8 @@ handle_command(char *line)
                         return;
                 }
                 /* xmodem_start_send(&xmodem, &cdc_xfer, &cdc_send_ctx, send_flash_csv, (void *)0); */
+        } else if (strcmp(line, "status") == 0) {
+                printf("flash id: %6x\r\n", flash_id);
         } else {
                 printf("invalid command `%s'\r\n", line);
         }

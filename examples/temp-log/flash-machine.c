@@ -19,6 +19,8 @@ uint8_t flash_page[SPIFLASH_PAGE_SIZE];
 static struct spiflash_transaction flash_trans;
 static size_t flash_total_size = 0;
 
+uint32_t flash_id;
+
 static enum flash_state flash_state = FLASH_INIT;
 static size_t flash_addr;
 
@@ -82,6 +84,8 @@ flash_find_empty_sector(void *cbdata)
 static void
 flash_got_id(void *cbdata, uint8_t manuf, uint8_t memtype, uint8_t capa)
 {
+        flash_id = (manuf << 16) | (memtype << 8) | capa;
+
         flash_total_size = 1 << capa;
         flash_state_machine();
 }

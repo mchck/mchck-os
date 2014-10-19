@@ -15,6 +15,7 @@ extern struct ow_ctx ow_ctx;
 extern struct ds18b20_ctx ds;
 
 extern uint8_t flash_page[SPIFLASH_PAGE_SIZE];
+extern uint32_t flash_id;
 
 extern unsigned long templog_interval;
 
