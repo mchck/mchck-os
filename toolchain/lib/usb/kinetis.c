@@ -224,23 +224,23 @@ usb_enable(void)
 void
 USB0_Handler(void)
 {
-        struct USB_ISTAT_t stat = {.raw = USB0.istat.raw };
+        struct USB_ISTAT_t istat = {.raw = USB0.istat.raw };
 
-        if (stat.usbrst) {
+        if (istat.usbrst) {
                 usb_reset();
                 return;
         }
-        if (stat.stall) {
+        if (istat.stall) {
                 /* XXX need more work for non-0 ep */
                 volatile struct USB_BD_t *bd = usb_get_bd(&usb.ep_state[0].rx);
                 if (bd->stall)
                         usb_setup_control();
         }
-        if (stat.tokdne) {
+        if (istat.tokdne) {
                 struct usb_xfer_info stat = USB0.stat;
                 usb_handle_transaction(&stat);
         }
-        if (stat.sleep) {
+        if (istat.sleep) {
                 USB0.inten.sleep = 0;
                 USB0.inten.resume = 1;
                 USB0.usbctrl.susp = 1;
@@ -250,7 +250,7 @@ USB0_Handler(void)
                  * Clear interrupts now so that we can detect a fresh
                  * resume later on.
                  */
-                USB0.istat.raw = stat.raw;
+                USB0.istat.raw = istat.raw;
 
                 const struct usbd_config *c = usb_get_config_data(-1);
                 if (c && c->suspend)
@@ -261,7 +261,7 @@ USB0_Handler(void)
          * resume interrupt if we were in sleep.  This code assumes we
          * do.
          */
-        if (stat.resume || USB0.usbtrc0.usb_resume_int) {
+        if (istat.resume || USB0.usbtrc0.usb_resume_int) {
                 USB0.inten.resume = 0;
                 USB0.inten.sleep = 1;
                 USB0.usbtrc0.usbresmen = 0;
@@ -271,9 +271,9 @@ USB0_Handler(void)
                 if (c && c->resume)
                         c->resume();
 
-                stat.resume = 1; /* always clear bit */
+                istat.resume = 1; /* always clear bit */
         }
-        USB0.istat.raw = stat.raw;
+        USB0.istat.raw = istat.raw;
 }
 
 void
