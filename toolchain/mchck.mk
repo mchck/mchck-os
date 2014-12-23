@@ -109,7 +109,7 @@ DFUPID?=	0001
 include ${_libdir}/${TARGET}.mk
 
 COPTFLAGS?=	-Os
-CWARNFLAGS?=	-Wall -Wno-main
+CWARNFLAGS?=	-Wall -Wno-main -Wshadow
 
 CFLAGS+=	-mcpu=cortex-m4 -msoft-float -mthumb -ffunction-sections -fdata-sections -fno-builtin -fstrict-volatile-bitfields
 ifndef NO_LTO
