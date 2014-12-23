@@ -19,6 +19,10 @@ class EndpointDesc < DslItem
     counts.merge cname => @epnum + 1
   end
 
+  def gen_defs
+    "\tstruct usb_desc_ep_t #{@name.to_loc_s};"
+  end
+
   def gen_desc_init
     <<_end_
 .#{@name.to_loc_s} = {
@@ -70,7 +74,8 @@ class InterfaceDesc < DslItem
   end
 
   def gen_defs
-    ''
+    "\tstruct usb_desc_iface_t #{@name.to_loc_s};\n" +
+      @ep.map{|e| e.gen_defs}.join("\n")
   end
 
   def gen_desc_init
@@ -112,13 +117,24 @@ class FunctionDesc < DslItem
   end
 
   def get_desc_struct
-    "#{self.class::TypeName} #@var_name;"
+    if self.class.const_defined? :TypeName
+      "#{self.class::TypeName} #@var_name;"
+    else
+      @interface.map{|i| i.gen_defs}.join("\n")
+    end
+  end
+
+  def gen_desc_init
+    @interface.map(&:gen_desc_init).join("\n")
   end
 
   def gen_defs
-    @interface.map{|i| i.gen_defs}.join("\n")
+    s = ""
+    s += "usbd_func_init_t #{@init_func.to_loc_s};\n" if @init_func
+    s += "usbd_func_configure_t #{@configure_func.to_loc_s};\n" if @configure_func
+    s += "usbd_func_control_t #{@control_func.to_loc_s};\n" if @control_func
+    s
   end
-
 
   def gen_func_var?
     !self.class.const_defined?(:FunctionVarName)
@@ -177,13 +193,9 @@ _end_
 _end_
   end
 
-  def get_function_var(func=nil)
+  def get_function_var(func="func")
     if gen_func_var?
-      if not func
-        raise RuntimeError, "Implement get_function_var in subclass"
-      else
-        "#@var_name.#{func}"
-      end
+      "#@var_name.#{func}"
     else
       self.class::FunctionVarName
     end

@@ -411,7 +411,7 @@ _end_
       s += "hid_#{p}_t #{val.to_loc_s};\n" if val
     end
     s += self.gen_report_defs
-    super() + s
+    s
   end
 
   def gen_vars

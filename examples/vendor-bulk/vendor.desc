@@ -1,0 +1,35 @@
+device(:vendor_dev) {
+  idVendor 0x2323
+  idProduct 8
+  iManufacturer "mchck.org"
+  iProduct "vendor bulk test"
+  wcid true
+
+  config {
+    initfun :init_my_vendor
+    function {
+      wcid :WINUSB
+      init_func :init_my_func
+
+      interface(:vendor_iface) {
+        bInterfaceClass 0xff
+        bInterfaceSubClass 0xff
+        bInterfaceProtocol 0
+
+        ep(:bulk_in_ep) {
+          direction :in
+          type :bulk
+          wMaxPacketSize 64
+          bInterval 0xff
+        }
+
+        ep(:bulk_out_ep) {
+          direction :out
+          type :bulk
+          wMaxPacketSize 64
+          bInterval 0xff
+        }
+      }
+    }
+  }
+}

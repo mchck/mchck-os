@@ -301,13 +301,19 @@ enum usb_ctrl_req_feature {
 struct usb_xfer_info;
 typedef void (*ep_callback_t)(void *buf, ssize_t len, void *data);
 
+struct usbd_function;
+
+typedef void (usbd_func_init_t)(const struct usbd_function *, int enable);
+typedef int (usbd_func_configure_t)(int orig_iface, int iface, int altsetting, void *data);
+typedef int (usbd_func_control_t)(struct usb_ctrl_req_t *, void *);
+
 /**
  * (Artificial) function.  Aggregates one or more interfaces.
  */
 struct usbd_function {
-	void (*init)(const struct usbd_function *, int enable);
-	int (*configure)(int orig_iface, int iface, int altsetting, void *data);
-	int (*control)(struct usb_ctrl_req_t *, void *);
+	usbd_func_init_t *init;
+	usbd_func_configure_t *configure;
+	usbd_func_control_t *control;
 	int interface_count;
 	int ep_rx_count;
 	int ep_tx_count;
