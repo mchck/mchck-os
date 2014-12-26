@@ -107,12 +107,15 @@ class FunctionDesc < DslItem
   field :configure_func, :optional => true
   field :control_func, :optional => true
 
+  field :wcid, :optional => true
+
   def renumber!(counts)
-    @var_name = "usb_function_#{counts[:iface]}"
+    @var_name = "usb_function_#{counts[:func]}"
     @interface.each do |iface|
       counts = iface.renumber!(counts)
       counts[:iface] += 1
     end
+    counts[:func] += 1
     counts
   end
 
@@ -215,7 +218,7 @@ class ConfigDesc < DslItem
 
   def renumber!(confignum)
     @confignum = confignum
-    counts = {:iface => 0, :ep_in => 1, :ep_out => 1}
+    counts = {:func => 0, :iface => 0, :ep_in => 1, :ep_out => 1}
     @function.each do |f|
       counts = f.renumber!(counts)
     end

@@ -3,10 +3,11 @@ device(:vendor_dev) {
   idProduct 8
   iManufacturer "mchck.org"
   iProduct "vendor bulk test"
-  wcid true
 
   config {
     initfun :init_my_vendor
+    wcid {}
+
     function {
       wcid :WINUSB
       init_func :init_my_func

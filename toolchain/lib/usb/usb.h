@@ -488,5 +488,6 @@ int usb_ep0_tx_cp(const void *, size_t, size_t, ep_callback_t, void *);
 #include <usb/dfu.h>
 #include <usb/cdc-acm.h>
 #include <usb/hid.h>
+#include <usb/wcid.h>
 
 #endif

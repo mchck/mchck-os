@@ -6,6 +6,7 @@ require 'desc'
 require 'cdc'
 require 'dfu'
 require 'hid'
+require 'wcid'
 require 'optparse'
 
 outname = nil
