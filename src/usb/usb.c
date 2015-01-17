@@ -300,17 +300,21 @@ usb_tx_config_desc(int idx, int reqlen)
 static int
 usb_tx_string_desc(int idx, int reqlen)
 {
-	const struct usb_desc_string_t * const *d;
+	const struct usbd_string_entry *d;
 
-	for (d = usb.identity->string_descs; idx != 0 && *d != NULL; ++d)
-		--idx;
-	switch ((uintptr_t)*d) {
+	for (d = usb.identity->string_descs; d->string != NULL; ++d)
+		if (d->index == idx)
+			break;
+	if (!d->string)
+		return (-1);
+
+	switch ((uintptr_t)d->string) {
 	case (uintptr_t)NULL:
 		return (-1);
 	case (uintptr_t)USB_DESC_STRING_SERIALNO:
 		return (usb_tx_serialno(reqlen));
 	default:
-		usb_ep0_tx_cp(*d, (*d)->bLength, reqlen, NULL, NULL);
+		usb_ep0_tx_cp(d->string, d->string->bLength, reqlen, NULL, NULL);
 		return (0);
 	}
 }
@@ -363,10 +367,15 @@ usb_handle_control_nonstddev(struct usb_ctrl_req_t *req)
 {
 	/* XXX filter by interface/endpoint? */
 	for (struct usbd_function_ctx_header *fh = &usb.functions; fh != NULL; fh = fh->next) {
-		int handle_it = (req->recp == USB_CTRL_REQ_IFACE) ?
-				(req->wIndex >= fh->interface_offset &&
-				(req->wIndex < (fh->interface_offset + fh->function->interface_count))) : 1;
-		/* ->control() returns != 0 if it handled the request */
+		int handle_it = 0;
+
+		if (req->recp != USB_CTRL_REQ_IFACE)
+			handle_it = 1;
+		else if ((req->wIndex >= fh->interface_offset &&
+			  (req->wIndex < (fh->interface_offset + fh->function->interface_count))) ||
+			 fh->function->interface_count == 0)
+			handle_it = 1;
+
 		if (handle_it &&
 		    fh->function->control != NULL &&
 		    fh->function->control(req, fh))

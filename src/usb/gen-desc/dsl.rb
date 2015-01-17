@@ -69,6 +69,8 @@ class LocationWrapper
 end
 
 class DslItem
+  attr_reader :parent
+
   class << self
     def fields
       instance_variable_get(:@fields) || superclass.fields
@@ -114,7 +116,7 @@ class DslItem
         args = args.map do |a|
           DslItem.attach_lineno(a, caller[2])
         end
-        val = klass.eval(*args, &block)
+        val = klass.eval(self, *args, &block)
         set_or_exec(opts[:name], val, opts)
       end
     end
@@ -123,8 +125,9 @@ class DslItem
       superclass::Parent.field_alias(name, self)
     end
 
-    def eval(*args, &block)
+    def eval(parent, *args, &block)
       i = self.new(*args)
+      i.instance_variable_set("@parent", parent)
       i.instance_exec(&block)
       i.post_eval
       i

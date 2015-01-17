@@ -6,10 +6,30 @@ struct wcid_os_descriptor {
         uint8_t bPad;
 } __packed;
 
-struct wcid_compat_id_header {
+#define WCID_REQ_ID 0xee
+/* XXX define table offset */
+#define USB_DESC_WCID_OS                                        \
+        (const struct usb_desc_string_t *)&(const struct wcid_os_descriptor) {      \
+                .bLength = sizeof(struct wcid_os_descriptor),   \
+                        .bDescriptorType = USB_DESC_STRING,     \
+                        .qwSignature = u"MSFT100",              \
+                        .bMS_VendorCode = WCID_REQ_ID,          \
+                        .bPad = 0                               \
+        }
+
+enum wcid_desc_index {
+        WCID_DESC_COMPAT_OS = 0x4,
+        WCID_DESC_EXTENDED_PROP = 0x5,
+};
+
+struct wcid_generic_header {
         uint32_t dwLength;
         struct usb_bcd_t bcdVersion;
         uint16_t wIndex;
+} __packed;
+
+struct wcid_compat_id_header {
+        struct wcid_generic_header;
         uint8_t bCount;
         uint8_t _rsvd[7];
 } __packed;
@@ -25,11 +45,15 @@ struct wcid_compat_id_function {
         uint8_t reserved[6];
 } __packed;
 
+struct wcid_extended_prop_header {
+        struct wcid_generic_header;
+        uint16_t wCount;
+} __packed;
+
 struct wcid_function {
-        struct usbd_function usb_func;
+        struct usbd_function func;
+        const struct wcid_compat_id_header *compat_id;
 };
 
 usbd_func_init_t wcid_init;
 usbd_func_control_t wcid_handle_control;
-
-extern const struct usbd_function wcid_function;

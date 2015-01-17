@@ -155,7 +155,7 @@ _end_
     s += "\t\t.configure = #{@configure_func.to_loc_s},\n" if @configure_func
     s += "\t\t.control = #{@control_func.to_loc_s},\n" if @control_func
     s += "\t\t.interface_count = #{@interface.count},\n"
-    s += "\t}\n"
+    s += "\t},\n"
   end
 
   def gen_func_var
@@ -216,9 +216,9 @@ class ConfigDesc < DslItem
 
   block :function, FunctionDesc, :list => true
 
-  def renumber!(confignum)
+  def renumber!(confignum, stringdata)
     @confignum = confignum
-    counts = {:func => 0, :iface => 0, :ep_in => 1, :ep_out => 1}
+    counts = {:func => 0, :iface => 0, :ep_in => 1, :ep_out => 1, :stringdata => stringdata}
     @function.each do |f|
       counts = f.renumber!(counts)
     end
@@ -293,8 +293,9 @@ class DeviceDesc < DslItem
   block :config, ConfigDesc, :list => true
 
   def renumber!
+    @stringdata = {}
     @config.each_with_index do |c, i|
-      c.renumber!(i + 1)
+      c.renumber!(i + 1, @stringdata)
     end
   end
 
@@ -325,12 +326,13 @@ static const struct usb_desc_dev_t #{@name.to_loc_s}_dev_desc = {
 	.bNumConfigurations = #{@config.length},
 };
 
-static const struct usb_desc_string_t * const #{@name.to_loc_s}_str_desc[] = {
-	USB_DESC_STRING_LANG_ENUS,
-	USB_DESC_STRING(#{@iManufacturer.to_loc_s{|s| "u#{s.inspect}"}}),
-	USB_DESC_STRING(#{@iProduct.to_loc_s{|s| "u#{s.inspect}"}}),
-	USB_DESC_STRING_SERIALNO,
-	NULL
+static const struct usbd_string_entry #{@name.to_loc_s}_str_desc[] = {
+	{0, USB_DESC_STRING_LANG_ENUS},
+	{1, USB_DESC_STRING(#{@iManufacturer.to_loc_s{|s| "u#{s.inspect}"}})},
+	{2, USB_DESC_STRING(#{@iProduct.to_loc_s{|s| "u#{s.inspect}"}})},
+	{3, USB_DESC_STRING_SERIALNO},
+#{@stringdata.map{|i, e| "\t{#{i}, #{e}},\n"}.join}
+	{0, NULL}
 };
 
 const struct usbd_device #{@name.to_loc_s} = {
@@ -354,7 +356,7 @@ class DescriptorRoot < DslItem
 
   def self.load(file)
     src = File.read(file)
-    self.eval do
+    self.eval(nil) do
       eval(src, binding, file)
     end
   end
