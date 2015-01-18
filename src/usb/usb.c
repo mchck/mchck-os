@@ -382,6 +382,17 @@ usb_handle_control_nonstddev(struct usb_ctrl_req_t *req)
 			return (1);
 	}
 
+	for (const struct usbd_config *const *cfg = usb.identity->configs; *cfg != NULL; ++cfg) {
+		for (const struct usbd_function *const *fp = (*cfg)->function; *fp != NULL; ++fp) {
+			const struct usbd_function *f = *fp;
+
+			if (f->global &&
+			    f->control &&
+			    f->control(req, NULL))
+				return (1);
+		}
+	}
+
 	/* Standard requests will be handled by usb_handle_control */
 	if (req->type == USB_CTRL_REQ_STD)
 		return (0);
@@ -595,6 +606,15 @@ usb_restart(void)
 	usb_init_ep(&usb.functions, 0, USB_EP_RX, EP0_BUFSIZE);
 	usb_init_ep(&usb.functions, 0, USB_EP_TX, EP0_BUFSIZE);
 	usb_setup_control();
+
+	for (const struct usbd_config *const *cfg = usb.identity->configs; *cfg != NULL; ++cfg) {
+		for (const struct usbd_function *const *fp = (*cfg)->function; *fp != NULL; ++fp) {
+			const struct usbd_function *f = *fp;
+
+			if (f->global && f->init)
+				f->init(f, 1);
+		}
+	}
 }
 
 void

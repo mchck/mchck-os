@@ -15,7 +15,6 @@ wcid_init(const struct usbd_function *f, int enable)
 
         if (enable) {
                 wcid_ctx.wcid = wcidf;
-                usb_attach_function(&wcidf->func, &wcid_ctx.header);
         } else {
                 wcid_ctx.wcid = NULL;
         }

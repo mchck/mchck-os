@@ -11,6 +11,8 @@ class WcidDesc < FunctionDesc
 
     init_func :wcid_init
     control_func :wcid_handle_control
+    global true
+
     @wcid_id = @@wcid_id
     @@wcid_id += 1
   end

@@ -107,6 +107,8 @@ class FunctionDesc < DslItem
   field :configure_func, :optional => true
   field :control_func, :optional => true
 
+  field :global, :optional => true
+
   field :wcid, :optional => true
 
   def renumber!(counts)
@@ -155,6 +157,7 @@ _end_
     s += "\t\t.configure = #{@configure_func.to_loc_s},\n" if @configure_func
     s += "\t\t.control = #{@control_func.to_loc_s},\n" if @control_func
     s += "\t\t.interface_count = #{@interface.count},\n"
+    s += "\t\t.global = 1,\n" if @global
     s += "\t},\n"
   end
 

@@ -317,6 +317,7 @@ struct usbd_function {
 	int interface_count;
 	int ep_rx_count;
 	int ep_tx_count;
+	int global : 1;
 };
 
 struct usbd_function_ctx_header {
