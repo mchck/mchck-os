@@ -1,17 +1,19 @@
 #include <mchck.h>
 
-volatile struct GPIO_t *
+GPIO_MemMapPtr
 gpio_physgpio_from_pin(enum gpio_pin_id pin)
 {
         switch (pin_port_from_pin(pin)) {
         case PIN_PORTA:
-                return (&GPIOA);
+                return (PTA_BASE_PTR);
         case PIN_PORTB:
-                return (&GPIOB);
+                return (PTB_BASE_PTR);
         case PIN_PORTC:
-                return (&GPIOC);
+                return (PTC_BASE_PTR);
         case PIN_PORTD:
-                return (&GPIOD);
+                return (PTD_BASE_PTR);
+        case PIN_PORTE:
+                return (PTE_BASE_PTR);
         default:
                 return (NULL);
         }
@@ -21,14 +23,14 @@ void
 gpio_dir(enum gpio_pin_id pin, enum gpio_dir dir)
 {
         int pinnum = pin_physpin_from_pin(pin);
-        volatile struct GPIO_t *pinp = gpio_physgpio_from_pin(pin);
+        GPIO_MemMapPtr pinp = gpio_physgpio_from_pin(pin);
 
         switch (dir) {
         case GPIO_OUTPUT:
-                pinp->pddr |= 1 << pinnum;
+                GPIO_PDDR_REG(pinp) |= 1 << pinnum;
                 goto set_mux;
         case GPIO_INPUT:
-                pinp->pddr &= ~(1 << pinnum);
+                GPIO_PDDR_REG(pinp) &= ~(1 << pinnum);
         set_mux:
                 pin_mode(pin, PIN_MODE_MUX_ALT1);
                 break;
@@ -41,17 +43,17 @@ gpio_dir(enum gpio_pin_id pin, enum gpio_dir dir)
 void
 gpio_write(enum gpio_pin_id pin, enum gpio_pin_value val)
 {
-        BITBAND_BIT(gpio_physgpio_from_pin(pin)->pdor, pin_physpin_from_pin(pin)) = val;
+        BITBAND_BIT(GPIO_PDOR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin)) = val;
 }
 
 void
 gpio_toggle(enum gpio_pin_id pin)
 {
-        gpio_physgpio_from_pin(pin)->ptor = 1 << pin_physpin_from_pin(pin);
+        GPIO_PTOR_REG(gpio_physgpio_from_pin(pin)) = 1 << pin_physpin_from_pin(pin);
 }
 
 enum gpio_pin_value
 gpio_read(enum gpio_pin_id pin)
 {
-        return (BITBAND_BIT(gpio_physgpio_from_pin(pin)->pdir, pin_physpin_from_pin(pin)));
+        return (BITBAND_BIT(GPIO_PDIR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin)));
 }

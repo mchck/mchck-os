@@ -86,10 +86,9 @@ Reset_Handler(void)
          * the loader magic, which will lead to a watchdog
          * configuration timeout.
          */
-	WDOG_UNLOCK = 0xc520;
-	WDOG_UNLOCK = 0xd928;
-	WDOG_STCTRLH &= ~WDOG_STCTRLH_WDOGEN_MASK;
+        watchdog_disable();
         /* XXX maybe re-enable watchdog later? */
+        /* XXX this is permanent on some platforms */
 
         /**
          * We treat _app_rom as pointer to directly read the stack

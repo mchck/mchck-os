@@ -3,6 +3,7 @@ enum pin_port_id {
         PIN_PORTB = 2 << 16,
         PIN_PORTC = 3 << 16,
         PIN_PORTD = 4 << 16,
+        PIN_PORTE = 5 << 16,
 };
 
 enum pin_id {
@@ -99,5 +100,5 @@ pin_physpin_from_pin(enum pin_id pin)
         return (pin & 0xffff);
 }
 
-volatile struct PORT_t *pin_physport_from_pin(enum pin_id pin);
+PORT_MemMapPtr pin_physport_from_pin(enum pin_id pin);
 void pin_mode(enum pin_id pin, enum pin_mode mode);

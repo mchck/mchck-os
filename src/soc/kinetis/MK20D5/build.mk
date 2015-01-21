@@ -1,5 +1,7 @@
 SOC+= kinetis
 
+CFLAGS+=	-mcpu=cortex-m4 -msoft-float -mthumb
+
 TARGETLD= MK20D5.ld
 CPPFLAGS.ld+= -I$(call srcpath,src/soc/kinetis/MK20D5) #XXX thispath
 
@@ -27,7 +29,7 @@ LOADER_ADDR=	0
 APP_SIZE=	${FLASH_SIZE}-${LOADER_SIZE}
 APP_ADDR=	${LOADER_SIZE}
 
-SRCS-kinetis=	adc.c crc.c flash.c flashconfig.c ftfl.c ftm.c gpio.c i2c.c onboard-led.c pin.c pin_change.c pit.c rtc.c spi.c stdio.c timeout.c uart.c usb.c
+SRCS-kinetis=	adc.c crc.c flashconfig.c ftfl.c ftm.c gpio.c i2c.c pin.c pin_change.c pit.c rtc.c spi.c stdio.c timeout.c uart.c usb.c wdog.c
 SRCS-kinetis.dir=	soc/kinetis
 SRCS.libs+=	kinetis
 
@@ -36,5 +38,5 @@ SRCS-kinetis-MK20D5.dir=	soc/kinetis/MK20D5
 SRCS.libs+=	kinetis-MK20D5
 
 ifdef LOADER
-SRCS.force-kinetis+=	flashconfig.c
+SRCS.force-kinetis-MK20D5+=	flashconfig.c
 endif

@@ -18,10 +18,7 @@ void main(void);
 void
 Default_Reset_Handler(void)
 {
-	/* Disable Watchdog */
-	WDOG_UNLOCK = 0xc520;
-	WDOG_UNLOCK = 0xd928;
-	WDOG_STCTRLH &= ~WDOG_STCTRLH_WDOGEN_MASK;
+        watchdog_disable();
 
 #ifdef EXTERNAL_XTAL
         OSC_CR = OSC_CR_SC16P_MASK;
@@ -62,11 +59,8 @@ Default_Reset_Handler(void)
         SIM.sopt2.pllfllsel = SIM_PLLFLLSEL_PLL;
 #else
         /* FLL at 48MHz */
-        MCG.c4.raw = ((struct MCG_C4_t){
-                        .drst_drs = MCG_DRST_DRS_MID,
-                        .dmx32 = 1
-                }).raw;
-        SIM.sopt2.pllfllsel = SIM_PLLFLLSEL_FLL;
+        MCG_C4 = MCG_C4_DRST_DRS(1) | MCG_C4_DMX32_MASK;
+        bf_set(SIM_SOPT2, SIM_SOPT2_PLLFLLSEL, SIM_PLLFLLSEL_FLL);
 #endif
 
         memcpy(&_sdata, &_sidata, (uintptr_t)&_edata - (uintptr_t)&_sdata);

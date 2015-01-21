@@ -1,8 +1,20 @@
-#define usb_xfer_info USB_STAT_t
+#define usb_xfer_info stat_wrap
 
 #include <mchck.h>
 
 #include <usb/usb-internal.h>
+
+struct stat_wrap {
+        union {
+                struct {
+                        uint8_t _rsvd0 : 2;
+                        enum usb_ep_pingpong pingpong : 1;
+                        enum usb_ep_dir dir : 1;
+                        uint8_t ep : 4;
+                };
+                uint8_t raw;
+        };
+};
 
 
 /**
@@ -34,7 +46,7 @@ usb_get_bd(struct usbd_ep_pipe_state_t *s)
 }
 
 static struct USB_BD_t *
-usb_get_bd_stat(struct USB_STAT_t *stat)
+usb_get_bd_stat(struct usb_xfer_info *stat)
 {
         return (((void *)(uintptr_t)bdt + (stat->raw << 1)));
 }
@@ -66,16 +78,13 @@ usb_get_xfer_dir(struct usb_xfer_info *i)
 void
 usb_enable_xfers(void)
 {
-        USB0.ctl.raw = ((struct USB_CTL_t){
-                        .txd_suspend = 0,
-                                .usben = 1
-                                }).raw;
+        USB0_CTL = USB_CTL_USBENSOFEN_MASK;
 }
 
 void
 usb_set_addr(int addr)
 {
-        USB0.addr.raw = addr;
+        USB0_ADDR = addr;
 }
 
 
@@ -102,22 +111,20 @@ usb_pipe_unstall(struct usbd_ep_pipe_state_t *s)
 void
 usb_pipe_enable(struct usbd_ep_pipe_state_t *s)
 {
-        USB0.endpt[s->ep_num].raw |= ((struct USB_ENDPT_t){
-                        .eptxen = s->ep_dir == USB_EP_TX,
-                                .eprxen = s->ep_dir == USB_EP_RX,
-                                .ephshk = 1, /* XXX ISO */
-                                .epctldis = s->ep_num != 0
-                                }).raw;
+        USB_ENDPT_REG(USB0_BASE_PTR, s->ep_num) |=
+                (s->ep_dir == USB_EP_TX ? USB_ENDPT_EPTXEN_MASK : 0) |
+                (s->ep_dir == USB_EP_RX ? USB_ENDPT_EPRXEN_MASK : 0) |
+                USB_ENDPT_EPHSHK_MASK |
+                (s->ep_num != 0 ? USB_ENDPT_EPCTLDIS_MASK : 0);
 }
 
 void
 usb_pipe_disable(struct usbd_ep_pipe_state_t *s)
 {
-        USB0.endpt[s->ep_num].raw &= ~((struct USB_ENDPT_t){
-                        .eptxen = s->ep_dir == USB_EP_TX,
-                                .eprxen = s->ep_dir == USB_EP_RX,
-                                .epctldis = 1
-                                }).raw;
+        USB_ENDPT_REG(USB0_BASE_PTR, s->ep_num) &= ~(
+                (s->ep_dir == USB_EP_TX ? USB_ENDPT_EPTXEN_MASK : 0) |
+                (s->ep_dir == USB_EP_RX ? USB_ENDPT_EPRXEN_MASK : 0) |
+                USB_ENDPT_EPCTLDIS_MASK);
 }
 
 size_t
@@ -147,74 +154,64 @@ usb_reset(void)
 {
         /* reset pingpong state */
         /* For some obscure reason, we need to use or here. */
-        USB0.ctl.raw |= ((struct USB_CTL_t){
-                        .txd_suspend = 1,
-                                .oddrst = 1,
-                                }).raw;
+        USB0_CTL |=
+                USB_CTL_TXSUSPENDTOKENBUSY_MASK | /* XXX did not get set in bitfield compiler output */
+                USB_CTL_ODDRST_MASK;
 
         /* clear all interrupt bits - not sure if needed */
-        USB0.istat.raw = 0xff;
-        USB0.errstat.raw = 0xff;
-        USB0.otgistat.raw = 0xff;
+        USB0_ISTAT = 0xff;
+        USB0_ERRSTAT = 0xff;
+        USB0_OTGISTAT = 0xff;
 
         /* zap also BDT pingpong & queued transactions */
         memset(bdt, 0, sizeof(bdt));
-        USB0.addr.raw = 0;
+        USB0_ADDR = 0;
 
         usb_restart();
 
-        USB0.ctl.raw = ((struct USB_CTL_t){
-                        	.txd_suspend = 0,
-                                .usben = 1
-                                }).raw;
+        USB0_CTL = USB_CTL_USBENSOFEN_MASK;
 
         /* we're only interested in reset and transfers */
-        USB0.inten.raw = ((struct USB_ISTAT_t){
-                        	.tokdne = 1,
-                                .usbrst = 1,
-                                .stall = 1,
-                                .sleep = 1,
-                                }).raw;
+        USB0_INTEN =
+                USB_INTEN_TOKDNEEN_MASK |
+                USB_INTEN_USBRSTEN_MASK |
+                USB_INTEN_STALLEN_MASK |
+                USB_INTEN_SLEEPEN_MASK;
 
-        USB0.usbtrc0.usbresmen = 0;
-        USB0.usbctrl.susp = 0;
+        bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
+        bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
 }
 
 void
 usb_enable(void)
 {
-        SIM.sopt2.usbsrc = 1;   /* usb from mcg */
-        SIM.scgc4.usbotg = 1;   /* enable usb clock */
+        bf_set(SIM_SOPT2, SIM_SOPT2_USBSRC, 1);   /* usb from mcg */
+        bf_set(SIM_SCGC4, SIM_SCGC4_USBOTG, 1);   /* enable usb clock */
 
         /* reset module - not sure if needed */
-        USB0.usbtrc0.raw = ((struct USB_USBTRC0_t){
-                        	.usbreset = 1,
-                                .usbresmen = 1
-                                }).raw;
-        while (USB0.usbtrc0.usbreset)
+        USB0_USBTRC0 =
+                USB_USBTRC0_USBRESET_MASK |
+                USB_USBTRC0_USBRESMEN_MASK;
+        while (bf_get(USB0_USBTRC0, USB_USBTRC0_USBRESET))
                 /* NOTHING */;
 
-        USB0.bdtpage1 = (uintptr_t)bdt >> 8;
-        USB0.bdtpage2 = (uintptr_t)bdt >> 16;
-        USB0.bdtpage3 = (uintptr_t)bdt >> 24;
+        USB0_BDTPAGE1 = (uintptr_t)bdt >> 8;
+        USB0_BDTPAGE2 = (uintptr_t)bdt >> 16;
+        USB0_BDTPAGE3 = (uintptr_t)bdt >> 24;
 
-        USB0.control.raw = ((struct USB_CONTROL_t){
-                        	.dppullupnonotg = 1 /* enable pullup */
-                                }).raw;
+        USB0_CONTROL = USB_CONTROL_DPPULLUPNONOTG_MASK;
 
-        USB0.usbctrl.raw = 0; /* resume peripheral & disable pulldowns */
-        usb_reset();          /* this will start usb processing */
+        USB0_USBCTRL = 0;  /* resume peripheral & disable pulldowns */
+        usb_reset();       /* this will start usb processing */
 
         /* really only one thing we want */
-        USB0.inten.raw = ((struct USB_ISTAT_t){
-                                .usbrst = 1,
-                                }).raw;
+        USB0_INTEN = USB_INTEN_USBRSTEN_MASK;
 
         /**
          * Suspend transceiver now - we'll wake up at reset again.
          */
-        USB0.usbctrl.susp = 1;
-        USB0.usbtrc0.usbresmen = 1;
+        bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 1);
+        bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 1);
 
 #ifndef SHORT_ISR
         int_enable(IRQ_USB0);
@@ -224,33 +221,33 @@ usb_enable(void)
 void
 USB0_Handler(void)
 {
-        struct USB_ISTAT_t istat = {.raw = USB0.istat.raw };
+        uint8_t istat = USB0_ISTAT;
 
-        if (istat.usbrst) {
+        if (istat & USB_ISTAT_USBRST_MASK) {
                 usb_reset();
                 return;
         }
-        if (istat.stall) {
+        if (istat & USB_ISTAT_STALL_MASK) {
                 /* XXX need more work for non-0 ep */
                 volatile struct USB_BD_t *bd = usb_get_bd(&usb.ep_state[0].rx);
                 if (bd->stall)
                         usb_setup_control();
         }
-        if (istat.tokdne) {
-                struct usb_xfer_info stat = USB0.stat;
+        if (istat & USB_ISTAT_TOKDNE_MASK) {
+                struct usb_xfer_info stat = {.raw = USB0_STAT};
                 usb_handle_transaction(&stat);
         }
-        if (istat.sleep) {
-                USB0.inten.sleep = 0;
-                USB0.inten.resume = 1;
-                USB0.usbctrl.susp = 1;
-                USB0.usbtrc0.usbresmen = 1;
+        if (istat & USB_ISTAT_SLEEP_MASK) {
+                bf_set(USB0_INTEN, USB_INTEN_SLEEPEN, 0);
+                bf_set(USB0_INTEN, USB_INTEN_RESUMEEN, 1);
+                bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 1);
+                bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 1);
 
                 /**
                  * Clear interrupts now so that we can detect a fresh
                  * resume later on.
                  */
-                USB0.istat.raw = istat.raw;
+                USB0_ISTAT = istat;
 
                 const struct usbd_config *c = usb_get_config_data(-1);
                 if (c && c->suspend)
@@ -261,19 +258,19 @@ USB0_Handler(void)
          * resume interrupt if we were in sleep.  This code assumes we
          * do.
          */
-        if (istat.resume || USB0.usbtrc0.usb_resume_int) {
-                USB0.inten.resume = 0;
-                USB0.inten.sleep = 1;
-                USB0.usbtrc0.usbresmen = 0;
-                USB0.usbctrl.susp = 0;
+        if ((istat & USB_ISTAT_RESUME_MASK) || (USB0_USBTRC0 & USB_USBTRC0_USB_RESUME_INT_MASK)) {
+                bf_set(USB0_INTEN, USB_INTEN_RESUMEEN, 0);
+                bf_set(USB0_INTEN, USB_INTEN_SLEEPEN, 1);
+                bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
+                bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
 
                 const struct usbd_config *c = usb_get_config_data(-1);
                 if (c && c->resume)
                         c->resume();
 
-                istat.resume = 1; /* always clear bit */
+                istat |= USB_ISTAT_RESUME_MASK; /* always clear bit */
         }
-        USB0.istat.raw = istat.raw;
+        USB0_ISTAT = istat;
 }
 
 void
@@ -305,7 +302,7 @@ usb_tx_serialno(size_t reqlen)
         size_t bufpos = 0;
         for (size_t reg = 0; reg < nregs; ++reg) {
                 /* registers run MSW first */
-                uint32_t val = (&SIM.uidmh)[reg];
+                uint32_t val = (&SIM_UIDMH)[reg];
 
                 for (size_t bits = 32; bits > 0; bits -= 4, val <<= 4) {
                         int nibble = val >> 28;

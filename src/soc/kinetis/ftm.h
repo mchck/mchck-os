@@ -19,5 +19,5 @@ void ftm_set_raw(enum FTM_CH_t channels, uint16_t duty);
 static inline void
 ftm_set(enum FTM_CH_t channels, fract duty)
 {
-    ftm_set_raw(channels, duty * FTM0.mod);
+    ftm_set_raw(channels, duty * FTM0_MOD);
 }

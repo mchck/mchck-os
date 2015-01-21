@@ -16,7 +16,7 @@ sys_reset(void)
 void
 sys_reset_to_loader(void)
 {
-        memcpy(&VBAT, sys_reset_to_loader_magic, sizeof(sys_reset_to_loader_magic));
+        memcpy((void *)RFVBAT_BASE_PTR, sys_reset_to_loader_magic, sizeof(sys_reset_to_loader_magic));
         sys_reset();
 }
 
