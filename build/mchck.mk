@@ -25,7 +25,9 @@ _deps-$(1)=	$$(addsuffix .d, $$(basename $$(addprefix $(1)-lib-,$${SRCS-$(1)} $$
 DEPS+=	$${_deps-$(1)}
 #INCLUDEDIRS+=	$${_libdir-$(1)}
 
-$${LIBDEPCACHE}/$(1)-lib-%.o $(1)-lib-%.o: $${_libdir-$(1)}/%.c
+$${LIBDEPCACHE}/$(1)-lib-%.o: $${_libdir-$(1)}/%.c
+	$$(COMPILE.c) $$(OUTPUT_OPTION) $$<
+$(1)-lib-%.o: $${_libdir-$(1)}/%.c
 	$$(COMPILE.c) $$(OUTPUT_OPTION) $$<
 $(1)-lib-%.d: $${_libdir-$(1)}/%.c
 	$$(GENERATE.d)
@@ -126,14 +128,14 @@ $(call includesoc)
 COPTFLAGS?=	-Os
 CWARNFLAGS?=	-Wall -Wno-main -Wshadow
 
-CFLAGS+=	-mcpu=cortex-m4 -msoft-float -mthumb -ffunction-sections -fdata-sections -fno-builtin -fstrict-volatile-bitfields
+CFLAGS+=	-ffunction-sections -fdata-sections -fno-builtin -fstrict-volatile-bitfields
 ifndef NO_LTO
 CFLAGS+=	-flto -fno-use-linker-plugin
 endif
 CPPFLAGS+=	-include ${_libdir}/src/include/mchck_internal.h
 
 LDFLAGS+=	-Wl,--gc-sections
-LDFLAGS+=	-fwhole-program
+LDFLAGS+=	-fwhole-program -specs nano.specs
 CPPFLAGS.ld+=	-P -CC -I${_libdir}/build/ld -I.
 CPPFLAGS.ld+=	-DTARGET_LDSCRIPT='"${TARGETLD}"'
 CPPFLAGS.ld+=	-DLOADER_ADDR='${LOADER_ADDR}'
@@ -179,7 +181,9 @@ include ${_libdir}/build/mk/linkdep.mk
 
 ${PROG}.elf: ${LINKOBJS} ${LDLIBS} ${LDTEMPLATE}
 	${CC} -o $@ ${CFLAGS} ${LDFLAGS} -Wl,--start-group ${LINKOBJS} ${LDLIBS} -Wl,--end-group
-	@${SIZE} $@ | awk 'END { \
+
+check-size: ${PROG}.elf
+	@${SIZE} $< | awk 'END { \
 		used_flash=$$1; \
 		used_ram=$$2+$$3; \
 		binsize=${BINSIZE}; \
@@ -191,10 +195,10 @@ ${PROG}.elf: ${LINKOBJS} ${LDLIBS} ${LDTEMPLATE}
 		} \
 	}'
 
-%.bin: %.elf
+%.bin: %.elf check-size
 	${OBJCOPY} -O binary $< $@
 
-%.hex: %.elf
+%.hex: %.elf check-size
 	${OBJCOPY} -O ihex $< $@
 
 ${LDTEMPLATE}: ${_libdir}/build/ld/link.ld.S ${LDSCRIPTS}
