@@ -44,4 +44,4 @@ endif
 $(foreach _iter,${_syms_files},$(eval $(call _update_symvars)))
 $(foreach _iter,${_syms_files},$(eval $(call _clean_symvar,${_iter})))
 
-LINKOBJS=	$(call uniq,${OBJS} $(call objdeps,${FORCEOBJS}))
+LINKOBJS=	$(call uniq,${OBJS} ${FORCEOBJS} $(call objdeps,${FORCEOBJS}))
