@@ -24,4 +24,4 @@ _gensrc+=	$(addsuffix .c,$(basename $(filter %.rl,${SRCS})))
 	ragel -C -G0 -o $@ $<
 CLEANFILES+=	$(patsubst %.rl,%.c,$(filter %.rl,${SRCS}))
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk

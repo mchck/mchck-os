@@ -8,4 +8,4 @@ SRCS=	main-mchck.c swd-adapter.desc
 # so that the IDE can compile it.
 SRCS+=	swduino/swd.c
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk

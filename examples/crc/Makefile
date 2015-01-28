@@ -9,4 +9,4 @@ endif
 
 SRCS+=	crc.desc
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk

@@ -1,3 +1,3 @@
 PROG=	tsi
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk

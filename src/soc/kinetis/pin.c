@@ -84,6 +84,7 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
         }
 
         if (mode & PIN_MODE__OPEN_DRAIN) {
+#ifdef PORT_PCR_ODE_MASK
                 switch (mode & PIN_MODE__OPEN_DRAIN_MASK) {
                 case PIN_MODE_OPEN_DRAIN_OFF:
                         bf_set(pcr, PORT_PCR_ODE, 0);
@@ -92,6 +93,9 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
                         bf_set(pcr, PORT_PCR_ODE, 1);
                         break;
                 }
+#else
+                panic("no open drain mode available");
+#endif
         }
 
         if (mode & PIN_MODE__MUX) {

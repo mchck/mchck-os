@@ -1,3 +1,3 @@
 PROG=	serial
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk

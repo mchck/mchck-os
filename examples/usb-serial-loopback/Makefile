@@ -9,4 +9,4 @@ endif
 
 SRCS+=	usb-serial-loopback.desc
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk

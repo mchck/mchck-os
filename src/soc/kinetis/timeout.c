@@ -95,7 +95,7 @@ timeout_put_ref()
 void
 timeout_init(void)
 {
-        bf_set(SIM_SCGC5, SIM_SCGC5_LPTIMER, 1);
+        bf_set(SIM_SCGC5, SIM_SCGC5_LPTMR, 1);
         LPTMR0_PSR = LPTMR_PSR_PBYP_MASK | LPTMR_PSR_PCS(LPTMR_PCS_LPO);
 
         LPTMR0_CSR = LPTMR_CSR_TCF_MASK | LPTMR_CSR_TFC_MASK;
