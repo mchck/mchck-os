@@ -44,11 +44,9 @@ if linker_in
   fixed_sects = []
 
   # do one plain pass so that --gc-sections do its job
-  tmp_obj = Tempfile.new(['mchck-real-ld-', '.o'])
-  tmp_obj.close
+  tmp_obj = Dir::Tmpname.create(['mchck-real-ld-', '.o']){|p| raise Errno::EEXIST if File.exist? p}
 
-  tmp_map = Tempfile.new(['mchck-real-ld-', '.map'])
-  tmp_map.close
+  tmp_map = Dir::Tmpname.create(['mchck-real-ld-', '.map']){|p| raise Errno::EEXIST if File.exist? p}
 
   if save_temps
     path = linker_out.path
@@ -56,10 +54,10 @@ if linker_in
     linker_out = File.open(path, "w+")
     $stdout.puts "keeping temporary linker file #{path}"
 
-    path = tmp_obj.path
+    path = tmp_obj
     $stdout.puts "keeping intermediary object file #{path}"
 
-    path = tmp_map.path
+    path = tmp_map
     $stdout.puts "keeping intermediary map file #{path}"
   end
 
@@ -75,7 +73,7 @@ if linker_in
     all_sect.delete_if{|s| File.fnmatch($1, s.name)}
   end
 
-  args = [ld, "-o", tmp_obj.path, "-T", linker_in, *object_files, *call_args, "-Map=#{tmp_map.path}"]
+  args = [ld, "-o", tmp_obj, "-T", linker_in, *object_files, *call_args, "-Map=#{tmp_map}"]
   if !system(*args)
     exit $?.exitstatus
   end
@@ -83,7 +81,7 @@ if linker_in
   # XXX getting ugly, move to separate functions
   skipping = true
   carryover = []
-  File.readlines(tmp_map.path).each do |line|
+  File.readlines(tmp_map).each do |line|
     line.chomp!
     case line
     when /^Discarded input sections/
@@ -142,8 +140,8 @@ begin
 ensure
   if !save_temps
     linker_out.unlink if linker_out
-    tmp_obj.unlink if tmp_obj
-    tmp_map.unlink if tmp_map
+    File.unlink(tmp_obj) if tmp_obj
+    File.unlink(tmp_map) if tmp_map
   end
 end
 exit(err)
