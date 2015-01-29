@@ -24,19 +24,21 @@
 #endif
 
 struct usbd_ep_pipe_state_t {
-	enum usb_ep_pingpong pingpong; /* next desc to use */
-	enum usb_data01 data01;
 	size_t transfer_size;
 	size_t pos;
 	uint8_t *data_buf;
 	const uint8_t *copy_source;
-	int short_transfer;
 	ep_callback_t callback;
 	void *callback_data;
-	size_t ep_maxsize;
+
+	uint16_t ep_maxsize;
+
+	int short_transfer : 8;
+	enum usb_ep_pingpong pingpong : 8; /* next desc to use */
+	enum usb_data01 data01 : 8;
 	/* constant */
-	int ep_num;
-	enum usb_ep_dir ep_dir;
+	enum usb_ep_dir ep_dir : 8;
+	int ep_num : 8;
 };
 
 struct usbd_ep_state_t {
