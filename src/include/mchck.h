@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdfix.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <mchck-cdefs.h>
 
