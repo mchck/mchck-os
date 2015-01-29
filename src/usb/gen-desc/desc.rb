@@ -135,9 +135,9 @@ class FunctionDesc < DslItem
 
   def gen_defs
     s = ""
-    s += "usbd_func_init_t #{@init_func.to_loc_s};\n" if @init_func
-    s += "usbd_func_configure_t #{@configure_func.to_loc_s};\n" if @configure_func
-    s += "usbd_func_control_t #{@control_func.to_loc_s};\n" if @control_func
+    s += "usbd_func_init_t #{@init_func.to_loc_s};\n" if !@init_func.nil?
+    s += "usbd_func_configure_t #{@configure_func.to_loc_s};\n" if !@configure_func.nil?
+    s += "usbd_func_control_t #{@control_func.to_loc_s};\n" if !@control_func.nil?
     s
   end
 
