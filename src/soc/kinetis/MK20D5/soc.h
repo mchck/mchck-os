@@ -5,8 +5,9 @@
 #define FLASH_ELEM_SIZE 4
 
 #include <soc/cortex-m/soc.h>
+#include <soc/cortex-m/bitband.h>
 
-#include <soc/kinetis/bitfield.h>
+#include <soc/kinetis/bitfield-bitband.h>
 
 #include <soc/kinetis/periph/lptmr.h>
 #include <soc/kinetis/periph/ftfl.h>
