@@ -4,7 +4,8 @@
 
 #include <soc/cortex-m/soc.h>
 
-#include <soc/kinetis/bitfield.h>
+#include <soc/kinetis/bme.h>
+#include <soc/kinetis/bitfield-bme.h>
 
 #include <soc/kinetis/periph/lptmr.h>
 #include <soc/kinetis/periph/ftfa.h>
