@@ -37,18 +37,16 @@ struct stat_wrap {
  */
 
 
-static struct USB_BD_t bdt[USB_MAX_EP * 2 *2] __attribute__((section(".usb_bdt")));
-
 static struct USB_BD_t *
 usb_get_bd(struct usbd_ep_pipe_state_t *s)
 {
-        return (&bdt[(s->ep_num << 2) | (s->ep_dir << 1) | s->pingpong]);
+        return (&kinetis_bdt[(s->ep_num << 2) | (s->ep_dir << 1) | s->pingpong]);
 }
 
 static struct USB_BD_t *
 usb_get_bd_stat(struct usb_xfer_info *stat)
 {
-        return (((void *)(uintptr_t)bdt + (stat->raw << 1)));
+        return (((void *)(uintptr_t)kinetis_bdt + (stat->raw << 1)));
 }
 
 void *
@@ -149,6 +147,7 @@ usb_queue_next(struct usbd_ep_pipe_state_t *s, void *addr, size_t len)
                                 }).raw;
 }
 
+__attribute__((__noinline__))
 static void
 usb_reset(void)
 {
@@ -164,7 +163,7 @@ usb_reset(void)
         USB0_OTGISTAT = 0xff;
 
         /* zap also BDT pingpong & queued transactions */
-        memset(bdt, 0, sizeof(bdt));
+        memset(kinetis_bdt, 0, (uintptr_t)&_usb_bdt_end - (uintptr_t)kinetis_bdt);
         USB0_ADDR = 0;
 
         usb_restart();
@@ -195,9 +194,9 @@ usb_enable(void)
         while (bf_get(USB0_USBTRC0, USB_USBTRC0_USBRESET))
                 /* NOTHING */;
 
-        USB0_BDTPAGE1 = (uintptr_t)bdt >> 8;
-        USB0_BDTPAGE2 = (uintptr_t)bdt >> 16;
-        USB0_BDTPAGE3 = (uintptr_t)bdt >> 24;
+        USB0_BDTPAGE1 = (uintptr_t)kinetis_bdt >> 8;
+        USB0_BDTPAGE2 = (uintptr_t)kinetis_bdt >> 16;
+        USB0_BDTPAGE3 = (uintptr_t)kinetis_bdt >> 24;
 
         USB0_CONTROL = USB_CONTROL_DPPULLUPNONOTG_MASK;
 
@@ -229,7 +228,7 @@ USB0_Handler(void)
         }
         if (istat & USB_ISTAT_STALL_MASK) {
                 /* XXX need more work for non-0 ep */
-                volatile struct USB_BD_t *bd = usb_get_bd(&usb.ep_state[0].rx);
+                volatile struct USB_BD_t *bd = usb_get_bd(&usbd_ep_state[0].rx);
                 if (bd->stall)
                         usb_setup_control();
         }

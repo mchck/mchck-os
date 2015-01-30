@@ -51,6 +51,7 @@ SECTIONS
         . = ALIGN(512);
         _sbss = . ;
         *(.usb_bdt)
+        _usb_bdt_end = .;
     } > ram
 
     /* .bss section which is used for uninitialized data */

@@ -19,10 +19,6 @@
  */
 
 
-#ifndef USB_MAX_EP
-#define USB_MAX_EP 16
-#endif
-
 struct usbd_ep_pipe_state_t {
 	size_t transfer_size;
 	size_t pos;
@@ -65,10 +61,16 @@ struct usbd_t {
 		USBD_STATE_CONFIGURED
 	} state;
 	enum usb_ctrl_req_dir ctrl_dir;
-	struct usbd_ep_state_t ep_state[USB_MAX_EP];
 };
 
 extern struct usbd_t usb;
+
+#define USB_DECL_BUFS(ep_in, ep_out)					\
+	USB_DECL_BUFS_MD(ep_in, ep_out);				\
+	struct usbd_ep_state_t usbd_ep_state[ep_in > ep_out ? ep_in : ep_out]
+
+extern struct usbd_ep_state_t usbd_ep_state[];
+
 
 void usb_restart(void);
 void usb_enable(void);

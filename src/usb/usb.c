@@ -198,7 +198,7 @@ usb_rx(struct usbd_ep_pipe_state_t *s, void *buf, size_t len, ep_callback_t cb, 
 int
 usb_ep0_tx_cp(const void *buf, size_t len, size_t reqlen, ep_callback_t cb, void *cb_data)
 {
-	struct usbd_ep_pipe_state_t *s = &usb.ep_state[0].tx;
+	struct usbd_ep_pipe_state_t *s = &usbd_ep_state[0].tx;
 	enum usb_ep_pingpong pp = s->pingpong;
 
 	setup_tx(s, ep0_buf[pp], len, reqlen, cb, cb_data);
@@ -210,7 +210,7 @@ usb_ep0_tx_cp(const void *buf, size_t len, size_t reqlen, ep_callback_t cb, void
 void *
 usb_ep0_tx_inplace_prepare(size_t len)
 {
-	enum usb_ep_pingpong pp = usb.ep_state[0].tx.pingpong;
+	enum usb_ep_pingpong pp = usbd_ep_state[0].tx.pingpong;
 
 	if (len > EP0_BUFSIZE)
 		return (NULL);
@@ -221,13 +221,13 @@ usb_ep0_tx_inplace_prepare(size_t len)
 int
 usb_ep0_tx(const void *buf, size_t len, size_t reqlen, ep_callback_t cb, void *cb_data)
 {
-	return (usb_tx(&usb.ep_state[0].tx, buf, len, reqlen, cb, cb_data));
+	return (usb_tx(&usbd_ep_state[0].tx, buf, len, reqlen, cb, cb_data));
 }
 
 int
 usb_ep0_rx(void *buf, size_t len, ep_callback_t cb, void *cb_data)
 {
-	return (usb_rx(&usb.ep_state[0].rx, buf, len, cb, cb_data));
+	return (usb_rx(&usbd_ep_state[0].rx, buf, len, cb, cb_data));
 }
 
 
@@ -355,12 +355,12 @@ usb_handle_control_status_cb(ep_callback_t cb)
 	/* empty status transfer */
 	switch (usb.ctrl_dir) {
 	case USB_CTRL_REQ_IN:
-		usb.ep_state[0].rx.data01 = USB_DATA01_DATA1;
-		usb_rx(&usb.ep_state[0].rx, NULL, 0, cb, NULL);
+		usbd_ep_state[0].rx.data01 = USB_DATA01_DATA1;
+		usb_rx(&usbd_ep_state[0].rx, NULL, 0, cb, NULL);
 		break;
 
 	default:
-		usb.ep_state[0].tx.data01 = USB_DATA01_DATA1;
+		usbd_ep_state[0].tx.data01 = USB_DATA01_DATA1;
 		usb_ep0_tx_cp(NULL, 0, 1 /* short packet */, cb, NULL);
 		break;
 	}
@@ -371,8 +371,8 @@ void
 usb_handle_control_status(int fail)
 {
 	if (fail) {
-		usb_pipe_stall(&usb.ep_state[0].rx);
-		usb_pipe_stall(&usb.ep_state[0].tx);
+		usb_pipe_stall(&usbd_ep_state[0].rx);
+		usb_pipe_stall(&usbd_ep_state[0].tx);
 	} else {
 		usb_handle_control_status_cb(usb_handle_control_done);
 	}
@@ -557,11 +557,11 @@ err:
 void
 usb_setup_control(void)
 {
-	void *buf = ep0_buf[usb.ep_state[0].rx.pingpong];
+	void *buf = ep0_buf[usbd_ep_state[0].rx.pingpong];
 
-	usb.ep_state[0].rx.data01 = USB_DATA01_DATA0;
-	usb.ep_state[0].tx.data01 = USB_DATA01_DATA1;
-	usb_rx(&usb.ep_state[0].rx, buf, EP0_BUFSIZE, usb_handle_control, NULL);
+	usbd_ep_state[0].rx.data01 = USB_DATA01_DATA0;
+	usbd_ep_state[0].tx.data01 = USB_DATA01_DATA1;
+	usb_rx(&usbd_ep_state[0].rx, buf, EP0_BUFSIZE, usb_handle_control, NULL);
 }
 
 
@@ -572,7 +572,7 @@ void
 usb_handle_transaction(struct usb_xfer_info *info)
 {
 	enum usb_tok_pid pid = usb_get_xfer_pid(info);
-	struct usbd_ep_state_t *eps = &usb.ep_state[usb_get_xfer_ep(info)];
+	struct usbd_ep_state_t *eps = &usbd_ep_state[usb_get_xfer_ep(info)];
 	struct usbd_ep_pipe_state_t *s = &eps->pipe[usb_get_xfer_dir(info)];
 
 	switch (pid) {
@@ -603,9 +603,9 @@ usb_init_ep(struct usbd_function_ctx_header *ctx, int ep, enum usb_ep_dir dir, s
 	struct usbd_ep_pipe_state_t *s;
 
 	if (dir == USB_EP_RX)
-		s = &usb.ep_state[ctx->ep_rx_offset + ep].rx;
+		s = &usbd_ep_state[ctx->ep_rx_offset + ep].rx;
 	else
-		s = &usb.ep_state[ctx->ep_tx_offset + ep].tx;
+		s = &usbd_ep_state[ctx->ep_tx_offset + ep].tx;
 
 	memset(s, 0, sizeof(*s));
 	s->ep_maxsize = size;

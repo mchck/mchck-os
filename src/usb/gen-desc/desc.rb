@@ -219,6 +219,8 @@ class ConfigDesc < DslItem
 
   block :function, FunctionDesc, :list => true
 
+  attr_reader :numinterfaces, :numep_in, :numep_out
+
   def renumber!(confignum, stringdata)
     @confignum = confignum
     counts = {:func => 0, :iface => 0, :ep_in => 1, :ep_out => 1, :stringdata => stringdata}
@@ -226,6 +228,8 @@ class ConfigDesc < DslItem
       counts = f.renumber!(counts)
     end
     @numinterfaces = counts[:iface]
+    @numep_in = counts[:ep_in]
+    @numep_out = counts[:ep_out]
 
     @config_name = "usb_config_#@confignum"
     @var_name = "usbd_config_#@confignum"
@@ -369,13 +373,28 @@ class DescriptorRoot < DslItem
       @device.map{|d| d.gen_defs}.join("\n")
   end
 
+  def gen_defs
+    ep_in = 0
+    ep_out = 0
+    @device.each do |d|
+      d.get_config.each do |c|
+        ep_in = [ep_in, c.numep_in].max
+        ep_out = [ep_out, c.numep_out].max
+      end
+    end
+
+    "USB_DECL_BUFS(#{ep_in}, #{ep_out});"
+  end
+
   def gen_src(name=nil)
     s = ""
     if name
       s += "#include #{name.inspect}\n"
+      s += "#include <usb/usb-internal.h>\n"
     end
 
-    s += @device.map{|d| d.gen_vars}.join("\n")
+    s += @device.map{|d| d.gen_vars}.join("\n") + "\n"
+    s += gen_defs
     s
   end
 

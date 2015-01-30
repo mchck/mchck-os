@@ -28,5 +28,6 @@
 #include <soc/kinetis/stdio.h>
 #include <soc/kinetis/timeout.h>
 #include <soc/kinetis/uart.h>
+#include <soc/kinetis/usb.h>
 #include <soc/kinetis/wdog.h>
 #include <soc/kinetis/sys-register.h>
