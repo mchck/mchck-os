@@ -1,5 +1,10 @@
 #include <MK20D5.h>
 
+/* fix up inconsistent header naming */
+#define SIM_SCGC5_LPTMR_SHIFT SIM_SCGC5_LPTIMER_SHIFT
+#define SIM_SCGC5_LPTMR_MASK SIM_SCGC5_LPTIMER_MASK
+
+
 #define FLASH_SECTOR_SIZE 1024
 #define FLASH_SECTION_SIZE 1024
 #define FLASH_ELEM_SIZE 4
