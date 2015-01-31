@@ -182,7 +182,7 @@ include ${_libdir}/build/mk/linkdep.mk
 ${PROG}.elf: ${LINKOBJS} ${LDLIBS} ${LDTEMPLATE}
 	${CC} -o $@ ${CFLAGS} ${LDFLAGS} -Wl,--start-group ${LINKOBJS} ${LDLIBS} -Wl,--end-group
 
-check-size: ${PROG}.elf
+define check-size
 	@${SIZE} $< | awk 'END { \
 		used_flash=$$1; \
 		used_ram=$$2+$$3; \
@@ -194,11 +194,14 @@ check-size: ${PROG}.elf
 			exit 1; \
 		} \
 	}'
+endef
 
-%.bin: %.elf check-size
+%.bin: %.elf
+	$(check-size)
 	${OBJCOPY} -O binary $< $@
 
-%.hex: %.elf check-size
+%.hex: %.elf
+	$(check-size)
 	${OBJCOPY} -O ihex $< $@
 
 ${LDTEMPLATE}: ${_libdir}/build/ld/link.ld.S ${LDSCRIPTS}
