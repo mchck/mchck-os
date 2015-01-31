@@ -6,17 +6,16 @@ const uint8_t sys_reset_to_loader_magic[] = "\xff\x00\x7fRESET TO LOADER\x7f\x00
 void
 sys_reset(void)
 {
-        SCB.aircr.raw = ((struct SCB_AIRCR_t){
-                        .vectkey = SCB_AIRCR_VECTKEY,
-                                .sysresetreq = 1
-                                }).raw;
+        SCB_AIRCR =
+                SCB_AIRCR_VECTKEY(SCB_AIRCR_VECTKEY) |
+                SCB_AIRCR_SYSRESETREQ_MASK;
         for (;;);
 }
 
 void __attribute__((noreturn))
 sys_yield_for_frogs(void)
 {
-        SCB.scr.sleeponexit = 1;
+        bf_set(SCB_SCR, SCB_SCR_SLEEPONEXIT, 1);
         for (;;)
                 __asm__("wfi");
 }
@@ -58,11 +57,11 @@ panic(const char *reason)
 void
 int_enable(size_t intno)
 {
-        NVIC.iser[intno / 32] = 1 << (intno % 32);
+        (&NVIC_BASE_PTR->ISER)[intno / 32] = 1 << (intno % 32);
 }
 
 void
 int_disable(size_t intno)
 {
-        NVIC.icer[intno / 32] = 1 << (intno % 32);
+        (&NVIC_BASE_PTR->ICER)[intno / 32] = 1 << (intno % 32);
 }

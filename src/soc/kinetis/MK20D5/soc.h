@@ -4,10 +4,14 @@
 #define SIM_SCGC5_LPTMR_SHIFT SIM_SCGC5_LPTIMER_SHIFT
 #define SIM_SCGC5_LPTMR_MASK SIM_SCGC5_LPTIMER_MASK
 
+#define FlashConfig_BASE_PTR FTFL_FlashConfig_BASE_PTR
+#define FlexRAM_BASE_PTR ((void *)0x14000000)
 
 #define FLASH_SECTOR_SIZE 1024
 #define FLASH_SECTION_SIZE 1024
 #define FLASH_ELEM_SIZE 4
+
+#define HAVE_PIT_SEPARATE_IRQ
 
 #include <soc/cortex-m/soc.h>
 #include <soc/cortex-m/bitband.h>
@@ -16,8 +20,12 @@
 
 #include <soc/kinetis/periph/lptmr.h>
 #include <soc/kinetis/periph/ftfl.h>
+#include <soc/kinetis/periph/flashconfig.h>
 #include <soc/kinetis/periph/usbotg.h>
 #include <soc/kinetis/periph/sim.h>
+#include <soc/kinetis/periph/spi.h>
+#include <soc/kinetis/periph/ftm.h>
+#include <soc/kinetis/periph/adc.h>
 
 #include <soc/kinetis/adc.h>
 #include <soc/kinetis/crc.h>

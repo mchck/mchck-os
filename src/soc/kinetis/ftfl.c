@@ -23,7 +23,7 @@ ftfl_submit_cmd(void)
 int
 flash_prepare_flashing(void)
 {
-        /* switch to FlexRAM */
+        /* switch to FlexRAM_BASE_PTR */
         if (!bf_get(FTFL_FCNFG, FTFL_FCNFG_RAMRDY)) {
                 FTFL_FCCOB0 = FTFL_FCMD_SET_FLEXRAM;
                 FTFL_FCCOB1 = FTFL_FLEXRAM_RAM;
@@ -63,7 +63,7 @@ flash_get_staging_area(uintptr_t addr, size_t len)
         if ((addr & (FLASH_SECTION_SIZE - 1)) != 0 ||
             len != FLASH_SECTION_SIZE)
                 return (NULL);
-        return (FlexRAM);
+        return (FlexRAM_BASE_PTR);
 }
 
 

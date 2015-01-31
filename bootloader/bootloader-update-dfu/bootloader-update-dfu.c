@@ -43,7 +43,7 @@ onboard_led_morse_raw(const char *signs)
 /**
  * We buffer the whole bootloader here before we go on to flash it.
  */
-static char staging[FLASH_SECTOR_SIZE * 3];
+static uint8_t staging[FLASH_SECTOR_SIZE * 3];
 
 static enum dfu_status
 setup_write(size_t off, size_t len, void **buf)
@@ -61,10 +61,10 @@ finish_write(void *buf, size_t off, size_t len)
         if (len != 0)
                 return (DFU_STATUS_OK);
 
-        NV_MemMapPtr flashconfig = (void *)&staging[(uintptr_t)FTFL_FlashConfig_BASE_PTR];
+        NV_MemMapPtr flashconfig = (void *)&staging[(uintptr_t)FlashConfig_BASE_PTR];
 
         /* Make sure we don't brick ourselves */
-        if (bf_get(NV_FSEC_REG(flashconfig), NV_FSEC_SEC) != FTFL_FSEC_SEC_UNSECURE)
+        if (bf_get(NV_FSEC_REG(flashconfig), NV_FSEC_SEC) != NV_FSEC_SEC_UNSECURE)
                 return (DFU_STATUS_errFILE);
 
         /* We know what we're doing, part 2. */

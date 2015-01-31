@@ -5,37 +5,26 @@ static struct spi_ctx_bare *spi_ctx;
 static void
 spi_start_xfer(void)
 {
-        SPI0.mcr.raw = ((struct SPI_MCR){
-                        .mstr = 1,
-                                .dconf = SPI_DCONF_SPI,
-                                .rooe = 1,
-                                .pcsis = 0b11111,
-                                .clr_txf = 1,
-                                .clr_rxf = 1,
-                                .halt = 0
-                                }).raw;
-        SPI0.rser.raw = ((struct SPI_RSER){
-                        .tfff_re = 1,
-                                .rfdf_re = spi_ctx->rx != NULL,
-                                .eoqf_re = 1,
-                                }).raw;
-        SPI0.sr.raw |= 0;
+        SPI0_MCR =
+                SPI_MCR_MSTR_MASK |
+                SPI_MCR_DCONF(SPI_DCONF_SPI) |
+                SPI_MCR_ROOE_MASK |
+                SPI_MCR_PCSIS(0b11111) |
+                SPI_MCR_CLR_TXF_MASK |
+                SPI_MCR_CLR_RXF_MASK;
+        SPI0_RSER =
+                SPI_RSER_TFFF_RE_MASK |
+                (spi_ctx->rx != NULL ? SPI_RSER_RFDF_RE_MASK : 0) |
+                SPI_RSER_EOQF_RE_MASK;
+        SPI0_SR = 0xffffffff;   /* clear all clags */
 }
 
 static void
 spi_stop_xfer(void)
 {
-        SPI0.mcr.raw = ((struct SPI_MCR){
-                        .mstr = 1,
-                                .dconf = SPI_DCONF_SPI,
-                                .rooe = 1,
-                                .pcsis = 0b11111,
-                                .clr_txf = 1,
-                                .clr_rxf = 1,
-                                .halt = 1
-                                }).raw;
-        SPI0.rser.raw = 0;
-        SPI0.sr.raw |= 0;
+        bf_set(SPI0_MCR, SPI_MCR_HALT, 1);
+        SPI0_RSER = 0;
+        SPI0_SR = 0xffffffff;   /* clear all clags */
 }
 
 bool spi_is_idle(void)
@@ -46,7 +35,7 @@ bool spi_is_idle(void)
 int
 spi_is_xfer_active(void)
 {
-        return !SPI0.mcr.halt;
+        return (!bf_get(SPI0_MCR, SPI_MCR_HALT));
 }
 
 int
@@ -109,22 +98,22 @@ again:
                 return;
 
         for (;;) {
-                struct SPI_SR status, flags;
+                uint32_t status, flags;
 
-                status.raw = SPI0.sr.raw;
-                flags.raw = status.raw & SPI0.rser.raw;
+                status = SPI0_SR;
+                flags = status & SPI0_RSER;
 
-                if (flags.rfdf && spi_ctx->rx) {
-                        for (int i = status.rxctr; i > 0 && spi_ctx->rx; --i, sg_move(&spi_ctx->rx, 1)) {
-                                uint8_t d = SPI0.popr;
+                if (bf_get(flags, SPI_SR_RFDF) && spi_ctx->rx) {
+                        for (int i = bf_get(status, SPI_SR_RXCTR); i > 0 && spi_ctx->rx; --i, sg_move(&spi_ctx->rx, 1)) {
+                                uint8_t d = SPI0_POPR;
                                 if (sg_data(spi_ctx->rx) != NULL)
                                         *sg_data(spi_ctx->rx) = d;
                         }
                         /* disable interrupt if we're done receiving */
                         if (!spi_ctx->rx)
-                                SPI0.rser.rfdf_re = 0;
-                        SPI0.sr.raw = ((struct SPI_SR){ .rfdf = 1 }).raw;
-                } else if ((spi_ctx->tx || spi_ctx->rx_tail > 0) && flags.tfff) {
+                                bf_set(SPI0_RSER, SPI_RSER_RFDF_RE, 0);
+                        SPI0_SR = SPI_SR_RFDF_MASK;
+                } else if ((spi_ctx->tx || spi_ctx->rx_tail > 0) && bf_get(flags, SPI_SR_TFFF)) {
                         int more = 0;
                         uint8_t data;
 
@@ -140,15 +129,13 @@ again:
                         }
                         more = more || (spi_ctx->rx_tail > 0);
 
-                        SPI0.pushr.raw = ((struct SPI_PUSHR){
-                                        .cont = more,
-                                                .ctas = 0,
-                                                .eoq = !more,
-                                                .pcs = spi_ctx->pcs,
-                                                .txdata = data
-                                                }).raw;
-                        SPI0.sr.raw = ((struct SPI_SR){ .tfff = 1 }).raw;
-                } else if (flags.eoqf && !spi_ctx->tx && !spi_ctx->rx) {
+                        SPI0_PUSHR =
+                                (more ? SPI_PUSHR_CONT_MASK : 0) |
+                                (!more ? SPI_PUSHR_EOQ_MASK : 0) |
+                                SPI_PUSHR_PCS(spi_ctx->pcs) |
+                                SPI_PUSHR_TXDATA(data);
+                        SPI0_SR = SPI_SR_TFFF_MASK;
+                } else if (bf_get(flags, SPI_SR_EOQF) && !spi_ctx->tx && !spi_ctx->rx) {
                         /* transfer done */
                         struct spi_ctx_bare *ctx = spi_ctx;
 
@@ -172,15 +159,12 @@ again:
 void
 spi_init(void)
 {
-        SIM.scgc6.spi0 = 1; /* enable SPI clock */
-        SPI0.ctar[0].raw = ((struct SPI_CTAR){
-                        .fmsz = 7,
-                                .cpol = 0,
-                                .cpha = 0,
-                                .cssck = 0b1000,
-                                .asc = 0b1000,
-                                .dt = 0b1000,
-                                .br = 0b1000
-                                }).raw;
+        bf_set(SIM_SCGC6, SIM_SCGC6_SPI0, 1); /* enable SPI clock */
+        SPI0_CTAR0 =
+                SPI_CTAR_FMSZ(7) |
+                SPI_CTAR_CSSCK(0b1000) |
+                SPI_CTAR_ASC(0b1000) |
+                SPI_CTAR_DT(0b1000) |
+                SPI_CTAR_BR(0b1000);
         int_enable(IRQ_SPI0);
 }

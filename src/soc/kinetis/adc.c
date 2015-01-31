@@ -15,18 +15,28 @@ static void
 adc_calibrate_cb(uint16_t val, int error, void *cbdata)
 {
         /* base ADC calibration */
-        if (error || ADC0.sc3.calf)
+        if (error || bf_get(ADC0_SC3, ADC_SC3_CALF))
                 return;
 
         uint32_t calib = 0;
-        for (int i = sizeof(ADC0.clp)/sizeof(*ADC0.clp) - 1; i >= 0; --i)
-                calib += ADC0.clp[i];
-        ADC0.pg = (calib >> 1) | 0x8000;
+        calib += ADC0_CLPD;
+        calib += ADC0_CLPS;
+        calib += ADC0_CLP4;
+        calib += ADC0_CLP3;
+        calib += ADC0_CLP2;
+        calib += ADC0_CLP1;
+        calib += ADC0_CLP0;
+        ADC0_PG = (calib >> 1) | 0x8000;
 
         calib = 0;
-        for (int i = sizeof(ADC0.clm)/sizeof(ADC0.clm) - 1; i >= 0; --i)
-                calib += ADC0.clm[i];
-        ADC0.mg = (calib >> 1) | 0x8000;
+        calib += ADC0_CLMD;
+        calib += ADC0_CLMS;
+        calib += ADC0_CLM4;
+        calib += ADC0_CLM3;
+        calib += ADC0_CLM2;
+        calib += ADC0_CLM1;
+        calib += ADC0_CLM0;
+        ADC0_MG = (calib >> 1) | 0x8000;
 
         adc_calibrate_voltage(0);
 }
@@ -35,7 +45,7 @@ static void
 adc_calibrate_voltage_cb(uint16_t val, int error, void *cbdata)
 {
         /* disable band-gap buffer */
-        PMC.regsc.bgbe = 1;
+        bf_set(PMC_REGSC, PMC_REGSC_BGBE, 1);
 
         if (error)
                 return;
@@ -87,10 +97,10 @@ adc_init(void)
          * Enable bandgap buffer.  We need this later to calibrate our
          * reference scale.  However, we start it now, so that it will
          * have time to stabilize. */
-        PMC.regsc.bgbe = 1;
+        bf_set(PMC_REGSC, PMC_REGSC_BGBE, 1);
 
         /* enable clock */
-        SIM.scgc6.adc0 = 1;
+        bf_set(SIM_SCGC6, SIM_SCGC6_ADC0, 1);
 
         /* enable interrupt handler */
         int_enable(IRQ_ADC0);
@@ -101,41 +111,32 @@ adc_init(void)
         adc_ctx.stat_a.active = 1;
 
         /* enable interrupt */
-        ADC0.sc1a.raw = ((struct ADC_SC1){
-                        .aien = 1,
-                                .diff = 0,
-                                .adch = ADC_ADCH_DISABLED, /* do not start ADC */
-                                }).raw;
+        ADC0_SC1A =
+                ADC_SC1_AIEN_MASK |
+                ADC_SC1_ADCH(ADC_ADCH_DISABLED); /* do not start ADC */
 
         /* start calibration */
-        ADC0.sc3.cal = 1;
+        bf_set(ADC0_SC3, ADC_SC3_CAL, 1);
 }
 
 void
 adc_sample_prepare(enum adc_mode mode)
 {
-        ADC0.cfg1.raw = ((struct ADC_CFG1){
-                        .adlpc = !!(mode & ADC_MODE_POWER_LOW),
-                                .adiv = ADC_DIV_1,
-                                .adlsmp = !!(mode & ADC_MODE_SAMPLE_LONG),
-                                .mode = ADC_BIT_16,
-                                .adiclk = ADC_CLK_ADACK,
-                                }).raw;
-        ADC0.cfg2.raw = ((struct ADC_CFG2){
-                        .muxsel = 1, /* we only have b channels on the K20 */
-                                .adacken = !!(mode & ADC_MODE_KEEP_CLOCK),
-                                .adhsc = !!(mode & ADC_MODE_SPEED_HIGH),
-                                }).raw;
-        ADC0.sc2.raw = ((struct ADC_SC2){
-                        .adtrg = 0,
-                                .acfe = 0,
-                                .dmaen = 0,
-                                .refsel = ADC_REF_DEFAULT,
-                                }).raw;
-        ADC0.sc3.raw = ((struct ADC_SC3){
-                        .adco = !!(mode & ADC_MODE_CONTINUOUS),
-                                .avge = (mode & ADC_MODE__AVG_MASK) / ADC_MODE__AVG / 2, /* XXX ugly */
-                                }).raw;
+        ADC0_CFG1 =
+                ((mode & ADC_MODE_POWER_LOW) ? ADC_CFG1_ADLPC_MASK : 0) |
+                ADC_CFG1_ADIV(ADC_DIV_1) |
+                ((mode & ADC_MODE_SAMPLE_LONG) ? ADC_CFG1_ADLSMP_MASK : 0) |
+                ADC_CFG1_MODE(ADC_BIT_16) |
+                ADC_CFG1_ADICLK(ADC_CLK_ADACK);
+        ADC0_CFG2 =
+                ADC_CFG2_MUXSEL_MASK | /* we only have b channels on the K20 */
+                ((mode & ADC_MODE_KEEP_CLOCK) ? ADC_CFG2_ADACKEN_MASK : 0) |
+                ((mode & ADC_MODE_SPEED_HIGH) ? ADC_CFG2_ADHSC_MASK : 0);
+        ADC0_SC2 = ADC_SC2_REFSEL(ADC_REF_DEFAULT);
+        ADC0_SC3 =
+                ((mode & ADC_MODE_CONTINUOUS) ? ADC_SC3_ADCO_MASK : 0) |
+                ((mode & ADC_MODE__AVG) ? ADC_SC3_AVGE_MASK : 0 ) |
+                ADC_SC3_AVGS((mode & ADC_MODE__AVG_MASK) / ADC_MODE__AVG / 2); /* XXX ugly */
 }
 
 int
@@ -149,11 +150,10 @@ adc_sample_start(enum adc_channel channel, adc_result_cb_t *cb, void *cbdata)
         adc_ctx.stat_a.cbdata = cbdata;
 
         /* trigger conversion */
-        ADC0.sc1a.raw = ((struct ADC_SC1){
-                        .aien = 1,
-                                .diff = 0, /* XXX */
-                                .adch = channel
-                                }).raw;
+        ADC0_SC1A =
+                ADC_SC1_AIEN_MASK |
+                ADC_SC1_ADCH(channel);
+        /* XXX diff */
         return (0);
 }
 
@@ -161,7 +161,7 @@ int
 adc_sample_abort(void)
 {
         crit_enter();
-        ADC0.sc1a.raw = ((struct ADC_SC1){.adch = ADC_ADCH_DISABLED}).raw;
+        ADC0_SC1A = ADC_SC1_ADCH(ADC_ADCH_DISABLED);
         if (adc_ctx.stat_a.active) {
                 adc_result_cb_t *cb = adc_ctx.stat_a.cb;
                 void *cbdata = adc_ctx.stat_a.cbdata;
@@ -179,7 +179,7 @@ adc_sample_abort(void)
 void
 ADC0_Handler(void)
 {
-        if (ADC0.sc1a.coco) {
+        if (bf_get(ADC0_SC1A, ADC_SC1_COCO)) {
                 adc_result_cb_t *cb;
                 void *cbdata;
                 uint16_t val;
@@ -187,9 +187,9 @@ ADC0_Handler(void)
                 crit_enter();
                 cb = adc_ctx.stat_a.cb;
                 cbdata = adc_ctx.stat_a.cbdata;
-                if (!ADC0.sc3.adco)
+                if (!bf_get(ADC0_SC3, ADC_SC3_ADCO))
                         adc_ctx.stat_a.active = 0;
-                val = ADC0.ra;  /* clears interrupt */
+                val = ADC0_RA;  /* clears interrupt */
                 crit_exit();
 
                 cb(val, 0, cbdata);

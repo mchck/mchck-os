@@ -1,23 +1,3 @@
-enum {
-        FTFL_FSEC_SEC_UNSECURE = 2,
-        FTFL_FSEC_SEC_SECURE = 3
-};
-
-enum {
-        FTFL_FSEC_FSLACC_DENY = 1,
-        FTFL_FSEC_FSLACC_GRANT = 3
-};
-
-enum {
-        FTFL_FSEC_MEEN_DISABLE = 2,
-        FTFL_FSEC_MEEN_ENABLE = 3
-};
-
-enum {
-        FTFL_FSEC_KEYEN_DISABLE = 1,
-        FTFL_FSEC_KEYEN_ENABLE = 2
-};
-
 enum FTFL_FCMD {
         FTFL_FCMD_READ_1s_BLOCK = 0x00,
         FTFL_FCMD_READ_1s_SECTION = 0x01,

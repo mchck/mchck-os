@@ -5,32 +5,34 @@ static struct rtc_alarm_ctx *alarm_head = NULL;
 void
 rtc_init(void)
 {
-        SIM.scgc6.rtc = 1;
-        RTC.cr.osce = 1;
+        bf_set(SIM_SCGC6, SIM_SCGC6_RTC, 1);
+        bf_set(RTC_CR, RTC_CR_OSCE, 1);
 }
 
 int
 rtc_start_counter(void)
 {
-        if (RTC.sr.tif)
+        if (bf_get(RTC_SR, RTC_SR_TIF))
                 return 1;
-        RTC.sr.tce = 1;
+        bf_set(RTC_SR, RTC_SR_TCE, 1);
         return 0;
 }
 
 uint32_t
 rtc_get_time(void)
 {
-        return RTC.tsr;
+        return (RTC_TSR);
 }
 
 void
 rtc_set_time(uint32_t seconds)
 {
-        int started = RTC.sr.tce;
-        RTC.sr.tce = 0;
-        RTC.tsr = seconds;
-        RTC.sr.tce = started;
+        int started = bf_get(RTC_SR, RTC_SR_TCE);
+
+        bf_set(RTC_SR, RTC_SR_TCE, 0);
+        RTC_TSR = seconds;
+        if (started)
+                bf_set(RTC_SR, RTC_SR_TCE, 1);
 }
 
 static void
@@ -40,10 +42,10 @@ rtc_alarm_update(void)
                 return;
 
         if (alarm_head) {
-                RTC.tar = alarm_head->time;
-                int_enable(IRQ_RTC_alarm);
+                RTC_TAR = alarm_head->time;
+                int_enable(IRQ_RTC);
         } else {
-                int_disable(IRQ_RTC_alarm);
+                int_disable(IRQ_RTC);
         }
 }
 

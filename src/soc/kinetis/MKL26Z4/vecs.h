@@ -45,4 +45,5 @@ V(42, TSI0)
 V(43, MCG)
 V(44, LPT)
 V(46, PORTA)
+V(47, PORTD)
 #endif

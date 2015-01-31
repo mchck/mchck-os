@@ -1,5 +1,5 @@
 #define bf_set(loc, name, val)                                          \
-        {                                                               \
+        do {                                                            \
         	uint32_t _bitpos = name ## _SHIFT;                      \
                 uint32_t _bitmask = name ## _MASK;                      \
                 if (__builtin_constant_p(&loc) &&                       \
@@ -11,7 +11,7 @@
                         uint32_t _locval = *locp;                       \
                         *locp = bf_set1(_locval, _bitpos, _bitmask, val); \
                 }                                                       \
-        }
+        } while (0)
 
 static inline int
 bf_single_bit_p(int bitpos, uint32_t bitmask)

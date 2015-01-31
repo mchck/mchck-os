@@ -15,17 +15,26 @@ static struct i2c_ctx ctx;
 static void
 i2c_start_transaction(void)
 {
-	while (I2C0.s.busy); // ensure STOP symbol has been sent
+	while (bf_get(I2C0_S, I2C_S_BUSY))
+		/* NOTHING */; // ensure STOP symbol has been sent
 	ctx.index = 0;
 	if (ctx.cur->direction == I2C_READ) {			// if this is a read transaction
 		ctx.state = I2C_STATE_RX_START;
-		I2C0.c1.raw = ((struct I2C_C1 ) { .iicen = 1, .iicie = 1, .mst = 1, .tx = 1,
-		    .txak = ctx.cur->length == 1 } ).raw;	// transmit acknowledge already when only one byte to receive
-		I2C0.d = (ctx.cur->address << 1) | 1;
+		I2C0_C1 =
+			I2C_C1_IICEN_MASK |
+			I2C_C1_IICIE_MASK |
+			I2C_C1_MST_MASK |
+			I2C_C1_TX_MASK |
+			(ctx.cur->length == 1 ? I2C_C1_TXAK_MASK : 0);
+		I2C0_D = (ctx.cur->address << 1) | 1;
 	} else {
 		ctx.state = I2C_STATE_TX;
-		I2C0.c1.raw = ((struct I2C_C1 ) { .iicen = 1, .iicie = 1, .mst = 1, .tx = 1 } ).raw;
-		I2C0.d = ctx.cur->address << 1;
+		I2C0_C1 =
+			I2C_C1_IICEN_MASK |
+			I2C_C1_IICIE_MASK |
+			I2C_C1_MST_MASK |
+			I2C_C1_TX_MASK;
+		I2C0_D = ctx.cur->address << 1;
 	}
 }
 
@@ -35,9 +44,9 @@ i2c_end_transaction()
 {
 	// send STOP condition if requested or nothing left to send, otherwise repeat START condition
 	if (ctx.cur->next == NULL || ctx.cur->stop == I2C_STOP)
-		I2C0.c1.mst = 0;
+		bf_set(I2C0_C1, I2C_C1_MST, 0);
 	else
-		I2C0.c1.rsta = 1;
+		bf_set(I2C0_C1, I2C_C1_RSTA, 1);
 }
 
 // start the next transaction
@@ -61,51 +70,51 @@ i2c_transaction_next(enum i2c_result result)
 void
 I2C0_Handler(void)
 {
-	I2C0.s.iicif = 1;
+	bf_set(I2C0_S, I2C_S_IICIF, 1);
 	enum i2c_result result = I2C_RESULT_SUCCESS;
 	switch (ctx.state) {
-		case I2C_STATE_TX:
-			if (ctx.index < ctx.cur->length) {
-				if (I2C0.s.rxak) {	// if not acked, consider the transaction done
-					result = I2C_RESULT_NACK;
-					i2c_end_transaction();
-					i2c_transaction_next(result);
-				} else {
-					I2C0.d = ctx.cur->buffer[ctx.index++];	// transmit next byte
-				}
-			} else {
-				if (I2C0.s.rxak)	// if not acked, report it
-					result = I2C_RESULT_NACK;
-				i2c_end_transaction();
-				i2c_transaction_next(result);
-			}
-			break;
-		case I2C_STATE_RX_START:
-			if (I2C0.s.rxak) {		// report premature nack
+	case I2C_STATE_TX:
+		if (ctx.index < ctx.cur->length) {
+			if (bf_get(I2C0_S, I2C_S_RXAK)) {	// if not acked, consider the transaction done
 				result = I2C_RESULT_NACK;
 				i2c_end_transaction();
 				i2c_transaction_next(result);
 			} else {
-				I2C0.c1.tx = 0;
-				ctx.state = I2C_STATE_RX;
-				// throw away the first byte read from the device.
-				(void)I2C0.d;
+				I2C0_D = ctx.cur->buffer[ctx.index++];	// transmit next byte
 			}
-			break;
-		case I2C_STATE_RX:
-			if (ctx.index == ctx.cur->length-1) {		// last byte has been received
-				i2c_end_transaction();
-				ctx.cur->buffer[ctx.index++] = I2C0.d;
-				i2c_transaction_next(result);
-			} else {
-				if (ctx.index == ctx.cur->length - 2)	// last-but-one byte has been received, send NACK with last byte
-					I2C0.c1.txak = 1;		// to signal to the device that we're done receiving
-				ctx.cur->buffer[ctx.index++] = I2C0.d;
-			}
-			break;
-		default:
-			// XXX this shouldn't happen, assert or something
-			break;
+		} else {
+			if (bf_get(I2C0_S, I2C_S_RXAK))	// if not acked, report it
+				result = I2C_RESULT_NACK;
+			i2c_end_transaction();
+			i2c_transaction_next(result);
+		}
+		break;
+	case I2C_STATE_RX_START:
+		if (bf_get(I2C0_S, I2C_S_RXAK)) {		// report premature nack
+			result = I2C_RESULT_NACK;
+			i2c_end_transaction();
+			i2c_transaction_next(result);
+		} else {
+			bf_set(I2C0_C1, I2C_C1_TX, 0);
+			ctx.state = I2C_STATE_RX;
+			// throw away the first byte read from the device.
+			(void)I2C0_D;
+		}
+		break;
+	case I2C_STATE_RX:
+		if (ctx.index == ctx.cur->length-1) {		// last byte has been received
+			i2c_end_transaction();
+			ctx.cur->buffer[ctx.index++] = I2C0_D;
+			i2c_transaction_next(result);
+		} else {
+			if (ctx.index == ctx.cur->length - 2)	// last-but-one byte has been received, send NACK with last byte
+				bf_set(I2C0_C1, I2C_C1_TXAK, 1);		// to signal to the device that we're done receiving
+			ctx.cur->buffer[ctx.index++] = I2C0_D;
+		}
+		break;
+	default:
+		// XXX this shouldn't happen, assert or something
+		break;
 	}
 }
 
@@ -113,13 +122,8 @@ void
 i2c_init(enum i2c_rate rate)
 {
 	// Enable clocks for I2C and PORTB
-	SIM.scgc4.i2c0 = 1;
-	SIM.scgc5.portb = 1;
-
-	// Enable OPEN_DRAIN and ALT2 on SCK and SDA
-	// Note enabling PULLUP (.ps=1,.pe=1) has no effect in I2C mode.
-	PORTB.pcr[pin_physpin_from_pin(PIN_PTB2)].raw = ((struct PCR_t) {.mux=2,.ode=1}).raw;
-	PORTB.pcr[pin_physpin_from_pin(PIN_PTB3)].raw = ((struct PCR_t) {.mux=2,.ode=1}).raw;
+	bf_set(SIM_SCGC4, SIM_SCGC4_I2C0, 1);
+	bf_set(SIM_SCGC5, SIM_SCGC5_PORTB, 1);
 
 	//                   I2C0_F values, indexed by enum i2c_rate.
 	//                   100kHz 400   600   800   1000  1200  1500  2000  2400kHz
@@ -127,9 +131,9 @@ i2c_init(enum i2c_rate rate)
 
 	if (rate < 0 || rate >= sizeof(f))
 		rate = I2C_RATE_100;
-	I2C0.f.raw = f[rate];
+	I2C0_F = f[rate];
 
-	I2C0.c1.iicen = 1;
+	bf_set(I2C0_C1, I2C_C1_IICEN, 1);
 	ctx.state = I2C_STATE_IDLE;
 	ctx.cur = NULL;
 	int_enable(IRQ_I2C0);

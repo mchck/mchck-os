@@ -1,7 +1,17 @@
 typedef void (*uart_cb)(const void *buf, size_t len, void *cbdata);
 
+struct uart_ctx;
+
+struct uart_methods {
+        void (*init)(struct uart_ctx *ctx);
+        void (*set_baudrate)(struct uart_ctx *ctx, unsigned int baudrate);
+        void (*start)(struct uart_ctx *ctx);
+        void (*irq_handler)(struct uart_ctx *ctx);
+};
+
 struct uart_ctx {
-        volatile struct UART_t *uart;
+        const struct uart_methods * const methods;
+        void * const uart;
         struct uart_trans_ctx *tx_queue;
         struct uart_trans_ctx *rx_queue;
 };
