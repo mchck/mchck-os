@@ -3,6 +3,11 @@
 
 enum spi_pcs {
         SPI_PCS0 = 1 << 0,
+        SPI_PCS1 = 1 << 1,
+        SPI_PCS2 = 1 << 2,
+        SPI_PCS3 = 1 << 3,
+        SPI_PCS4 = 1 << 4,
+        SPI_PCS5 = 1 << 5,
 };
 
 typedef void (spi_cb)(void *cbdata);
