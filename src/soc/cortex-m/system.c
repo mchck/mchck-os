@@ -57,11 +57,15 @@ panic(const char *reason)
 void
 int_enable(size_t intno)
 {
-        (&NVIC_BASE_PTR->ISER)[intno / 32] = 1 << (intno % 32);
+        volatile uint32_t *iser = (void *)&NVIC_BASE_PTR->ISER;
+
+        iser[intno / 32] = 1 << (intno % 32);
 }
 
 void
 int_disable(size_t intno)
 {
-        (&NVIC_BASE_PTR->ICER)[intno / 32] = 1 << (intno % 32);
+        volatile uint32_t *icer = (void *)&NVIC_BASE_PTR->ICER;
+
+        icer[intno / 32] = 1 << (intno % 32);
 }
