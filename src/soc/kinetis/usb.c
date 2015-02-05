@@ -187,6 +187,13 @@ usb_enable(void)
         bf_set(SIM_SOPT2, SIM_SOPT2_USBSRC, 1);   /* usb from mcg */
         bf_set(SIM_SCGC4, SIM_SCGC4_USBOTG, 1);   /* enable usb clock */
 
+#if defined(FMC_PFAPR)
+        /* Allow USB to access the Flash */
+        bf_set(FMC_PFAPR, FMC_PFAPR_M3AP, FMC_MAP_RDWR);
+#endif
+        /* Round robin bus masters, so that the CPU can't starve the USB */
+        bf_set(MCM_PLACR, MCM_PLACR_ARB, 1);
+
         /* reset module - not sure if needed */
         USB0_USBTRC0 =
                 USB_USBTRC0_USBRESET_MASK |

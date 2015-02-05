@@ -13,6 +13,36 @@
 
 #define HAVE_PIT_SEPARATE_IRQ
 
+
+/* Missing from header */
+typedef struct MCM_MemMap {
+  uint8_t RESERVED_0[8];
+  uint16_t PLASC;
+  uint16_t PLAMC;
+  uint32_t PLACR;
+} volatile *MCM_MemMapPtr;
+
+#define MCM_PLASC_REG(base)                      ((base)->PLASC)
+#define MCM_PLAMC_REG(base)                      ((base)->PLAMC)
+#define MCM_PLACR_REG(base)                      ((base)->PLACR)
+
+#define MCM_PLASC_ASC_MASK                       0xFFu
+#define MCM_PLASC_ASC_SHIFT                      0
+#define MCM_PLASC_ASC(x)                         (((uint16_t)(((uint16_t)(x))<<MCM_PLASC_ASC_SHIFT))&MCM_PLASC_ASC_MASK)
+#define MCM_PLAMC_AMC_MASK                       0xFFu
+#define MCM_PLAMC_AMC_SHIFT                      0
+#define MCM_PLAMC_AMC(x)                         (((uint16_t)(((uint16_t)(x))<<MCM_PLAMC_AMC_SHIFT))&MCM_PLAMC_AMC_MASK)
+#define MCM_PLACR_ARB_MASK                       0x200u
+#define MCM_PLACR_ARB_SHIFT                      9
+
+#define MCM_BASE_PTR                             ((MCM_MemMapPtr)0xE0080000u)
+#define MCM_BASE_PTRS                            { MCM_BASE_PTR }
+
+#define MCM_PLASC                                MCM_PLASC_REG(MCM_BASE_PTR)
+#define MCM_PLAMC                                MCM_PLAMC_REG(MCM_BASE_PTR)
+#define MCM_PLACR                                MCM_PLACR_REG(MCM_BASE_PTR)
+
+
 #include <soc/cortex-m/soc.h>
 #include <soc/cortex-m/bitband.h>
 
@@ -21,6 +51,7 @@
 #include <soc/kinetis/periph/lptmr.h>
 #include <soc/kinetis/periph/ftfl.h>
 #include <soc/kinetis/periph/flashconfig.h>
+#include <soc/kinetis/periph/fmc.h>
 #include <soc/kinetis/periph/usbotg.h>
 #include <soc/kinetis/periph/sim.h>
 #include <soc/kinetis/periph/dspi.h>
