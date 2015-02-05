@@ -124,7 +124,7 @@ hid_handle_control(struct usb_ctrl_req_t *req, void *data)
 		}
 		if (len == 0)
 			return (0);
-		usb_ep0_tx_cp(buf, len, req->wLength, NULL, NULL);
+		usb_ep0_tx(buf, len, req->wLength, NULL, NULL);
 		usb_handle_control_status(0);
 		return (1);
 

@@ -56,7 +56,7 @@ wcid_handle_control(struct usb_ctrl_req_t *req, void *data)
                 return (0);
         if (pos + len > desc->dwLength)
                 len = desc->dwLength - pos;
-        usb_ep0_tx_cp((uint8_t *)desc + pos, len, req->wLength, NULL, NULL);
+        usb_ep0_tx((uint8_t *)desc + pos, len, req->wLength, NULL, NULL);
         usb_handle_control_status(0);
         return (1);
 }

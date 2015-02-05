@@ -310,7 +310,7 @@ usb_tx_config_desc(int idx, int reqlen)
 {
 	const struct usb_desc_config_t *d = usb.identity->configs[idx]->desc;
 
-	usb_ep0_tx_cp(d, d->wTotalLength, reqlen, NULL, NULL);
+	usb_ep0_tx(d, d->wTotalLength, reqlen, NULL, NULL);
 	return (0);
 }
 
@@ -331,7 +331,7 @@ usb_tx_string_desc(int idx, int reqlen)
 	case (uintptr_t)USB_DESC_STRING_SERIALNO:
 		return (usb_tx_serialno(reqlen));
 	default:
-		usb_ep0_tx_cp(d->string, d->string->bLength, reqlen, NULL, NULL);
+		usb_ep0_tx(d->string, d->string->bLength, reqlen, NULL, NULL);
 		return (0);
 	}
 }
@@ -508,7 +508,7 @@ usb_handle_control(void *data, ssize_t len, void *cbdata)
 	case USB_CTRL_REQ_GET_DESCRIPTOR:
 		switch (req->wValue >> 8) {
 		case USB_DESC_DEV:
-			usb_ep0_tx_cp(usb.identity->dev_desc, usb.identity->dev_desc->bLength,
+			usb_ep0_tx(usb.identity->dev_desc, usb.identity->dev_desc->bLength,
 				      req->wLength, NULL, NULL);
 			fail = 0;
 			break;
@@ -526,7 +526,7 @@ usb_handle_control(void *data, ssize_t len, void *cbdata)
 		goto err;
 
 	case USB_CTRL_REQ_GET_CONFIGURATION:
-		usb_ep0_tx_cp(&usb.config, 1, req->wLength, NULL, NULL); /* XXX implicit LE */
+		usb_ep0_tx(&usb.config, 1, req->wLength, NULL, NULL); /* XXX implicit LE */
 		break;
 
 	case USB_CTRL_REQ_SET_CONFIGURATION:
