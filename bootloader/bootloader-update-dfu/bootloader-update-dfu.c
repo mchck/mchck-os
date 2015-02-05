@@ -41,25 +41,32 @@ onboard_led_morse_raw(const char *signs)
 }
 
 /**
- * We buffer the whole bootloader here before we go on to flash it.
+ * We buffer the whole bootloader in this flash area before we go on
+ * to flash it to the final location.
+ *
+ * We initialize the variable so that it gets placed into .rodata, and
+ * not into .bss.
  */
-static uint8_t staging[FLASH_SECTOR_SIZE * 3];
+const static uint8_t staging[LOADER_SIZE] __attribute__((__aligned__(FLASH_SECTOR_SIZE), __section__(".rodata.staging"))) = {0};
+
+static uint8_t staging_buf[FLASH_SECTOR_SIZE];
 
 static enum dfu_status
 setup_write(size_t off, size_t len, void **buf)
 {
         if (off + len > sizeof(staging))
                 return (DFU_STATUS_errADDRESS);
-        *buf = staging + off;
+        *buf = staging_buf;
         return (DFU_STATUS_OK);
 }
 
 static enum dfu_status
 finish_write(void *buf, size_t off, size_t len)
 {
-        /* buffer all while we are not done */
-        if (len != 0)
+        if (len != 0) {
+                flash_program_sector(staging_buf, (uintptr_t)staging + off, FLASH_SECTOR_SIZE);
                 return (DFU_STATUS_OK);
+        }
 
         NV_MemMapPtr flashconfig = (void *)&staging[(uintptr_t)FlashConfig_BASE_PTR];
 
