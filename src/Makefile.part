@@ -1,0 +1,3 @@
+include ${_libdir}/src/common/Makefile.part
+include ${_libdir}/src/nrf/Makefile.part
+include ${_libdir}/src/usb/Makefile.part

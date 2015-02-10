@@ -15,4 +15,4 @@ endif
 
 SRCS+=	dfu.desc
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk

@@ -5,6 +5,7 @@
 *.hex
 *.map
 *.ld
+!src/**/*.ld
 *.ld-template
 *.linkdep
 .mchckrc

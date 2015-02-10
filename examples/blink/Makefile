@@ -1,3 +1,3 @@
 PROG=	blink
 
-include ../../toolchain/mchck.mk
+include ../../build/mchck.mk
