@@ -1,15 +1,4 @@
-void *memset(void *, int, size_t);
-void *memcpy(void *, const void *, size_t);
-int memcmp(const void *, const void *, size_t);
-void *memchr(const void *addr, int val, size_t len);
-size_t strlen(const char *str);
-char *strchr(const char *str, int chr);
-int strcmp(const char *a, const char *b);
-int strncmp(const char *a, const char *b, size_t len);
-
-
 void __attribute__((noreturn)) sys_reset(void);
-void __attribute__((noreturn)) sys_reset_to_loader(void);
 void __attribute__((noreturn)) sys_yield_for_frogs(void);
 
 void crit_enter(void);

@@ -13,13 +13,6 @@ sys_reset(void)
         for (;;);
 }
 
-void
-sys_reset_to_loader(void)
-{
-        memcpy((void *)RFVBAT_BASE_PTR, sys_reset_to_loader_magic, sizeof(sys_reset_to_loader_magic));
-        sys_reset();
-}
-
 void __attribute__((noreturn))
 sys_yield_for_frogs(void)
 {
