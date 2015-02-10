@@ -31,6 +31,8 @@ usb_tx_next(struct usbd_ep_pipe_state_t *s)
 
 		if (thislen > s->ep_maxsize)
 			thislen = s->ep_maxsize;
+		else if (thislen != s->ep_maxsize)
+			s->short_transfer = 0;
 
 		void *addr = s->data_buf + s->pos;
 
@@ -77,7 +79,18 @@ setup_tx(struct usbd_ep_pipe_state_t *s, const void *buf, size_t len, size_t req
 	s->callback_data = cb_data;
 	if (s->transfer_size > reqlen)
 		s->transfer_size = reqlen;
-	if (s->transfer_size < reqlen && s->transfer_size % s->ep_maxsize == 0)
+
+	/*
+	 * A short transfer should only happen if we transfer less
+	 * than the requested length, *and* a multiple of the endpoint
+	 * transfer size, i.e. s->transfer_size % s->ep_maxsize == 0.
+	 *
+	 * This, however, is a division, which we should avoid on some
+	 * platforms.  We tentatively set the flag now, and clear it
+	 * in the tx handler, if the last transfer turns out to be not
+	 * a multiple of the endpoint size.
+	 */
+	if (s->transfer_size < reqlen)
 		s->short_transfer = 1;
 	else
 		s->short_transfer = 0;
