@@ -6,16 +6,14 @@ const uint8_t sys_reset_to_loader_magic[] = "\xff\x00\x7fRESET TO LOADER\x7f\x00
 void
 sys_reset(void)
 {
-        SCB_AIRCR =
-                SCB_AIRCR_VECTKEY(SCB_AIRCR_VECTKEY) |
-                SCB_AIRCR_SYSRESETREQ_MASK;
+        NVIC_SystemReset();
         for (;;);
 }
 
 void __attribute__((noreturn))
 sys_yield_for_frogs(void)
 {
-        bf_set(SCB_SCR, SCB_SCR_SLEEPONEXIT, 1);
+        SCB->SCR |= SCB_SCR_SLEEPONEXIT_Msk;
         for (;;)
                 __asm__("wfi");
 }
@@ -57,15 +55,11 @@ panic(const char *reason)
 void
 int_enable(size_t intno)
 {
-        volatile uint32_t *iser = (void *)&NVIC_BASE_PTR->ISER;
-
-        iser[intno / 32] = 1 << (intno % 32);
+        NVIC_EnableIRQ(intno);
 }
 
 void
 int_disable(size_t intno)
 {
-        volatile uint32_t *icer = (void *)&NVIC_BASE_PTR->ICER;
-
-        icer[intno / 32] = 1 << (intno % 32);
+        NVIC_DisableIRQ(intno);
 }

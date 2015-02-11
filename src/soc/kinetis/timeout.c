@@ -99,7 +99,7 @@ timeout_init(void)
         LPTMR0_PSR = LPTMR_PSR_PBYP_MASK | LPTMR_PSR_PCS(LPTMR_PCS_LPO);
 
         LPTMR0_CSR = LPTMR_CSR_TCF_MASK | LPTMR_CSR_TFC_MASK;
-        int_enable(IRQ_LPT);
+        int_enable(IRQ_LPTMR0);
 }
 
 void
@@ -154,7 +154,7 @@ timeout_cancel(struct timeout_ctx *t)
 }
 
 void
-LPT_Handler(void)
+LPTMR0_Handler(void)
 {
         crit_enter();
         timeout_update_time();

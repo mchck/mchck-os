@@ -17,7 +17,7 @@ crc_init(
 		CRC_CTRL_TOT(tot);
 	CRC_GPOLY = poly;
 	bf_set(CRC_CTRL, CRC_CTRL_WAS, 1);
-	CRC_CRC = seed;
+	CRC_DATA = seed;
 	bf_set(CRC_CTRL, CRC_CTRL_WAS, 0);
 }
 
@@ -26,16 +26,16 @@ crc_update(const void *buf, size_t len)
 {
 	size_t n = len / 4;
 	while (n-- > 0) {
-		CRC_CRC = *(uint32_t*)buf;
+		CRC_DATA = *(uint32_t*)buf;
 		buf += 4;
 	}
 	n = len % 4;
 	while (n-- > 0)
-		CRC_CRCLL = *(uint8_t*)buf++;
+		CRC_DATALL = *(uint8_t*)buf++;
 }
 
 uint32_t
 crc_value(void)
 {
-	return CRC_CRC;
+	return CRC_DATA;
 }

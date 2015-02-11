@@ -1,5 +1,3 @@
-#include <mchck.h>
-
 #define V(n, x)	_CONCAT(IRQ_, x) = (n - 16),
 #define VH(n, x, y)	V(n, x)
 enum {
@@ -7,3 +5,5 @@ enum {
 };
 #undef VH
 #undef V
+
+#include <mchck.h>

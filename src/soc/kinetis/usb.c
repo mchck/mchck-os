@@ -191,8 +191,13 @@ usb_enable(void)
         /* Allow USB to access the Flash */
         bf_set(FMC_PFAPR, FMC_PFAPR_M3AP, FMC_MAP_RDWR);
 #endif
+#if defined(MCM_PLACR) && !defined(AXBS_CRS)
         /* Round robin bus masters, so that the CPU can't starve the USB */
         bf_set(MCM_PLACR, MCM_PLACR_ARB, 1);
+#elif defined(AXBS_CRS)
+        for (int i = 0; i < sizeof(((AXBS_MemMapPtr)0)->SLAVE)/sizeof(*((AXBS_MemMapPtr)0)->SLAVE); ++i)
+                bf_set(AXBS_CRS(i), AXBS_CRS_ARB, 0b01);
+#endif
 
         /* reset module - not sure if needed */
         USB0_USBTRC0 =

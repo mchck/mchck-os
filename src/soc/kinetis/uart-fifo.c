@@ -15,15 +15,15 @@ init(struct uart_ctx *ctx)
         switch ((uintptr_t)uart) {
         case (uintptr_t)UART0_BASE_PTR:
                 bf_set(SIM_SCGC4, SIM_SCGC4_UART0, 1);
-                int_enable(IRQ_UART0_status);
+                int_enable(IRQ_UART0_RX_TX);
                 break;
         case (uintptr_t)UART1_BASE_PTR:
                 bf_set(SIM_SCGC4, SIM_SCGC4_UART1, 1);
-                int_enable(IRQ_UART1_status);
+                int_enable(IRQ_UART1_RX_TX);
                 break;
         case (uintptr_t)UART2_BASE_PTR:
                 bf_set(SIM_SCGC4, SIM_SCGC4_UART2, 1);
-                int_enable(IRQ_UART2_status);
+                int_enable(IRQ_UART2_RX_TX);
                 break;
         }
 

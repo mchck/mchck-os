@@ -132,7 +132,6 @@ CFLAGS+=	-ffunction-sections -fdata-sections -fno-builtin -fstrict-volatile-bitf
 ifndef NO_LTO
 CFLAGS+=	-flto -fno-use-linker-plugin
 endif
-CPPFLAGS+=	-include ${_libdir}/src/include/mchck_internal.h
 
 LDFLAGS+=	-Wl,--gc-sections
 LDFLAGS+=	-fwhole-program -specs nano.specs
