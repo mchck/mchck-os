@@ -48,6 +48,7 @@ class InterfaceDesc < DslItem
   field :bInterfaceClass
   field :bInterfaceSubClass
   field :bInterfaceProtocol
+  field(:iInterface, :optional => true) {|s| @iInterface = device.add_string(s)}
 
   block :ep, EndpointDesc, :list => true, :optional => true
   block :alternate, InterfaceDesc, :list => true, :optional => true
@@ -97,7 +98,7 @@ class InterfaceDesc < DslItem
 	.bInterfaceClass = #{@bInterfaceClass.to_loc_s},
 	.bInterfaceSubClass = #{@bInterfaceSubClass.to_loc_s},
 	.bInterfaceProtocol = #{@bInterfaceProtocol.to_loc_s},
-	.iInterface = 0
+	.iInterface = #{@iInterface.to_loc_s{|v| v || 0}},
 },
 _end_
     v + @ep.map{|e| e.gen_desc_init}.join("\n")
