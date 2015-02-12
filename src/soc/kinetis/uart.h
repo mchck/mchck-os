@@ -30,8 +30,6 @@ struct uart_trans_ctx {
         struct uart_trans_ctx *next;
 };
 
-extern struct uart_ctx uart0, uart1, uart2;
-
 void uart_init(struct uart_ctx *uart);
 
 void uart_set_baudrate(struct uart_ctx *uart, unsigned int baudrate);

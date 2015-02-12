@@ -25,6 +25,24 @@ init(struct uart_ctx *ctx)
                 bf_set(SIM_SCGC4, SIM_SCGC4_UART2, 1);
                 int_enable(IRQ_UART2_RX_TX);
                 break;
+#ifdef UART3_BASE_PTR
+        case (uintptr_t)UART3_BASE_PTR:
+                bf_set(SIM_SCGC4, SIM_SCGC4_UART3, 1);
+                int_enable(IRQ_UART3_RX_TX);
+                break;
+#endif
+#ifdef UART4_BASE_PTR
+        case (uintptr_t)UART4_BASE_PTR:
+                bf_set(SIM_SCGC1, SIM_SCGC1_UART4, 1);
+                int_enable(IRQ_UART4_RX_TX);
+                break;
+#endif
+#ifdef UART5_BASE_PTR
+        case (uintptr_t)UART5_BASE_PTR:
+                bf_set(SIM_SCGC1, SIM_SCGC1_UART5, 1);
+                int_enable(IRQ_UART5_RX_TX);
+                break;
+#endif
         }
 
         // Enable FIFOs
@@ -164,3 +182,58 @@ const struct uart_methods uart_fifo_methods = {
         .start = start,
         .irq_handler = irq_handler,
 };
+
+
+struct uart_ctx uart0 = {&uart_fifo_methods, UART0_BASE_PTR};
+
+void
+UART0_RX_TX_Handler(void)
+{
+        uart0.methods->irq_handler(&uart0);
+}
+
+struct uart_ctx uart1 = {&uart_fifo_methods, UART1_BASE_PTR};
+
+void
+UART1_RX_TX_Handler(void)
+{
+        uart1.methods->irq_handler(&uart1);
+}
+
+struct uart_ctx uart2 = {&uart_fifo_methods, UART2_BASE_PTR};
+
+void
+UART2_RX_TX_Handler(void)
+{
+        uart2.methods->irq_handler(&uart2);
+}
+
+#ifdef UART3_BASE_PTR
+struct uart_ctx uart3 = {&uart_fifo_methods, UART3_BASE_PTR};
+
+void
+UART3_RX_TX_Handler(void)
+{
+        uart3.methods->irq_handler(&uart3);
+}
+#endif
+
+#ifdef UART4_BASE_PTR
+struct uart_ctx uart4 = {&uart_fifo_methods, UART4_BASE_PTR};
+
+void
+UART4_RX_TX_Handler(void)
+{
+        uart4.methods->irq_handler(&uart4);
+}
+#endif
+
+#ifdef UART5_BASE_PTR
+struct uart_ctx uart5 = {&uart_fifo_methods, UART5_BASE_PTR};
+
+void
+UART5_RX_TX_Handler(void)
+{
+        uart5.methods->irq_handler(&uart5);
+}
+#endif

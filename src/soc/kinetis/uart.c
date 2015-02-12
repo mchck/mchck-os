@@ -1,5 +1,17 @@
 #include <mchck.h>
 
+void
+uart_init(struct uart_ctx *ctx)
+{
+        ctx->methods->init(ctx);
+}
+
+void
+uart_set_baudrate(struct uart_ctx *ctx, unsigned int baudrate)
+{
+        ctx->methods->set_baudrate(ctx, baudrate);
+}
+
 static void
 uart_queue_transfer(struct uart_ctx *uart, struct uart_trans_ctx *ctx)
 {
