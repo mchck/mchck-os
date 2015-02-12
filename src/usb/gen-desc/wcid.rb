@@ -15,11 +15,8 @@ class WcidDesc < FunctionDesc
 
     @wcid_id = @@wcid_id
     @@wcid_id += 1
-  end
 
-  def renumber!(data)
-    data[:stringdata]["WCID_REQ_ID"] = "USB_DESC_WCID_OS"
-    super
+    self.device.add_string_raw("USB_DESC_WCID_OS", "WCID_REQ_ID")
   end
 
   def gen_func_defs
@@ -35,7 +32,7 @@ _end_
   def gen_vars
     wfs = parent.get_function.map do |f|
       wcid = f.get_wcid
-      next unless wcid
+      next if wcid.nil?
       [f.get_interface.first.ifacenum, wcid]
     end.compact
 

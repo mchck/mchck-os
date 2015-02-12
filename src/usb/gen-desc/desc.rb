@@ -13,6 +13,10 @@ class EndpointDesc < DslItem
     @name = name
   end
 
+  def device
+    @parent.device
+  end
+
   def renumber!(counts)
     cname = "ep_#@direction".to_sym
     @epnum = counts[cname]
@@ -51,6 +55,10 @@ class InterfaceDesc < DslItem
   def initialize(name)
     super()
     @name = name
+  end
+
+  def device
+    @parent.device
   end
 
   def renumber!(counts, alternatenum=0)
@@ -111,6 +119,10 @@ class FunctionDesc < DslItem
 
   field :wcid, :optional => true
 
+  def device
+    @parent.device
+  end
+
   def renumber!(counts)
     @var_name = "usb_function_#{counts[:func]}"
     @interface.each do |iface|
@@ -153,9 +165,9 @@ _end_
 
   def gen_func_init
     s = "\t{\n"
-    s += "\t\t.init = #{@init_func.to_loc_s},\n" if @init_func
-    s += "\t\t.configure = #{@configure_func.to_loc_s},\n" if @configure_func
-    s += "\t\t.control = #{@control_func.to_loc_s},\n" if @control_func
+    s += "\t\t.init = #{@init_func.to_loc_s},\n" if !@init_func.nil?
+    s += "\t\t.configure = #{@configure_func.to_loc_s},\n" if !@configure_func.nil?
+    s += "\t\t.control = #{@control_func.to_loc_s},\n" if !@control_func.nil?
     s += "\t\t.interface_count = #{@interface.count},\n"
     s += "\t\t.global = 1,\n" if @global
     s += "\t},\n"
@@ -221,9 +233,13 @@ class ConfigDesc < DslItem
 
   attr_reader :numinterfaces, :numep_in, :numep_out
 
-  def renumber!(confignum, stringdata)
+  def device
+    @parent
+  end
+
+  def renumber!(confignum)
     @confignum = confignum
-    counts = {:func => 0, :iface => 0, :ep_in => 1, :ep_out => 1, :stringdata => stringdata}
+    counts = {:func => 0, :iface => 0, :ep_in => 1, :ep_out => 1}
     @function.each do |f|
       counts = f.renumber!(counts)
     end
@@ -289,20 +305,38 @@ class DeviceDesc < DslItem
   field :idVendor
   field :idProduct
   field :bcdDevice, :default => 0.0
-  field :iManufacturer
-  field :iProduct
+  field(:iManufacturer) {|s| @iManufacturer = add_string(s)}
+  field(:iProduct) {|s| @iProduct = add_string(s)}
 
   def initialize(name)
     super()
     @name = name
+    @stringdata = {}
   end
 
   block :config, ConfigDesc, :list => true
 
+  def add_string(str, num=nil)
+    if num.nil?
+      (2..255).each do |idx|
+        if !@stringdata.include? idx
+          num = idx
+          break
+        end
+      end
+    end
+
+    add_string_raw("USB_DESC_STRING(u#{str.inspect})", num)
+    num
+  end
+
+  def add_string_raw(raw, num)
+    @stringdata[num] = raw
+  end
+
   def renumber!
-    @stringdata = {}
     @config.each_with_index do |c, i|
-      c.renumber!(i + 1, @stringdata)
+      c.renumber!(i + 1)
     end
   end
 
@@ -327,17 +361,15 @@ static const struct usb_desc_dev_t #{@name.to_loc_s}_dev_desc = {
 	.idVendor = #{@idVendor.to_loc_s},
 	.idProduct = #{@idProduct.to_loc_s},
 	.bcdDevice = { .raw = 0 },
-	.iManufacturer = 1,
-	.iProduct = 2,
-	.iSerialNumber = 3,
+	.iManufacturer = #@iManufacturer,
+	.iProduct = #@iProduct,
+	.iSerialNumber = 1,
 	.bNumConfigurations = #{@config.length},
 };
 
 static const struct usbd_string_entry #{@name.to_loc_s}_str_desc[] = {
 	{0, USB_DESC_STRING_LANG_ENUS},
-	{1, USB_DESC_STRING(#{@iManufacturer.to_loc_s{|s| "u#{s.inspect}"}})},
-	{2, USB_DESC_STRING(#{@iProduct.to_loc_s{|s| "u#{s.inspect}"}})},
-	{3, USB_DESC_STRING_SERIALNO},
+	{1, USB_DESC_STRING_SERIALNO},
 #{@stringdata.map{|i, e| "\t{#{i}, #{e}},\n"}.join}
 	{0, NULL}
 };
