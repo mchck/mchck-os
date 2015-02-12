@@ -126,8 +126,9 @@ class DslItem
     end
 
     def eval(parent, *args, &block)
-      i = self.new(*args)
+      i = self.allocate
       i.instance_variable_set("@parent", parent)
+      i.send(:initialize, *args)
       i.instance_exec(&block)
       i.post_eval
       i
