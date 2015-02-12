@@ -187,10 +187,14 @@ usb_enable(void)
         bf_set(SIM_SOPT2, SIM_SOPT2_USBSRC, 1);   /* usb from mcg */
         bf_set(SIM_SCGC4, SIM_SCGC4_USBOTG, 1);   /* enable usb clock */
 
-#if defined(FMC_PFAPR)
+#if USB_FMC_MASTER == 3
         /* Allow USB to access the Flash */
         bf_set(FMC_PFAPR, FMC_PFAPR_M3AP, FMC_MAP_RDWR);
+#elif USB_FMC_MASTER == 4
+        /* Allow USB to access the Flash */
+        bf_set(FMC_PFAPR, FMC_PFAPR_M4AP, FMC_MAP_RDWR);
 #endif
+
 #if defined(MCM_PLACR) && !defined(AXBS_CRS)
         /* Round robin bus masters, so that the CPU can't starve the USB */
         bf_set(MCM_PLACR, MCM_PLACR_ARB, 1);

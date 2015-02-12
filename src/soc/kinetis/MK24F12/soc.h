@@ -8,6 +8,7 @@
 #define FLASH_ELEM_SIZE 16
 
 #define HAVE_PIT_SEPARATE_IRQ
+#define USB_FMC_MASTER 4
 
 #include <soc/cortex-m/soc.h>
 #include <soc/cortex-m/bitband.h>
