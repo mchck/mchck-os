@@ -12,6 +12,8 @@ class DFUDesc < FunctionDesc
       bInterfaceSubClass :USB_DEV_SUBCLASS_APP_DFU
       bInterfaceProtocol :USB_DEV_PROTO_DFU_DFU
     }
+
+    wcid "WINUSB"
   end
 
   def gen_desc_init
