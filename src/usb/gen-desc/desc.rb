@@ -72,7 +72,7 @@ class InterfaceDesc < DslItem
     end
 
     @alternate.each_with_index do |a, i|
-      ac = a.renumber!(counts, i)
+      ac = a.renumber!(counts, i+1)
       [:ep_in, :ep_out].each do |e|
         if ac[e] > nc[e]
           nc[e] = ac[e]
@@ -84,7 +84,8 @@ class InterfaceDesc < DslItem
 
   def gen_defs
     "\tstruct usb_desc_iface_t #{@name.to_loc_s};\n" +
-      @ep.map{|e| e.gen_defs}.join("\n")
+      @ep.map{|e| e.gen_defs}.join("\n") +
+      @alternate.map(&:gen_defs).join
   end
 
   def gen_desc_init
@@ -98,10 +99,11 @@ class InterfaceDesc < DslItem
 	.bInterfaceClass = #{@bInterfaceClass.to_loc_s},
 	.bInterfaceSubClass = #{@bInterfaceSubClass.to_loc_s},
 	.bInterfaceProtocol = #{@bInterfaceProtocol.to_loc_s},
-	.iInterface = #{@iInterface.to_loc_s{|v| v || 0}},
+	.iInterface = #{@iInterface.nil? ? 0 : @iInterface},
 },
 _end_
-    v + @ep.map{|e| e.gen_desc_init}.join("\n")
+    v + @ep.map{|e| e.gen_desc_init}.join("\n") +
+      @alternate.map(&:gen_desc_init).join
   end
 end
 
