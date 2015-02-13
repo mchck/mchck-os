@@ -1,9 +1,19 @@
 class DFUDesc < FunctionDesc
+  class Segment < DslItem
+    field :id, :optional => true
+    field :desc, :optional => true
+    field :setup_write_func
+    field :finish_write_func
+
+    def initialize(id)
+      super()
+      @id = id
+    end
+  end
+
   child_block :dfu
 
-  field :setup_write_func
-  field :finish_write_func
-  field :segment, :optional => true, :list => true
+  block :segment, Segment, :list => true
 
   def initialize
     super
@@ -18,35 +28,20 @@ class DFUDesc < FunctionDesc
     super
 
     segments = @segment
-    seg = segments.first || 0
-
-    seg2sym = ->(seg) do
-      case seg
-      when Array, Hash
-        seg = seg.to_a
-      else
-        seg = [seg]
-      end
-      sym, name = seg
-      name ||= sym.to_s
-
-      [sym, name]
-    end
+    seg = segments.first
 
     interface(:iface) {
       bInterfaceClass :USB_DEV_CLASS_APP
       bInterfaceSubClass :USB_DEV_SUBCLASS_APP_DFU
       bInterfaceProtocol :USB_DEV_PROTO_DFU_DFU
-      sym, name = seg2sym.(seg)
-      iInterface name if segments.any?
+      iInterface seg.get_desc if !seg.get_desc.nil?
 
       segments[1..-1].each_with_index do |seg, idx|
         alternate("iface#{idx}") {
           bInterfaceClass :USB_DEV_CLASS_APP
           bInterfaceSubClass :USB_DEV_SUBCLASS_APP_DFU
           bInterfaceProtocol :USB_DEV_PROTO_DFU_DFU
-          sym, name = seg2sym.(seg)
-          iInterface name
+          iInterface seg.get_desc if !seg.get_desc.nil?
         }
       end
     }
@@ -54,10 +49,13 @@ class DFUDesc < FunctionDesc
 
   def gen_defs
     s = super
-    s + <<_end_
-dfu_setup_write_t #{@setup_write_func.to_loc_s};
-dfu_finish_write_t #{@finish_write_func.to_loc_s};
+    @segment.each do |seg|
+      s += <<_end_
+dfu_setup_write_t #{seg.get_setup_write_func.to_loc_s};
+dfu_finish_write_t #{seg.get_finish_write_func.to_loc_s};
 _end_
+    end
+    s
   end
 
   def gen_func_var
@@ -72,11 +70,20 @@ _end_
 
   def gen_func_init
     s = super
-    s + <<_end_
+    s += <<_end_
 	.ctx = &dfu_ctx,
-	.setup_write = #{@setup_write_func.to_loc_s},
-	.finish_write = #{@finish_write_func.to_loc_s},
+	.segment_count = #{@segment.count},
+	.segment = {
 _end_
+    @segment.each do |seg|
+      s += <<_end_
+	{
+		.setup_write = #{seg.get_setup_write_func.to_loc_s},
+		.finish_write = #{seg.get_finish_write_func.to_loc_s},
+	},
+_end_
+    end
+    s += "\t},\n"
   end
 
   def get_desc_struct

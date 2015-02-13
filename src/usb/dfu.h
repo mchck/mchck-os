@@ -83,6 +83,7 @@ struct dfu_function;
 struct dfu_ctx {
         struct usbd_function_ctx_header header;
         const struct dfu_function *dfuf;
+        int segment;
         size_t off;
         size_t len;
         enum dfu_state state;
@@ -92,8 +93,11 @@ struct dfu_ctx {
 struct dfu_function {
         struct usbd_function func;
         struct dfu_ctx *ctx;
-        dfu_setup_write_t *setup_write;
-        dfu_finish_write_t *finish_write;
+        int segment_count;
+        struct dfu_cb {
+                dfu_setup_write_t *setup_write;
+                dfu_finish_write_t *finish_write;
+        } segment[];
 };
 
 
