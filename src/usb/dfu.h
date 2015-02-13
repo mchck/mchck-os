@@ -74,18 +74,26 @@ struct dfu_status_t {
 CTASSERT_SIZE_BYTE(struct dfu_status_t, 6);
 
 
-typedef enum dfu_status (*dfu_setup_write_t)(size_t off, size_t len, void **buf);
-typedef enum dfu_status (*dfu_finish_write_t)(void *, size_t off, size_t len);
+typedef enum dfu_status (dfu_setup_write_t)(size_t off, size_t len, void **buf);
+typedef enum dfu_status (dfu_finish_write_t)(void *, size_t off, size_t len);
 typedef void (*dfu_detach_t)(void);
+
+struct dfu_function;
 
 struct dfu_ctx {
         struct usbd_function_ctx_header header;
-        enum dfu_state state;
-        enum dfu_status status;
-        dfu_setup_write_t setup_write;
-        dfu_finish_write_t finish_write;
+        const struct dfu_function *dfuf;
         size_t off;
         size_t len;
+        enum dfu_state state;
+        enum dfu_status status;
+};
+
+struct dfu_function {
+        struct usbd_function func;
+        struct dfu_ctx *ctx;
+        dfu_setup_write_t *setup_write;
+        dfu_finish_write_t *finish_write;
 };
 
 
@@ -113,7 +121,6 @@ extern const struct usbd_function dfu_function;
 extern const struct usbd_function dfu_app_function;
 
 void dfu_write_done(enum dfu_status, struct dfu_ctx *ctx);
-void dfu_init(dfu_setup_write_t setup_write, dfu_finish_write_t finish_write, struct dfu_ctx *ctx);
 void dfu_app_init(dfu_detach_t detachcb);
 
 #endif

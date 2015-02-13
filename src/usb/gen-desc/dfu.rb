@@ -1,12 +1,15 @@
 class DFUDesc < FunctionDesc
-  FunctionVarName = "dfu_function"
-
   child_block :dfu
 
+  field :setup_write_func
+  field :finish_write_func
   field :segment, :optional => true, :list => true
 
   def initialize
     super
+
+    init_func :dfu_init
+    control_func :dfu_handle_control
 
     wcid "WINUSB"
   end
@@ -47,6 +50,33 @@ class DFUDesc < FunctionDesc
         }
       end
     }
+  end
+
+  def gen_defs
+    s = super
+    s + <<_end_
+dfu_setup_write_t #{@setup_write_func.to_loc_s};
+dfu_finish_write_t #{@finish_write_func.to_loc_s};
+_end_
+  end
+
+  def gen_func_var
+    <<_end_
+struct dfu_ctx dfu_ctx;
+
+static const struct dfu_function #@var_name = {
+#{gen_func_init}
+};
+_end_
+  end
+
+  def gen_func_init
+    s = super
+    s + <<_end_
+	.ctx = &dfu_ctx,
+	.setup_write = #{@setup_write_func.to_loc_s},
+	.finish_write = #{@finish_write_func.to_loc_s},
+_end_
   end
 
   def get_desc_struct

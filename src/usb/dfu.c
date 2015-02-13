@@ -26,7 +26,7 @@ dfu_dnload_complete(void *buf, ssize_t len, void *cbdata)
 {
         struct dfu_ctx *ctx = cbdata;
 
-        enum dfu_status s = ctx->finish_write(buf, ctx->off, len);
+        enum dfu_status s = ctx->dfuf->finish_write(buf, ctx->off, len);
         ctx->off += len;
         ctx->len = len;
 
@@ -36,7 +36,7 @@ dfu_dnload_complete(void *buf, ssize_t len, void *cbdata)
         usb_handle_control_status(ctx->state == DFU_STATE_dfuERROR);
 }
 
-static int
+int
 dfu_handle_control(struct usb_ctrl_req_t *req, void *data)
 {
         struct dfu_ctx *ctx = data;
@@ -60,7 +60,7 @@ dfu_handle_control(struct usb_ctrl_req_t *req, void *data)
                  * XXX we are not allowed to STALL here, and we need to eat all transferred data.
                  * better not allow setup_write to break the protocol.
                  */
-                ctx->status = ctx->setup_write(ctx->off, req->wLength, &buf);
+                ctx->status = ctx->dfuf->setup_write(ctx->off, req->wLength, &buf);
                 if (ctx->status != DFU_STATUS_OK) {
                         ctx->state = DFU_STATE_dfuERROR;
                         goto err_have_status;
@@ -132,15 +132,14 @@ out_no_status:
 }
 
 void
-dfu_init(dfu_setup_write_t setup_write, dfu_finish_write_t finish_write, struct dfu_ctx *ctx)
+dfu_init(const struct usbd_function *f, int enable)
 {
-        ctx->state = DFU_STATE_dfuIDLE;
-        ctx->setup_write = setup_write;
-        ctx->finish_write = finish_write;
-        usb_attach_function(&dfu_function, &ctx->header);
-}
+        const struct dfu_function *dfuf = (void *)f;
+        struct dfu_ctx *ctx = dfuf->ctx;
 
-const struct usbd_function dfu_function = {
-        .control = dfu_handle_control,
-        .interface_count = USB_FUNCTION_DFU_IFACE_COUNT,
-};
+        if (enable) {
+                ctx->dfuf = dfuf;
+                ctx->state = DFU_STATE_dfuIDLE;
+                usb_attach_function(&dfuf->func, &ctx->header);
+        }
+}
