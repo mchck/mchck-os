@@ -280,32 +280,6 @@ usb_set_config(int config)
 }
 
 static int
-usb_set_interface(int iface, int altsetting)
-{
-	int iface_count = 0;
-
-	for (struct usbd_function_ctx_header *fh = &usb.functions;
-	     fh != NULL;
-	     fh = fh->next, iface_count += fh->function->interface_count) {
-		if (iface - iface_count < fh->function->interface_count) {
-			if (fh->function->configure != NULL)
-				return (fh->function->configure(iface,
-								iface - iface_count,
-								altsetting,
-								fh));
-
-			/* Default to a single altsetting */
-			if (altsetting != 0)
-				return (-1);
-			else
-				return (0);
-		}
-	}
-
-	return (-1);
-}
-
-static int
 usb_tx_config_desc(int idx, int reqlen)
 {
 	const struct usb_desc_config_t *d = usb.identity->configs[idx]->desc;
@@ -531,16 +505,6 @@ usb_handle_control(void *data, ssize_t len, void *cbdata)
 
 	case USB_CTRL_REQ_SET_CONFIGURATION:
 		if (usb_set_config(req->wValue) < 0)
-			goto err;
-		break;
-
-	case USB_CTRL_REQ_GET_INTERFACE:
-		/* We only support iface setting 0 */
-		usb_ep0_tx_cp(&zero16, 1, req->wLength, NULL, NULL);
-		break;
-
-	case USB_CTRL_REQ_SET_INTERFACE:
-		if (usb_set_interface(req->wIndex, req->wValue) < 0)
 			goto err;
 		break;
 

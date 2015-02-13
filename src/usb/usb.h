@@ -304,7 +304,6 @@ typedef void (*ep_callback_t)(void *buf, ssize_t len, void *data);
 struct usbd_function;
 
 typedef void (usbd_func_init_t)(const struct usbd_function *, int enable);
-typedef int (usbd_func_configure_t)(int orig_iface, int iface, int altsetting, void *data);
 typedef int (usbd_func_control_t)(struct usb_ctrl_req_t *, void *);
 
 /**
@@ -312,7 +311,6 @@ typedef int (usbd_func_control_t)(struct usb_ctrl_req_t *, void *);
  */
 struct usbd_function {
 	usbd_func_init_t *init;
-	usbd_func_configure_t *configure;
 	usbd_func_control_t *control;
 	int interface_count;
 	int ep_rx_count;
