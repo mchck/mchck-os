@@ -17,6 +17,7 @@ class Linkdep
     IO.popen([nm] + %w{-A -P -g} + [obj]) do |output|
       yield output
     end
+    raise RuntimeError, "error in nm" if !$?.success?
   end
 
   def process(file, include_path=true)
