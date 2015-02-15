@@ -48,14 +48,13 @@ got_temp_data(struct ds18b20_ctx *ctx, int16_t temp, void *cbdata)
         struct templog_entry e;
 
         last_temp = temp;
-        if (page_space_available()) {
-                e.time = rtc_get_time();
-                e.temp = temp;
-                memcpy(&flash_page[flash_pagepos], &e, sizeof(e));
-                flash_pagepos += sizeof(e);
-        } else {
+        e.time = rtc_get_time();
+        e.temp = temp;
+        memcpy(&flash_page[flash_pagepos], &e, sizeof(e));
+        flash_pagepos += sizeof(e);
+
+        if (!page_space_available())
                 flash_flush_data(flash_pagepos, flush_done, NULL);
-        }
 
         /* printf("pagepos %d, pos %d, free %d, temp %d %d/16\r\n", */
         /*        flash_pagepos, */
@@ -129,12 +128,6 @@ bool
 templog_stopped(void)
 {
         return (templog_state == TEMPLOG_STOPPED || templog_state == TEMPLOG_IDLE);
-}
-
-size_t
-templog_free(void)
-{
-        return ((flash_free() - flash_pagepos) / sizeof(struct templog_entry));
 }
 
 int16_t

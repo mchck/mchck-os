@@ -11,6 +11,7 @@ enum flash_state {
         FLASH_WRITING,
         FLASH_ERASING,
         FLASH_FULL,
+        FLASH_READING,
 };
 
 
@@ -50,13 +51,9 @@ flush_flash_done(void *cbdata)
 void
 flash_flush_data(size_t writelen, flush_cb_t flush_cb_, void *cbdata)
 {
-        if (flash_state != FLASH_READY) {
-                flash_flush_count = writelen;
-                flush_cb = flush_cb_;
-                flush_cbdata = cbdata;
-                return;
-        }
-
+        flash_flush_count = writelen;
+        flush_cb = flush_cb_;
+        flush_cbdata = cbdata;
         flash_state = FLASH_PAGE_FILLED;
         flash_state_machine();
 }
@@ -137,13 +134,15 @@ flash_state_machine(void)
                 break;
         case FLASH_FULL:
                 break;
+        case FLASH_READING:
+                break;
         }
 }
 
 size_t
-flash_free(void)
+flash_total(void)
 {
-        return (flash_total_size - flash_addr);
+        return (flash_total_size);
 }
 
 size_t
@@ -174,6 +173,28 @@ flash_eraseall(void)
         flash_state = FLASH_ERASING;
 }
 
+static
+void
+flash_read_done(void *cbdata)
+{
+        flash_read_cb *cb = cbdata;
+        cb(flash_page, sizeof(flash_page));
+        flash_state = FLASH_READY;
+}
+
+int
+flash_read_page(uint32_t addr, flash_read_cb *cb)
+{
+        if (flash_state != FLASH_READY)
+                return (-1);
+
+        flash_state = FLASH_READING;
+        spiflash_read_page(&onboard_flash, &flash_trans,
+                           flash_page, addr, sizeof(flash_page),
+                           flash_read_done, cb);
+        return (0);
+}
+
 bool
 flash_initializing_p(void)
 {
@@ -184,4 +205,10 @@ bool
 flash_full_p(void)
 {
         return (flash_state == FLASH_FULL);
+}
+
+bool
+flash_ready_p(void)
+{
+        return (flash_state == FLASH_READY);
 }

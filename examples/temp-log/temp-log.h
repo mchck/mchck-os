@@ -23,12 +23,13 @@ void flash_flush_data(size_t writelen, flush_cb_t flush_cb_, void *cbdata);
 void templog_start(void);
 void templog_stop(void);
 bool templog_stopped(void);
-size_t templog_free(void);
 int16_t templog_last_temp(void);
 
-size_t flash_free(void);
+typedef void (flash_read_cb)(const void *, size_t);
+size_t flash_total(void);
 size_t flash_used(void);
 void flash_init(void);
 void flash_eraseall(void);
 bool flash_initializing_p(void);
 bool flash_full_p(void);
+bool flash_ready_p(void);

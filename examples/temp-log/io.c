@@ -4,26 +4,56 @@
 
 #include "temp-log.h"
 
+enum templog_req {
+        REQ_GET_VERSION  = 0,
+        REQ_SET_TIME     = 1,
+        REQ_GET_TIME     = 2,
+        REQ_SET_INTERVAL = 3,
+        REQ_GET_INTERVAL = 4,
+        REQ_SET_MODE     = 5,
+        REQ_GET_MODE     = 6,
+        REQ_ERASE_DATA   = 7,
+        REQ_GET_COUNT    = 8,
+        REQ_GET_TEMP     = 10,
+        REQ_GET_DATA     = 12,
+};
+
+
 #define templog_min_interval 2
 unsigned long templog_interval = templog_min_interval;
 
 static uint32_t time;
-
 static struct usbd_function_ctx_header fh;
+static size_t get_data_remaining;
+static size_t get_data_pos;
 
-enum templog_req {
-        REQ_SET_TIME     = 0,
-        REQ_GET_TIME     = 1,
-        REQ_SET_INTERVAL = 2,
-        REQ_GET_INTERVAL = 3,
-        REQ_SET_MODE     = 4,
-        REQ_GET_MODE     = 5,
-        REQ_ERASE_DATA   = 6,
-        REQ_GET_COUNT    = 7,
-        REQ_GET_TEMP     = 9,
-        REQ_GET_DATA     = 11,
-};
+static void get_data_next(void *cbdata);
 
+static void
+get_data_ready(const void *buf, size_t len)
+{
+        size_t remaining = get_data_remaining;
+
+        if (remaining > len)
+                remaining = len;
+        get_data_remaining -= remaining;
+        get_data_pos += len;
+        usb_ep0_tx(buf, len, remaining, get_data_next, NULL);
+}
+
+static void
+get_data_next(void *cbdata)
+{
+        if (get_data_remaining == 0) {
+                usb_handle_control_status(0);
+                return;
+        }
+        if (get_data_pos >= flash_used()) {
+                usb_handle_control_status(1);
+                return;
+        }
+        flash_read_page(get_data_pos, get_data_ready);
+}
 
 static void
 time_done_cb(void *buf, ssize_t len, void *cbdata)
@@ -42,6 +72,11 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
                 return (0);
 
         switch ((enum templog_req)req->bRequest) {
+        case REQ_GET_VERSION: {
+                uint32_t version = 0;
+                usb_ep0_tx_cp(&version, sizeof(version), req->wLength, NULL, NULL);
+                break;
+        }
         case REQ_SET_TIME:
                 usb_ep0_rx(&time, sizeof(time), time_done_cb, NULL);
                 break;
@@ -83,8 +118,8 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
                         uint32_t count;
                         uint32_t free;
                 } count = {
-                        flash_used() / sizeof(templog_entry),
-                        flash_free() / sizeof(templog_entry),
+                        flash_total(),
+                        flash_used(),
                 };
                 usb_ep0_tx_cp(&count, sizeof(count), req->wLength, NULL, NULL);
                 break;
@@ -95,7 +130,13 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
                 break;
         }
         case REQ_GET_DATA:
-                break;
+                if (!templog_stopped() && (flash_ready_p() || flash_full_p()))
+                        goto out;
+                if (req->wValue == 0)
+                        get_data_pos = 0;
+                get_data_remaining = req->wLength;
+                get_data_next(NULL);
+                return (1);
 
         default:
                 goto out;
