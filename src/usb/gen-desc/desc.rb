@@ -228,7 +228,7 @@ class ConfigDesc < DslItem
   field :self_powered, :default => 0
   field :bMaxPower, :default => 100
 
-  field :initfun
+  field :initfun, :optional => true
   field :suspendfun, :optional => true
   field :resumefun, :optional => true
 
@@ -256,7 +256,7 @@ class ConfigDesc < DslItem
 
   def gen_defs
     s = ""
-    s += "usbd_init_fun_t #{@initfun.to_loc_s};\n" if @initfun
+    s += "usbd_init_fun_t #{@initfun.to_loc_s};\n" if !@initfun.nil?
     s += "usbd_suspend_resume_fun_t #{@suspendfun.to_loc_s};\n" if !@suspendfun.nil?
     s += "usbd_suspend_resume_fun_t #{@resumefun.to_loc_s};\n" if !@resumefun.nil?
 
@@ -287,7 +287,7 @@ static const struct #@config_name #@config_name = {
 };
 
 static const struct usbd_config #@var_name = {
-	.init = #{@initfun.to_loc_s},
+	.init = #{@initfun.to_loc_s{|s| s or "NULL"}},
 	.suspend = #{@suspendfun.to_loc_s{|s| s or "NULL"}},
 	.resume = #{@resumefun.to_loc_s{|s| s or "NULL"}},
 	.desc = &#@config_name.config,

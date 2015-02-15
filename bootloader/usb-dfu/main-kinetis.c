@@ -8,7 +8,7 @@
  */
 static char staging[FLASH_SECTOR_SIZE];
 
-static enum dfu_status
+enum dfu_status
 setup_write(size_t off, size_t len, void **buf)
 {
         static int last = 0;
@@ -31,7 +31,7 @@ setup_write(size_t off, size_t len, void **buf)
         return (DFU_STATUS_OK);
 }
 
-static enum dfu_status
+enum dfu_status
 finish_write(void *buf, size_t off, size_t len)
 {
         if (len == 0)
@@ -42,14 +42,6 @@ finish_write(void *buf, size_t off, size_t len)
         return (DFU_STATUS_OK);
 }
 
-
-static struct dfu_ctx dfu_ctx;
-
-void
-init_usb_bootloader(int config)
-{
-        dfu_init(setup_write, finish_write, &dfu_ctx);
-}
 
 void
 main(void)

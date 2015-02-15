@@ -5,7 +5,7 @@ class DFUDesc < FunctionDesc
     field :setup_write_func
     field :finish_write_func
 
-    def initialize(id)
+    def initialize(id=nil)
       super()
       @id = id
     end

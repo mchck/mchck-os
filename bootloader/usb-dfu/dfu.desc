@@ -4,9 +4,11 @@ device(:dfu_device) {
   iManufacturer "mchck.org"
   iProduct "DFU bootloader"
   config {
-    initfun :init_usb_bootloader
-
     dfu {
+      segment {
+        setup_write_func :setup_write
+        finish_write_func :finish_write
+      }
     }
   }
 }
