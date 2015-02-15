@@ -1,3 +1,5 @@
+#include <soc/cortex-m/intnums.h>
+
 #include <MK20D5.h>
 
 /* fix up inconsistent header naming */
@@ -5,7 +7,7 @@
 #define SIM_SCGC5_LPTMR_MASK SIM_SCGC5_LPTIMER_MASK
 
 #define CRC_DATA CRC_CRC
-#define CRC_DATALL CRC_CRC_LL
+#define CRC_DATALL CRC_CRCLL
 
 #define FlashConfig_BASE_PTR FTFL_FlashConfig_BASE_PTR
 #define FlexRAM_BASE_PTR ((void *)0x14000000)
@@ -15,7 +17,7 @@
 #define FLASH_ELEM_SIZE 4
 
 #define HAVE_PIT_SEPARATE_IRQ
-
+#define USB_FMC_MASTER 3
 
 /* Missing from header */
 typedef struct MCM_MemMap {
@@ -75,6 +77,7 @@ typedef struct MCM_MemMap {
 #include <soc/kinetis/stdio.h>
 #include <soc/kinetis/timeout.h>
 #include <soc/kinetis/uart.h>
+#include <soc/kinetis/uart-fifo.h>
 #include <soc/kinetis/usb.h>
 #include <soc/kinetis/wdog.h>
 #include <soc/kinetis/sys-register.h>

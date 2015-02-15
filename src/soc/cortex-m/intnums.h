@@ -5,5 +5,3 @@ enum {
 };
 #undef VH
 #undef V
-
-#include <mchck.h>

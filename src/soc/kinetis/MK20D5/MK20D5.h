@@ -152,6 +152,76 @@ typedef enum {
  * @}
  */ /* end of group Interrupt_vector_numbers */
 
+/** Interrupt Number Definitions */
+typedef enum IRQn {
+  /* Core interrupts */
+  NonMaskableInt_IRQn          = -14,              /**< Non Maskable Interrupt */
+  MemoryManagement_IRQn        = -12,              /**< Cortex-M4 Memory Management Interrupt */
+  BusFault_IRQn                = -11,              /**< Cortex-M4 Bus Fault Interrupt */
+  UsageFault_IRQn              = -10,              /**< Cortex-M4 Usage Fault Interrupt */
+  SVCall_IRQn                  = -5,               /**< Cortex-M4 SV Call Interrupt */
+  DebugMonitor_IRQn            = -4,               /**< Cortex-M4 Debug Monitor Interrupt */
+  PendSV_IRQn                  = -2,               /**< Cortex-M4 Pend SV Interrupt */
+  SysTick_IRQn                 = -1,               /**< Cortex-M4 System Tick Interrupt */
+
+  /* Device specific interrupts */
+  DMA0_IRQn                    = 0,                /**< DMA channel 0 transfer complete interrupt */
+  DMA1_IRQn                    = 1,                /**< DMA channel 1 transfer complete interrupt */
+  DMA2_IRQn                    = 2,                /**< DMA channel 2 transfer complete interrupt */
+  DMA3_IRQn                    = 3,                /**< DMA channel 3 transfer complete interrupt */
+  DMA_Error_IRQn               = 4,                /**< DMA error interrupt */
+  Reserved21_IRQn              = 5,                /**< Reserved interrupt 21 */
+  FTFL_IRQn                    = 6,                /**< FTFL interrupt */
+  Read_Collision_IRQn          = 7,                /**< Read collision interrupt */
+  LVD_LVW_IRQn                 = 8,                /**< Low Voltage Detect, Low Voltage Warning */
+  LLW_IRQn                     = 9,                /**< Low Leakage Wakeup */
+  Watchdog_IRQn                = 10,               /**< WDOG interrupt */
+  I2C0_IRQn                    = 11,               /**< I2C0 interrupt */
+  SPI0_IRQn                    = 12,               /**< SPI0 interrupt */
+  I2S0_Tx_IRQn                 = 13,               /**< I2S0 transmit interrupt */
+  I2S0_Rx_IRQn                 = 14,               /**< I2S0 receive interrupt */
+  UART0_LON_IRQn               = 15,               /**< UART0 LON interrupt */
+  UART0_RX_TX_IRQn             = 16,               /**< UART0 receive/transmit interrupt */
+  UART0_ERR_IRQn               = 17,               /**< UART0 error interrupt */
+  UART1_RX_TX_IRQn             = 18,               /**< UART1 receive/transmit interrupt */
+  UART1_ERR_IRQn               = 19,               /**< UART1 error interrupt */
+  UART2_RX_TX_IRQn             = 20,               /**< UART2 receive/transmit interrupt */
+  UART2_ERR_IRQn               = 21,               /**< UART2 error interrupt */
+  ADC0_IRQn                    = 22,               /**< ADC0 interrupt */
+  CMP0_IRQn                    = 23,               /**< CMP0 interrupt */
+  CMP1_IRQn                    = 24,               /**< CMP1 interrupt */
+  FTM0_IRQn                    = 25,               /**< FTM0 fault, overflow and channels interrupt */
+  FTM1_IRQn                    = 26,               /**< FTM1 fault, overflow and channels interrupt */
+  CMT_IRQn                     = 27,               /**< CMT interrupt */
+  RTC_IRQn                     = 28,               /**< RTC interrupt */
+  RTC_Seconds_IRQn             = 29,               /**< RTC seconds interrupt */
+  PIT0_IRQn                    = 30,               /**< PIT timer channel 0 interrupt */
+  PIT1_IRQn                    = 31,               /**< PIT timer channel 1 interrupt */
+  PIT2_IRQn                    = 32,               /**< PIT timer channel 2 interrupt */
+  PIT3_IRQn                    = 33,               /**< PIT timer channel 3 interrupt */
+  PDB0_IRQn                    = 34,               /**< PDB0 interrupt */
+  USB0_IRQn                    = 35,               /**< USB0 interrupt */
+  USBDCD_IRQn                  = 36,               /**< USBDCD interrupt */
+  TSI0_IRQn                    = 37,               /**< TSI0 interrupt */
+  MCG_IRQn                     = 38,               /**< MCG interrupt */
+  LPTimer_IRQn                 = 39,               /**< LPTimer interrupt */
+  PORTA_IRQn                   = 40,               /**< Port A interrupt */
+  PORTB_IRQn                   = 41,               /**< Port B interrupt */
+  PORTC_IRQn                   = 42,               /**< Port C interrupt */
+  PORTD_IRQn                   = 43,               /**< Port D interrupt */
+  PORTE_IRQn                   = 44,               /**< Port E interrupt */
+  SWI_IRQn                     = 45                /**< Software interrupt */
+} IRQn_Type;
+
+
+#define __MPU_PRESENT                  0         /**< Defines if an MPU is present or not */
+#define __NVIC_PRIO_BITS               4         /**< Number of priority bits implemented in the NVIC */
+#define __Vendor_SysTickConfig         0         /**< Vendor specific implementation of SysTickConfig is defined */
+
+#include "core_cm4.h"                  /* Core Peripheral Access Layer */
+#include "system_MK20D5.h"             /* Device specific configuration file */
+
+
 
 /* ----------------------------------------------------------------------------
    -- Peripheral type defines
@@ -1101,14 +1171,6 @@ typedef struct CoreDebug_MemMap {
  * @{
  */
 
-
-/* CoreDebug - Register instance definitions */
-/* CoreDebug */
-#define DHCSR_Read                               CoreDebug_base_DHCSR_Read_REG(CoreDebug_BASE_PTR)
-#define DHCSR_Write                              CoreDebug_base_DHCSR_Write_REG(CoreDebug_BASE_PTR)
-#define DCRSR                                    CoreDebug_base_DCRSR_REG(CoreDebug_BASE_PTR)
-#define DCRDR                                    CoreDebug_base_DCRDR_REG(CoreDebug_BASE_PTR)
-#define DEMCR                                    CoreDebug_base_DEMCR_REG(CoreDebug_BASE_PTR)
 
 /**
  * @}

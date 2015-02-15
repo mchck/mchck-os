@@ -7,6 +7,7 @@
 #include <stdfix.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <mchck-cdefs.h>
 
@@ -22,8 +23,6 @@
  }
 #endif
 #endif
-
-#include <intnums.h>
 
 #include <board.h>
 #include <soc.h>
