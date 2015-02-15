@@ -5,9 +5,18 @@ device(:cdc_device) {
   iProduct "temperature logger"
 
   config {
-    initfun :init_usb
+    wcid {}
 
-    cdc {
+    function {
+      wcid :WINUSB
+      init_func :init_func
+      control_func :control_func
+
+      interface(:iface) {
+        bInterfaceClass 0xff
+        bInterfaceSubClass 0xff
+        bInterfaceProtocol 0
+      }
     }
   }
 }

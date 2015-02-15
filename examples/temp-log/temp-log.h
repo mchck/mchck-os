@@ -27,6 +27,7 @@ size_t templog_free(void);
 int16_t templog_last_temp(void);
 
 size_t flash_free(void);
+size_t flash_used(void);
 void flash_init(void);
 void flash_eraseall(void);
 bool flash_initializing_p(void);

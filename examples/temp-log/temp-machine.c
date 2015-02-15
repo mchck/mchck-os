@@ -121,13 +121,14 @@ templog_start(void)
 void
 templog_stop(void)
 {
-        templog_state = TEMPLOG_STOPPING;
+        if (templog_state != TEMPLOG_STOPPED && templog_state != TEMPLOG_IDLE)
+                templog_state = TEMPLOG_STOPPING;
 }
 
 bool
 templog_stopped(void)
 {
-        return (templog_state == TEMPLOG_STOPPED);
+        return (templog_state == TEMPLOG_STOPPED || templog_state == TEMPLOG_IDLE);
 }
 
 size_t

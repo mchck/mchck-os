@@ -146,6 +146,12 @@ flash_free(void)
         return (flash_total_size - flash_addr);
 }
 
+size_t
+flash_used(void)
+{
+        return (flash_addr);
+}
+
 void
 flash_init(void)
 {
