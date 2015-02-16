@@ -51,7 +51,7 @@ const static uint8_t staging[LOADER_SIZE] __attribute__((__aligned__(FLASH_SECTO
 
 static uint8_t staging_buf[FLASH_SECTOR_SIZE];
 
-static enum dfu_status
+enum dfu_status
 setup_write(size_t off, size_t len, void **buf)
 {
         if (off + len > sizeof(staging))
@@ -60,7 +60,7 @@ setup_write(size_t off, size_t len, void **buf)
         return (DFU_STATUS_OK);
 }
 
-static enum dfu_status
+enum dfu_status
 finish_write(void *buf, size_t off, size_t len)
 {
         if (len != 0) {
@@ -85,12 +85,6 @@ finish_write(void *buf, size_t off, size_t len)
 }
 
 static struct dfu_ctx dfu_ctx;
-
-void
-init_usb_bootloader(int config)
-{
-        dfu_init(setup_write, finish_write, &dfu_ctx);
-}
 
 void
 main(void)
