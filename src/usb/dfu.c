@@ -42,7 +42,7 @@ dfu_handle_control(struct usb_ctrl_req_t *req, void *data)
         struct dfu_ctx *ctx = data;
         int fail = 1;
 
-        switch ((enum dfu_ctrl_req_code)req->bRequest) {
+        switch ((uint8_t)req->bRequest) {
         case USB_CTRL_REQ_SET_INTERFACE:
                 if (req->wValue >= ctx->dfuf->segment_count)
                         goto out;
