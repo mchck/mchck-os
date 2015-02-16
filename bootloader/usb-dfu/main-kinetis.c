@@ -97,7 +97,7 @@ Reset_Handler(void)
                 Default_Reset_Handler();
         } else {
                 uint32_t addr = (uintptr_t)&_app_rom;
-                SCB_VTOR = addr;   /* relocate vector table */
+                SCB->VTOR = addr;   /* relocate vector table */
                 jump_to_app(addr);
         }
 }

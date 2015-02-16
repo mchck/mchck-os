@@ -1,4 +1,7 @@
+#include <soc/cortex-m/intnums.h>
+
 #include <MKL26Z4.h>
+#include <MemMapPtr_KL26Z4.h>
 
 #define FlashConfig_BASE_PTR FTFA_FlashConfig_BASE_PTR
 

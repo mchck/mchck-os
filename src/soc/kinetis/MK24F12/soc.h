@@ -1,3 +1,5 @@
+#include <soc/cortex-m/intnums.h>
+
 #include <MK24F12.h>
 
 #define FlashConfig_BASE_PTR FTFE_FlashConfig_BASE_PTR

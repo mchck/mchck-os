@@ -1,7 +1,6 @@
-#include <mchck.h>
-
 #include <soc/cortex-m/startup.c>
 
+#include <mchck.h>
 
 /**
  * The following variables are only used for their addresses;
