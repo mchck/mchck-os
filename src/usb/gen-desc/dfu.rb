@@ -27,6 +27,11 @@ class DFUDesc < FunctionDesc
   def post_eval
     super
 
+    if @segment.empty?
+      @warnings << "#{caller[2]}: no segments specified"
+      return
+    end
+
     segments = @segment
     seg = segments.first
 
