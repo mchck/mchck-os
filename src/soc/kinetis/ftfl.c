@@ -38,22 +38,17 @@ flash_erase_sector(uintptr_t addr)
         if (addr < (uintptr_t)&_app_rom &&
                 flash_ALLOW_BRICKABLE_ADDRESSES != 0x00023420)
                 return (-1);
+        *(volatile uint32_t *)&FTFL_FCCOB3 = addr; /* this overwrites B0 */
         FTFL_FCCOB0 = FTFL_FCMD_ERASE_SECTOR;
-        FTFL_FCCOB1 = addr >> 16;
-        FTFL_FCCOB2 = addr >> 8;
-        FTFL_FCCOB3 = addr;
         return (ftfl_submit_cmd());
 }
 
 static int
 flash_program_section(uintptr_t addr, size_t len)
 {
+        *(volatile uint32_t *)&FTFL_FCCOB3 = addr; /* this overwrites B0 */
         FTFL_FCCOB0 = FTFL_FCMD_PROGRAM_SECTION;
-        FTFL_FCCOB1 = addr >> 16;
-        FTFL_FCCOB2 = addr >> 8;
-        FTFL_FCCOB3 = addr;
-        FTFL_FCCOB4 = (len / FLASH_ELEM_SIZE) >> 8;
-        FTFL_FCCOB5 = (len / FLASH_ELEM_SIZE);
+        *(volatile uint16_t *)&FTFL_FCCOB5 = len / FLASH_ELEM_SIZE;
         return (ftfl_submit_cmd());
 }
 
