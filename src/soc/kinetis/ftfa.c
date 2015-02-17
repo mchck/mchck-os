@@ -33,10 +33,8 @@ flash_erase_sector(uintptr_t addr)
         if (addr < (uintptr_t)&_app_rom &&
             flash_ALLOW_BRICKABLE_ADDRESSES != 0x00023420)
                 return (-1);
+        *(volatile uint32_t *)&FTFA_FCCOB3 = addr; /* this overwrites B0 */
         FTFA_FCCOB0 = FTFA_FCMD_ERASE_SECTOR;
-        FTFA_FCCOB1 = addr >> 16;
-        FTFA_FCCOB2 = addr >> 8;
-        FTFA_FCCOB3 = addr;
         return (ftfa_submit_cmd());
 }
 
@@ -46,14 +44,9 @@ flash_program_section(const uint8_t *buf, uintptr_t addr, size_t len)
         int r;
 
         while (len > 0) {
+                *(volatile uint32_t *)&FTFA_FCCOB3 = addr; /* this overwrites B0 */
                 FTFA_FCCOB0 = FTFA_FCMD_PROGRAM_LONGWORD;
-                FTFA_FCCOB1 = addr >> 16;
-                FTFA_FCCOB2 = addr >> 8;
-                FTFA_FCCOB3 = addr;
-                FTFA_FCCOB4 = buf[3];
-                FTFA_FCCOB5 = buf[2];
-                FTFA_FCCOB6 = buf[1];
-                FTFA_FCCOB7 = buf[0];
+                *(volatile uint32_t *)&FTFA_FCCOB7 = *(uint32_t *)buf;
                 r = ftfa_submit_cmd();
                 if (r != 0)
                         break;
