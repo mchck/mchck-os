@@ -109,20 +109,34 @@ usb_pipe_unstall(struct usbd_ep_pipe_state_t *s)
 void
 usb_pipe_enable(struct usbd_ep_pipe_state_t *s)
 {
-        USB_ENDPT_REG(USB0_BASE_PTR, s->ep_num) |=
-                (s->ep_dir == USB_EP_TX ? USB_ENDPT_EPTXEN_MASK : 0) |
-                (s->ep_dir == USB_EP_RX ? USB_ENDPT_EPRXEN_MASK : 0) |
-                USB_ENDPT_EPHSHK_MASK |
-                (s->ep_num != 0 ? USB_ENDPT_EPCTLDIS_MASK : 0);
+        uint32_t flags = 0;
+
+        flags |= USB_ENDPT_EPHSHK_MASK;
+
+        if (s->ep_dir == USB_EP_TX)
+                flags |= USB_ENDPT_EPTXEN_MASK;
+        else
+                flags |= USB_ENDPT_EPRXEN_MASK;
+
+        if (s->ep_num != 0)
+                flags |= USB_ENDPT_EPCTLDIS_MASK;
+
+        USB_ENDPT_REG(USB0_BASE_PTR, s->ep_num) |= flags;
 }
 
 void
 usb_pipe_disable(struct usbd_ep_pipe_state_t *s)
 {
-        USB_ENDPT_REG(USB0_BASE_PTR, s->ep_num) &= ~(
-                (s->ep_dir == USB_EP_TX ? USB_ENDPT_EPTXEN_MASK : 0) |
-                (s->ep_dir == USB_EP_RX ? USB_ENDPT_EPRXEN_MASK : 0) |
-                USB_ENDPT_EPCTLDIS_MASK);
+        uint32_t flags = 0;
+
+        flags |= USB_ENDPT_EPCTLDIS_MASK;
+
+        if (s->ep_dir == USB_EP_TX)
+                flags |= USB_ENDPT_EPTXEN_MASK;
+        else
+                flags |= USB_ENDPT_EPRXEN_MASK;
+
+        USB_ENDPT_REG(USB0_BASE_PTR, s->ep_num) &= ~flags;
 }
 
 size_t

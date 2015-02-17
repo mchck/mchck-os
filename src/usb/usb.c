@@ -387,9 +387,6 @@ usb_handle_control_nonstddev(struct usb_ctrl_req_t *req)
 		}
 	}
 
-	/* Standard requests will be handled by usb_handle_control */
-	if (req->type == USB_CTRL_REQ_STD)
-		return (0);
 	usb_handle_control_status(-1);
 	return (1);
 }
