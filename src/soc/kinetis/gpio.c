@@ -43,7 +43,7 @@ gpio_dir(enum gpio_pin_id pin, enum gpio_dir dir)
 void
 gpio_write(enum gpio_pin_id pin, enum gpio_pin_value val)
 {
-        BITBAND_BIT(GPIO_PDOR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin)) = val;
+        bf_set(GPIO_PDOR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin), 1, val);
 }
 
 void
@@ -55,5 +55,5 @@ gpio_toggle(enum gpio_pin_id pin)
 enum gpio_pin_value
 gpio_read(enum gpio_pin_id pin)
 {
-        return (BITBAND_BIT(GPIO_PDIR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin)));
+        return (bf_get(GPIO_PDOR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin), 1));
 }
