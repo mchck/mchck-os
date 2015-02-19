@@ -21,17 +21,17 @@ void
 pin_change_init(void)
 {
         if (PIN_CHANGE_ENABLE(A)) {
-                bf_set(SIM_SCGC5, SIM_SCGC5_PORTA, 1);
+                bf_set_reg(SIM_SCGC5, SIM_SCGC5_PORTA, 1);
                 PIN_CHANGE_SET_IRQC(A);
                 int_enable(IRQ_PORTA);
         }
 
         if (PIN_CHANGE_ENABLE(C)) {
-                bf_set(SIM_SCGC5, SIM_SCGC5_PORTC, 1);
+                bf_set_reg(SIM_SCGC5, SIM_SCGC5_PORTC, 1);
                 PIN_CHANGE_SET_IRQC(C);
         }
         if (PIN_CHANGE_ENABLE(D)) {
-                bf_set(SIM_SCGC5, SIM_SCGC5_PORTD, 1);
+                bf_set_reg(SIM_SCGC5, SIM_SCGC5_PORTD, 1);
                 PIN_CHANGE_SET_IRQC(D);
         }
         if (PIN_CHANGE_ENABLE(C) || PIN_CHANGE_ENABLE(D)) {

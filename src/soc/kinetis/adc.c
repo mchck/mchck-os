@@ -15,7 +15,7 @@ static void
 adc_calibrate_cb(uint16_t val, int error, void *cbdata)
 {
         /* base ADC calibration */
-        if (error || bf_get(ADC0_SC3, ADC_SC3_CALF))
+        if (error || bf_get_reg(ADC0_SC3, ADC_SC3_CALF))
                 return;
 
         uint32_t calib = 0;
@@ -45,7 +45,7 @@ static void
 adc_calibrate_voltage_cb(uint16_t val, int error, void *cbdata)
 {
         /* disable band-gap buffer */
-        bf_set(PMC_REGSC, PMC_REGSC_BGBE, 1);
+        bf_set_reg(PMC_REGSC, PMC_REGSC_BGBE, 1);
 
         if (error)
                 return;
@@ -97,10 +97,10 @@ adc_init(void)
          * Enable bandgap buffer.  We need this later to calibrate our
          * reference scale.  However, we start it now, so that it will
          * have time to stabilize. */
-        bf_set(PMC_REGSC, PMC_REGSC_BGBE, 1);
+        bf_set_reg(PMC_REGSC, PMC_REGSC_BGBE, 1);
 
         /* enable clock */
-        bf_set(SIM_SCGC6, SIM_SCGC6_ADC0, 1);
+        bf_set_reg(SIM_SCGC6, SIM_SCGC6_ADC0, 1);
 
         /* enable interrupt handler */
         int_enable(IRQ_ADC0);
@@ -116,7 +116,7 @@ adc_init(void)
                 ADC_SC1_ADCH(ADC_ADCH_DISABLED); /* do not start ADC */
 
         /* start calibration */
-        bf_set(ADC0_SC3, ADC_SC3_CAL, 1);
+        bf_set_reg(ADC0_SC3, ADC_SC3_CAL, 1);
 }
 
 void
@@ -179,7 +179,7 @@ adc_sample_abort(void)
 void
 ADC0_Handler(void)
 {
-        if (bf_get(ADC0_SC1A, ADC_SC1_COCO)) {
+        if (bf_get_reg(ADC0_SC1A, ADC_SC1_COCO)) {
                 adc_result_cb_t *cb;
                 void *cbdata;
                 uint16_t val;
@@ -187,7 +187,7 @@ ADC0_Handler(void)
                 crit_enter();
                 cb = adc_ctx.stat_a.cb;
                 cbdata = adc_ctx.stat_a.cbdata;
-                if (!bf_get(ADC0_SC3, ADC_SC3_ADCO))
+                if (!bf_get_reg(ADC0_SC3, ADC_SC3_ADCO))
                         adc_ctx.stat_a.active = 0;
                 val = ADC0_RA;  /* clears interrupt */
                 crit_exit();

@@ -16,25 +16,31 @@
                 (mask) == 0b111111111111111 ? 15 :              \
                 (mask) == 0b1111111111111111 ? 16 : 0xffffffff)
 
-#define bf_set(loc, name, val)                                          \
+#define bf_set_reg(loc, name, val)                                      \
         do {                                                            \
                 uint32_t _bitpos = name ## _SHIFT;                      \
                 uint32_t _bitmask = name ## _MASK;                      \
                                                                         \
+                bf_set(loc, _bitpos, bf_mask_to_width(_bitmask >> _bitpos), val); \
+        } while (0)
+
+#define bf_set(loc, pos, width, val)                                    \
+        do {                                                            \
                 if (__builtin_constant_p(val) &&                        \
-                    bf_single_bit_p(_bitpos, _bitmask) &&               \
+                    __builtin_constant_p(pos) &&                        \
+                    __builtin_constant_p(width) && width == 1 &&        \
                     bme_op_possible(loc)) {                             \
                         if (val)                                        \
-                                bme_setbit(loc, _bitpos);               \
+                                bme_setbit(loc, pos);                   \
                         else                                            \
-                                bme_clearbit(loc, _bitpos);             \
+                                bme_clearbit(loc, pos);                 \
                 } else if (__builtin_constant_p(val) &&                 \
                            bme_bf_possible(loc)) {                      \
-                        bme_bf_set(loc, _bitpos, bf_mask_to_width(_bitmask >> _bitpos), val); \
+                        bme_bf_set(loc, pos, width, val);               \
                 } else {                                                \
                         typeof(&loc) locp = &loc;                       \
                         uint32_t _locval = *locp;                       \
-                        *locp = bf_set1(_locval, _bitpos, _bitmask, val); \
+                        *locp = bf_set1(_locval, pos, width, val);      \
                 }                                                       \
         } while (0)
 
@@ -47,8 +53,10 @@ bf_single_bit_p(int bitpos, uint32_t bitmask)
 }
 
 static inline uint32_t
-bf_set1(uint32_t locval, int bitpos, uint32_t bitmask, uint32_t val)
+bf_set1(uint32_t locval, int bitpos, uint32_t width, uint32_t val)
 {
+        uint32_t bitmask = ((1 << width) - 1) << bitpos;
+
         if (bf_single_bit_p(bitpos, bitmask)) {
                 /* single bit op */
                 if (val)
@@ -60,16 +68,22 @@ bf_set1(uint32_t locval, int bitpos, uint32_t bitmask, uint32_t val)
 }
 
 
-#define bf_get(loc, name)                                               \
+#define bf_get_reg(loc, name)                                           \
         ({                                                              \
                 uint32_t _bitpos = name ## _SHIFT;                      \
                 uint32_t _bitmask = name ## _MASK;                      \
+                                                                        \
+                bf_get(loc, _bitpos, bf_mask_to_width(_bitmask >> _bitpos)); \
+        })
+
+#define bf_get(loc, pos, width)                                         \
+        ({                                                              \
                 uint32_t _res;                                          \
                                                                         \
                 if (bme_bf_possible(loc))                               \
-                        _res = bme_bf_get(loc, _bitpos, bf_mask_to_width(_bitmask >> _bitpos)); \
+                        _res = bme_bf_get(loc, pos, width);             \
                 else                                                    \
-                        _res = (((loc) & (name ## _MASK)) >> (name ## _SHIFT)); \
+                        _res = ((loc) >> pos) & ((1 << width) - 1);     \
                 _res;                                                   \
         })
 

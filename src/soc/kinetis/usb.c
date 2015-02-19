@@ -191,37 +191,37 @@ usb_reset(void)
                 USB_INTEN_STALLEN_MASK |
                 USB_INTEN_SLEEPEN_MASK;
 
-        bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
-        bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
+        bf_set_reg(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
+        bf_set_reg(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
 }
 
 void
 usb_enable(void)
 {
-        bf_set(SIM_SOPT2, SIM_SOPT2_USBSRC, 1);   /* usb from mcg */
-        bf_set(SIM_SCGC4, SIM_SCGC4_USBOTG, 1);   /* enable usb clock */
+        bf_set_reg(SIM_SOPT2, SIM_SOPT2_USBSRC, 1);   /* usb from mcg */
+        bf_set_reg(SIM_SCGC4, SIM_SCGC4_USBOTG, 1);   /* enable usb clock */
 
 #if USB_FMC_MASTER == 3
         /* Allow USB to access the Flash */
-        bf_set(FMC_PFAPR, FMC_PFAPR_M3AP, FMC_MAP_RDWR);
+        bf_set_reg(FMC_PFAPR, FMC_PFAPR_M3AP, FMC_MAP_RDWR);
 #elif USB_FMC_MASTER == 4
         /* Allow USB to access the Flash */
-        bf_set(FMC_PFAPR, FMC_PFAPR_M4AP, FMC_MAP_RDWR);
+        bf_set_reg(FMC_PFAPR, FMC_PFAPR_M4AP, FMC_MAP_RDWR);
 #endif
 
 #if defined(MCM_PLACR) && !defined(AXBS_CRS)
         /* Round robin bus masters, so that the CPU can't starve the USB */
-        bf_set(MCM_PLACR, MCM_PLACR_ARB, 1);
+        bf_set_reg(MCM_PLACR, MCM_PLACR_ARB, 1);
 #elif defined(AXBS_CRS)
         for (int i = 0; i < sizeof(((AXBS_MemMapPtr)0)->SLAVE)/sizeof(*((AXBS_MemMapPtr)0)->SLAVE); ++i)
-                bf_set(AXBS_CRS(i), AXBS_CRS_ARB, 0b01);
+                bf_set_reg(AXBS_CRS(i), AXBS_CRS_ARB, 0b01);
 #endif
 
         /* reset module - not sure if needed */
         USB0_USBTRC0 =
                 USB_USBTRC0_USBRESET_MASK |
                 USB_USBTRC0_USBRESMEN_MASK;
-        while (bf_get(USB0_USBTRC0, USB_USBTRC0_USBRESET))
+        while (bf_get_reg(USB0_USBTRC0, USB_USBTRC0_USBRESET))
                 /* NOTHING */;
 
         USB0_BDTPAGE1 = (uintptr_t)kinetis_bdt >> 8;
@@ -239,8 +239,8 @@ usb_enable(void)
         /**
          * Suspend transceiver now - we'll wake up at reset again.
          */
-        bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 1);
-        bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 1);
+        bf_set_reg(USB0_USBCTRL, USB_USBCTRL_SUSP, 1);
+        bf_set_reg(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 1);
 
 #ifndef SHORT_ISR
         int_enable(IRQ_USB0);
@@ -267,10 +267,10 @@ USB0_Handler(void)
                 usb_handle_transaction(&stat);
         }
         if (istat & USB_ISTAT_SLEEP_MASK) {
-                bf_set(USB0_INTEN, USB_INTEN_SLEEPEN, 0);
-                bf_set(USB0_INTEN, USB_INTEN_RESUMEEN, 1);
-                bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 1);
-                bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 1);
+                bf_set_reg(USB0_INTEN, USB_INTEN_SLEEPEN, 0);
+                bf_set_reg(USB0_INTEN, USB_INTEN_RESUMEEN, 1);
+                bf_set_reg(USB0_USBCTRL, USB_USBCTRL_SUSP, 1);
+                bf_set_reg(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 1);
 
                 /**
                  * Clear interrupts now so that we can detect a fresh
@@ -288,10 +288,10 @@ USB0_Handler(void)
          * do.
          */
         if ((istat & USB_ISTAT_RESUME_MASK) || (USB0_USBTRC0 & USB_USBTRC0_USB_RESUME_INT_MASK)) {
-                bf_set(USB0_INTEN, USB_INTEN_RESUMEEN, 0);
-                bf_set(USB0_INTEN, USB_INTEN_SLEEPEN, 1);
-                bf_set(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
-                bf_set(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
+                bf_set_reg(USB0_INTEN, USB_INTEN_RESUMEEN, 0);
+                bf_set_reg(USB0_INTEN, USB_INTEN_SLEEPEN, 1);
+                bf_set_reg(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
+                bf_set_reg(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
 
                 const struct usbd_config *c = usb_get_config_data(-1);
                 if (c && c->resume)

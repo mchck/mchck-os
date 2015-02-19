@@ -31,16 +31,16 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
 
         if (mode & PIN_MODE_RESET) {
                 pcr &= ~0xff;
-                bf_set(pcr, PORT_PCR_MUX, 0);
+                bf_set_reg(pcr, PORT_PCR_MUX, 0);
         }
 
         if (mode & PIN_MODE__SLEW) {
                 switch (mode & PIN_MODE__SLEW_MASK) {
                 case PIN_MODE_SLEW_FAST:
-                        bf_set(pcr, PORT_PCR_SRE, 0);
+                        bf_set_reg(pcr, PORT_PCR_SRE, 0);
                         break;
                 case PIN_MODE_SLEW_SLOW:
-                        bf_set(pcr, PORT_PCR_SRE, 1);
+                        bf_set_reg(pcr, PORT_PCR_SRE, 1);
                         break;
                 }
         }
@@ -48,15 +48,15 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
         if (mode & PIN_MODE__PULL) {
                 switch (mode & PIN_MODE__PULL_MASK) {
                 case PIN_MODE_PULL_OFF:
-                        bf_set(pcr, PORT_PCR_PE, 0);
+                        bf_set_reg(pcr, PORT_PCR_PE, 0);
                         break;
                 case PIN_MODE_PULLDOWN:
-                        bf_set(pcr, PORT_PCR_PE, 1);
-                        bf_set(pcr, PORT_PCR_PS, 0);
+                        bf_set_reg(pcr, PORT_PCR_PE, 1);
+                        bf_set_reg(pcr, PORT_PCR_PS, 0);
                         break;
                 case PIN_MODE_PULLUP:
-                        bf_set(pcr, PORT_PCR_PE, 1);
-                        bf_set(pcr, PORT_PCR_PS, 1);
+                        bf_set_reg(pcr, PORT_PCR_PE, 1);
+                        bf_set_reg(pcr, PORT_PCR_PS, 1);
                         break;
                 }
         }
@@ -64,10 +64,10 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
         if (mode & PIN_MODE__DRIVE) {
                 switch (mode & PIN_MODE__DRIVE_MASK) {
                 case PIN_MODE_DRIVE_LOW:
-                        bf_set(pcr, PORT_PCR_DSE, 0);
+                        bf_set_reg(pcr, PORT_PCR_DSE, 0);
                         break;
                 case PIN_MODE_DRIVE_HIGH:
-                        bf_set(pcr, PORT_PCR_DSE, 1);
+                        bf_set_reg(pcr, PORT_PCR_DSE, 1);
                         break;
                 }
         }
@@ -75,10 +75,10 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
         if (mode & PIN_MODE__FILTER) {
                 switch (mode & PIN_MODE__FILTER_MASK) {
                 case PIN_MODE_FILTER_OFF:
-                        bf_set(pcr, PORT_PCR_PFE, 0);
+                        bf_set_reg(pcr, PORT_PCR_PFE, 0);
                         break;
                 case PIN_MODE_FILTER_ON:
-                        bf_set(pcr, PORT_PCR_PFE, 1);
+                        bf_set_reg(pcr, PORT_PCR_PFE, 1);
                         break;
                 }
         }
@@ -87,10 +87,10 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
 #ifdef PORT_PCR_ODE_MASK
                 switch (mode & PIN_MODE__OPEN_DRAIN_MASK) {
                 case PIN_MODE_OPEN_DRAIN_OFF:
-                        bf_set(pcr, PORT_PCR_ODE, 0);
+                        bf_set_reg(pcr, PORT_PCR_ODE, 0);
                         break;
                 case PIN_MODE_OPEN_DRAIN_ON:
-                        bf_set(pcr, PORT_PCR_ODE, 1);
+                        bf_set_reg(pcr, PORT_PCR_ODE, 1);
                         break;
                 }
 #else
@@ -99,7 +99,7 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
         }
 
         if (mode & PIN_MODE__MUX) {
-                bf_set(pcr, PORT_PCR_MUX, (mode & PIN_MODE__MUX_MASK) >> 13);
+                bf_set_reg(pcr, PORT_PCR_MUX, (mode & PIN_MODE__MUX_MASK) >> 13);
         }
 
         PORT_PCR_REG(pin_physport_from_pin(pin), pinnum) = pcr;

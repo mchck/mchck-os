@@ -7,9 +7,9 @@ static struct pit_ctx_t {
 void
 pit_init(void)
 {
-	bf_set(SIM_SCGC6, SIM_SCGC6_PIT, 1);
-	bf_set(PIT_MCR, PIT_MCR_MDIS, 0);
-	bf_set(PIT_MCR, PIT_MCR_FRZ, 0);
+	bf_set_reg(SIM_SCGC6, SIM_SCGC6_PIT, 1);
+	bf_set_reg(PIT_MCR, PIT_MCR_MDIS, 0);
+	bf_set_reg(PIT_MCR, PIT_MCR_FRZ, 0);
 
 #if defined(HAVE_PIT_SEPARATE_IRQ)
 	int_enable(IRQ_PIT0);
@@ -26,15 +26,15 @@ pit_start(enum pit_id id, uint32_t cycles, pit_callback *cb)
 {
 	ctx[id].cb = cb;
 	PIT_LDVAL(id) = cycles;
-	bf_set(PIT_TFLG(id), PIT_TFLG_TIF, 1);
-	bf_set(PIT_TCTRL(id), PIT_TCTRL_TIE, cb != NULL);
-	bf_set(PIT_TCTRL(id), PIT_TCTRL_TEN, 1);
+	bf_set_reg(PIT_TFLG(id), PIT_TFLG_TIF, 1);
+	bf_set_reg(PIT_TCTRL(id), PIT_TCTRL_TIE, cb != NULL);
+	bf_set_reg(PIT_TCTRL(id), PIT_TCTRL_TEN, 1);
 }
 
 void
 pit_stop(enum pit_id id)
 {
-	bf_set(PIT_TCTRL(id), PIT_TCTRL_TEN, 0);
+	bf_set_reg(PIT_TCTRL(id), PIT_TCTRL_TEN, 0);
 }
 
 uint32_t
@@ -46,7 +46,7 @@ pit_cycle(enum pit_id id)
 static void
 common_handler(enum pit_id id)
 {
-	bf_set(PIT_TFLG(id), PIT_TFLG_TIF, 1);
+	bf_set_reg(PIT_TFLG(id), PIT_TFLG_TIF, 1);
 	ctx[id].cb(id);
 }
 
@@ -82,9 +82,9 @@ PIT3_Handler(void)
 void
 PIT_Handler(void)
 {
-	if (bf_get(PIT_TFLG(0), PIT_TFLG_TIF))
+	if (bf_get_reg(PIT_TFLG(0), PIT_TFLG_TIF))
 		common_handler(PIT_0);
-	if (bf_get(PIT_TFLG(1), PIT_TFLG_TIF))
+	if (bf_get_reg(PIT_TFLG(1), PIT_TFLG_TIF))
 		common_handler(PIT_1);
 }
 

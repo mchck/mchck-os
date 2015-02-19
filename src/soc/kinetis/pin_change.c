@@ -24,5 +24,5 @@ pin_change_handler(PORT_MemMapPtr port,
 #define PIN_CHANGE_SET_IRQC(port)                                         \
         FOREACH_PIN_CHANGE(port) {                                        \
                 PORT_MemMapPtr p = PORTA_BASE_PTR;                      \
-                bf_set(PORT_PCR_REG(p, pin_physpin_from_pin(i->pin_id)), PORT_PCR_IRQC, i->polarity); \
+                bf_set_reg(PORT_PCR_REG(p, pin_physpin_from_pin(i->pin_id)), PORT_PCR_IRQC, i->polarity); \
         }

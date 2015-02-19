@@ -24,7 +24,7 @@ int
 flash_prepare_flashing(void)
 {
         /* switch to FlexRAM_BASE_PTR */
-        if (!bf_get(FTFL_FCNFG, FTFL_FCNFG_RAMRDY)) {
+        if (!bf_get_reg(FTFL_FCNFG, FTFL_FCNFG_RAMRDY)) {
                 FTFL_FCCOB0 = FTFL_FCMD_SET_FLEXRAM;
                 FTFL_FCCOB1 = FTFL_FLEXRAM_RAM;
                 return (ftfl_submit_cmd());

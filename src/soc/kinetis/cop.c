@@ -3,5 +3,5 @@
 void
 watchdog_disable(void)
 {
-        bf_set(SIM_COPC, SIM_COPC_COPT, 0);
+        bf_set_reg(SIM_COPC, SIM_COPC_COPT, 0);
 }

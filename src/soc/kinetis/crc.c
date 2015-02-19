@@ -9,16 +9,16 @@ crc_init(
 	enum crc_transpose_t tot,
 	uint8_t compl_xor)
 {
-	bf_set(SIM_SCGC6, SIM_SCGC6_CRC, 1);
+	bf_set_reg(SIM_SCGC6, SIM_SCGC6_CRC, 1);
 	CRC_CTRL =
 		(compl_xor ? CRC_CTRL_FXOR_MASK : 0) |
 		(width ? CRC_CTRL_TCRC_MASK : 0) |
 		CRC_CTRL_TOTR(totr) |
 		CRC_CTRL_TOT(tot);
 	CRC_GPOLY = poly;
-	bf_set(CRC_CTRL, CRC_CTRL_WAS, 1);
+	bf_set_reg(CRC_CTRL, CRC_CTRL_WAS, 1);
 	CRC_DATA = seed;
-	bf_set(CRC_CTRL, CRC_CTRL_WAS, 0);
+	bf_set_reg(CRC_CTRL, CRC_CTRL_WAS, 0);
 }
 
 void
