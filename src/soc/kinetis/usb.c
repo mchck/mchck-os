@@ -161,7 +161,7 @@ usb_queue_next(struct usbd_ep_pipe_state_t *s, void *addr, size_t len)
                                 }).raw;
 }
 
-__attribute__((__noinline__))
+__noinline
 static void
 usb_reset(void)
 {

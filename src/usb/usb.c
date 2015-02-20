@@ -14,7 +14,7 @@ struct usbd_t usb;
  * more to go.
  */
 /* Defaults to EP0 for now */
-__attribute__((__noinline__))
+__noinline
 static int
 usb_tx_next(struct usbd_ep_pipe_state_t *s)
 {
@@ -67,7 +67,7 @@ usb_tx_next(struct usbd_ep_pipe_state_t *s)
 	return (0);
 }
 
-__attribute__((__noinline__))
+__noinline
 static void
 setup_tx(struct usbd_ep_pipe_state_t *s, const void *buf, size_t len, size_t reqlen, ep_callback_t cb, void *cb_data)
 {
@@ -96,7 +96,7 @@ setup_tx(struct usbd_ep_pipe_state_t *s, const void *buf, size_t len, size_t req
 		s->short_transfer = 0;
 }
 
-__attribute__((__noinline__))
+__noinline
 static void
 submit_tx(struct usbd_ep_pipe_state_t *s)
 {
@@ -127,7 +127,7 @@ usb_tx(struct usbd_ep_pipe_state_t *s, const void *buf, size_t len, size_t reqle
  */
 /* Defaults to EP0 for now */
 /* XXX pass usb_stat to validate pingpong */
-__attribute__((__noinline__))
+__noinline
 static int
 usb_rx_next(struct usbd_ep_pipe_state_t *s)
 {
@@ -311,7 +311,7 @@ usb_tx_string_desc(int idx, int reqlen)
 }
 
 
-__attribute__((__noinline__))
+__noinline
 static void
 usb_handle_control_done(void *data, ssize_t len, void *cbdata)
 {
@@ -322,7 +322,7 @@ usb_handle_control_done(void *data, ssize_t len, void *cbdata)
 	usb_setup_control();
 }
 
-__attribute__((__noinline__))
+__noinline
 void
 usb_handle_control_status_cb(ep_callback_t cb)
 {
@@ -340,7 +340,7 @@ usb_handle_control_status_cb(ep_callback_t cb)
 	}
 }
 
-__attribute__((__noinline__))
+__noinline
 void
 usb_handle_control_status(int fail)
 {
