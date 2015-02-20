@@ -50,6 +50,7 @@ typedef struct MCM_MemMap {
 
 #include <soc/cortex-m/soc.h>
 #include <soc/cortex-m/bitband.h>
+#include <soc/cortex-m/bitfield-bitband.h>
 
 #include <soc/kinetis/bitfield-bitband.h>
 
