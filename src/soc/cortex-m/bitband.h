@@ -20,12 +20,12 @@ bitband_addr(uintptr_t addr, uint32_t bitpos)
 
 #define bitband_set(loc, bitpos, value)                                 \
         do {                                                            \
-                volatile typeof(loc) *p = (void *)bitband_addr((uintptr_t)&loc, bitpos); \
-                *p = value;                                             \
+                volatile typeof(loc) *p = (void *)bitband_addr((uintptr_t)&(loc), (bitpos)); \
+                *p = (value);                                           \
         } while (0)
 
 #define bitband_get(loc, bitpos)                                        \
         ({                                                              \
-                volatile typeof(loc) *p = (void *)bitband_addr((uintptr_t)&loc, bitpos); \
-                *p;                                                     \
+                volatile typeof((loc)) *_p = (void *)bitband_addr((uintptr_t)&(loc), (bitpos)); \
+                *_p;                                                    \
         })
