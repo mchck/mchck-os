@@ -25,7 +25,7 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
         int pinnum = pin_physpin_from_pin(pin);
 
         /* enable port clock */
-        SIM_SCGC5 |= 1 << (pin_portnum_from_pin(pin) + 8);
+        bf_set(SIM_SCGC5, pin_portnum_from_pin(pin) + 8, 1, 1);
 
         uint32_t pcr = PORT_PCR_REG(pin_physport_from_pin(pin), pinnum);
 
