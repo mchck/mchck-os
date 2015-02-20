@@ -126,9 +126,9 @@ include $(call srcpath,${BOARD}/build.mk,src/board)
 $(call includesoc)
 
 COPTFLAGS?=	-Os
-CWARNFLAGS?=	-Wall -Wno-main -Wshadow
+CWARNFLAGS?=	-Wall -Wno-main -Wshadow -fno-common
 
-CFLAGS+=	-ffunction-sections -fdata-sections -fno-builtin -fstrict-volatile-bitfields
+CFLAGS+=	-fstrict-volatile-bitfields
 ifndef NO_LTO
 CFLAGS+=	-flto -fno-use-linker-plugin
 endif
