@@ -37,7 +37,7 @@ buf_count(FILE *f)
         return (buffered);
 }
 
-void
+int
 fputc(int c, FILE *f)
 {
         crit_enter();
@@ -48,6 +48,8 @@ fputc(int c, FILE *f)
         if (f->ops && (c == '\n' || buf_count(f) > sizeof(f->outbuf) / 2))
                 fflush(f);
         crit_exit();
+
+        return (c);
 }
 
 struct buffer_file_ctx {
