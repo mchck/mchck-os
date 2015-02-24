@@ -26,6 +26,7 @@
 #include <soc/kinetis/pin.h>
 #include <soc/kinetis/pin_change.h>
 #include <soc/kinetis/gpio.h>
+#include <soc/kinetis/fgpio.h>
 #include <soc/kinetis/pit.h>
 #include <soc/kinetis/rtc.h>
 #include <soc/kinetis/spi.h>
