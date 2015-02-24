@@ -49,7 +49,7 @@ gpio_write(enum gpio_pin_id pin, enum gpio_pin_value val)
 void
 gpio_toggle(enum gpio_pin_id pin)
 {
-        bf_set(GPIO_PTOR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin), 1, 1);
+        GPIO_PTOR_REG(gpio_physgpio_from_pin(pin) = 1 << pin_physpin_from_pin(pin);
 }
 
 enum gpio_pin_value
