@@ -195,7 +195,7 @@ class HIDReportDesc < DslItem
 
   def elements
     e = []
-    e << HIDReportElement.new(:global, :report_id, @report_id) if @report_id
+    e << HIDReportElement.new(:global, :report_id, @report_id) if !@report_id.nil?
     @item.each do |i|
       e += i.elements(@type)
     end
@@ -205,14 +205,14 @@ class HIDReportDesc < DslItem
 
   def size
     s = 0
-    s += 1 if @report_id
+    s += 1 if !@report_id.nil?
     s += @item.map{|i| i.get_size * i.get_count}.reduce(&:+)
     (s + 7) / 8
   end
 
   def gen_report_def
     rid = ""
-    if @report_id
+    if !@report_id.nil?
       rid = "uint8_t report_id;"
     end
     <<_end_
@@ -235,13 +235,13 @@ class HIDReportItem < HIDReportBaseItem
 
   def elements(type)
     e = []
-    if @logical_range
+    if !@logical_range.nil?
       e += [
         HIDReportElement.new(:global, :logical_minimum, @logical_range.begin),
         HIDReportElement.new(:global, :logical_maximum, @logical_range.end)
       ]
     end
-    if @usage_page
+    if !@usage_page.nil?
       e += [HIDReportElement.new(:global, :usage_page, usage_str(@usage_page))]
     end
     e + super(type, @usage_page)
@@ -300,7 +300,7 @@ class HIDReportCollection < DslItem
 
   def renumber_reports!(type, counts)
     @report.each do |r|
-      counts = r.renumber!(type, counts)
+      counts = r.renumber!(type, counts) if r.type == type
     end
 
     counts
@@ -367,7 +367,9 @@ class HIDDesc < FunctionDesc
         ids += c.report_ids(type)
       end
 
-      if !ids.compact.empty?
+      if !ids.select{|r| !r.nil?}.empty? || ids.count > 1
+        require 'pp'
+        pp ids, ids.count
         counts = {:used => [], :assigned => ids.compact}
         @collection.each do |c|
           counts = c.renumber_reports!(type, counts)
@@ -408,7 +410,7 @@ struct hid_ctx #{@name.to_loc_s};
 _end_
     METHODS.each do |p|
       val = self.instance_variable_get("@#{p}")
-      s += "hid_#{p}_t #{val.to_loc_s};\n" if val
+      s += "hid_#{p}_t #{val.to_loc_s};\n" if !val.nil?
     end
     s += self.gen_report_defs
     s
@@ -444,7 +446,7 @@ _end_
 _end_
     METHODS.each do |p|
       val = self.instance_variable_get("@#{p}")
-      s += "		.#{p} = #{val.to_loc_s},\n" if val
+      s += "		.#{p} = #{val.to_loc_s},\n" if !val.nil?
     end
     s += <<_end_
 		.report_desc = &hid_report_desc_#@hid_id,
