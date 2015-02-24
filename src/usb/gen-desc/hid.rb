@@ -406,7 +406,7 @@ class HIDDesc < FunctionDesc
 
   def gen_defs
     s = <<_end_
-struct hid_ctx #{@name.to_loc_s};
+extern struct hid_ctx #{@name.to_loc_s};
 _end_
     METHODS.each do |p|
       val = self.instance_variable_get("@#{p}")
