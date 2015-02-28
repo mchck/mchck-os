@@ -6,7 +6,7 @@
                         bitband_set((loc), (pos), (val));               \
                 } else {                                                \
                         typeof(&(loc)) _locp = &(loc);                  \
-                        uint32_t _locval = *locp;                       \
+                        uint32_t _locval = *_locp;                      \
                         *_locp = _bf_set1(_locval, (pos), ((1 << (width)) - 1) << (pos), (val)); \
                 }                                                       \
         } while (0)
