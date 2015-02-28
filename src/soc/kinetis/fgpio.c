@@ -5,15 +5,15 @@ fgpio_physgpio_from_pin(enum gpio_pin_id pin)
 {
         switch (pin_port_from_pin(pin)) {
         case PIN_PORTA:
-                return (FPTA_BASE);
+                return (FPTA);
         case PIN_PORTB:
-                return (FPTB_BASE);
+                return (FPTB);
         case PIN_PORTC:
-                return (FPTC_BASE);
+                return (FPTC);
         case PIN_PORTD:
-                return (FPTD_BASE);
+                return (FPTD);
         case PIN_PORTE:
-                return (FPTE_BASE);
+                return (FPTE);
         default:
                 return (NULL);
         }
