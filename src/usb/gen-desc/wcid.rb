@@ -24,7 +24,8 @@ class WcidDesc < FunctionDesc
   end
 
   def gen_func_init
-    super + <<_end_
+    <<_end_
+#{super},
 	.compat_id = &wcid_data_#@wcid_id.header,
 _end_
   end
