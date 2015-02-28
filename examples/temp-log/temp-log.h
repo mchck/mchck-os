@@ -33,3 +33,4 @@ void flash_eraseall(void);
 bool flash_initializing_p(void);
 bool flash_full_p(void);
 bool flash_ready_p(void);
+int flash_read_page(uint32_t addr, flash_read_cb *cb);

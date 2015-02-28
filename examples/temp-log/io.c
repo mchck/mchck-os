@@ -27,7 +27,7 @@ static struct usbd_function_ctx_header fh;
 static size_t get_data_remaining;
 static size_t get_data_pos;
 
-static void get_data_next(void *cbdata);
+static void get_data_next(void *bud, ssize_t len, void *cbdata);
 
 static void
 get_data_ready(const void *buf, size_t len)
@@ -42,7 +42,7 @@ get_data_ready(const void *buf, size_t len)
 }
 
 static void
-get_data_next(void *cbdata)
+get_data_next(void *buf, ssize_t len, void *cbdata)
 {
         if (get_data_remaining == 0) {
                 usb_handle_control_status(0);
@@ -135,7 +135,7 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
                 if (req->wValue == 0)
                         get_data_pos = 0;
                 get_data_remaining = req->wLength;
-                get_data_next(NULL);
+                get_data_next(NULL, 0, NULL);
                 return (1);
 
         default:
