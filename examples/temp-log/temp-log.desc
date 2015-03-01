@@ -1,6 +1,6 @@
 device(:cdc_device) {
   idVendor 0x2323
-  idProduct 3
+  idProduct 0x0101
   iManufacturer "mchck.org"
   iProduct "temperature logger"
 
