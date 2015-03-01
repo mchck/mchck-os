@@ -441,7 +441,7 @@ _end_
   def gen_func_init
     s = <<_end_
 	.hid_func = {
-		.usb_func = #{super},
+		.usb_func = #{super}
 		.ctx = &#{@name.to_loc_s},
 _end_
     METHODS.each do |p|

@@ -74,8 +74,8 @@ _end_
   end
 
   def gen_func_init
-    s = super
-    s += <<_end_
+    s = <<_end_
+#{super}
 	.ctx = &dfu_ctx,
 	.segment_count = #{@segment.count},
 	.segment = {
@@ -92,15 +92,15 @@ _end_
   end
 
   def get_desc_struct
-    super +
-      <<_end_
+    <<_end_
+#{super}
 	struct dfu_desc_functional dfu;
 _end_
   end
 
   def gen_desc_init
-    super +
       <<_end_
+#{super}
 	.dfu = {
 		.bLength = sizeof(struct dfu_desc_functional),
 		.bDescriptorType = {

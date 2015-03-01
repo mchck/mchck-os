@@ -173,7 +173,7 @@ _end_
     s += "\t\t.control = #{@control_func.to_loc_s},\n" if !@control_func.nil?
     s += "\t\t.interface_count = #{@interface.count},\n"
     s += "\t\t.global = 1,\n" if !@global.nil?
-    s += "\t}"
+    s += "\t},"
   end
 
   def gen_func_var
