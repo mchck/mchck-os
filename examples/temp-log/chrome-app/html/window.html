@@ -7,6 +7,7 @@
 
     <link href="../lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="../lib/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-switch/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet">
   </head>
   <body role="document">
     <div class="container" role="main">
@@ -26,13 +27,15 @@
         <p>Current time on logger is <span id="current-time"></span>.  <button type="button" class="btn" id="sync-time-button">Sync with host time</button></p>
         <p>Sampling interval: <span id="current-interval"></span>.</p>
         <p>Total Flash: <span id="total-flash"></span>, used: <span id="used-flash"></span></p>
-        <p>Logger is <span id="current-mode"></span></p>
+        <p>Logger status <input type="checkbox" id="current-mode-checkbox" data-on-text="Running" data-off-text="Stopped" data-animate="false" /></p>
+        <p>Last measured temperature: <span id="last-temperature"></span></p>
       </div>
     </div>
 
     <script src="../lib/jquery.js"></script>
     <script src="../lib/sugar.min.js"></script>
-    <script src="../js/window.js"></script>
     <script src="../lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-switch/js/bootstrap-switch.js"></script>
+    <script src="../js/window.js"></script>
   </body>
 </html>

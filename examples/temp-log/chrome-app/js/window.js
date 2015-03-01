@@ -21,10 +21,11 @@ function do_req(reqinfo, cb) {
         reqinfo = {'req': reqinfo};
     }
 
-    var req = Object.merge(Object.clone(reqinfo), templog_req[reqinfo.req]);
+    var req = Object.merge(Object.clone(templog_req[reqinfo.req]), reqinfo);
     var wIndex = 0;             // interface 0
     var wValue = req.value || 0;
     var bRequest = req.num;
+    var data = req.data || new ArrayBuffer(0);
 
     chrome.usb.controlTransfer(logger,
                                {
@@ -35,7 +36,7 @@ function do_req(reqinfo, cb) {
                                    'value': wValue,
                                    'index': wIndex,
                                    'length': req.len,
-                                   'data': req.data
+                                   'data': data
                                }, function(ti) {
                                    if (ti.resultCode != 0) {
                                        connection_error();
@@ -106,6 +107,53 @@ function get_count(cb) {
     });
 }
 
+function get_temp(cb) {
+    do_req('GET_TEMP', function(ti) {
+        var dv = new DataView(ti.data);
+        var tempint = dv.getUint16(0, true);
+        var temp = tempint / 16.0;
+
+        cb(temp);
+    });
+}
+
+function get_data(cb) {
+    var tail = function(count, first) {
+        var result = [];
+
+        var count_now = count;
+        if (count_now > 1024) {
+            count_now = 1024;
+        }
+
+        do_req({'req': 'GET_DATA', 'len': count_now, 'value': first ? 0 : 1}, function(ti) {
+            var len = ti.data.byteLength;
+            var dv = new DataView(ti.data);
+
+            (len/8).times(function(i) {
+                var time_raw = dv.getUint32(i * 8, true);
+                var temp_raw = dv.getUint32(i * 8 + 4, true);
+
+                if (time_raw != 0xffffffff && temp_raw != 0xffffffff) {
+                    var elem = [Date.create(time_raw * 1000), temp_raw / 16.0];
+                    result.add([elem]);
+                }
+            });
+
+            count -= len;
+            if (count > 0) {
+                tail(count);
+            } else {
+                cb(result);
+            }
+        });
+    };
+
+    get_count(function(total, used) {
+        tail(used, true);
+    });
+}
+
 function connection_error() {
     if (status_updater) {
         window.clearInterval(status_updater);
@@ -153,6 +201,10 @@ function sync_time() {
     });
 }
 
+function sync_mode(ev, state) {
+    set_mode(state ? 1 : 0);
+}
+
 function update_status() {
     get_time(function(time) {
         $('#current-time').text(time.format("{dd}.{MM}.{yyyy} {HH}:{mm}:{ss}"));
@@ -165,17 +217,18 @@ function update_status() {
         $('#used-flash').text(used);
     });
     get_mode(function(mode) {
-        if (mode == 0) {
-            $('#current-mode').text("stopped");
-        } else {
-            $('#current-mode').text("running");
-        }
+        $('#current-mode-checkbox').bootstrapSwitch('state', mode != 0, true);
+    });
+    get_temp(function(temp) {
+        $('#last-temperature').text(temp);
     });
 }
 
 function onLoad() {
     $('#refresh-button').click(check_for_devices);
     $('#sync-time-button').click(sync_time);
+    $('#current-mode-checkbox').bootstrapSwitch();
+    $('#current-mode-checkbox').bootstrapSwitch('onSwitchChange', sync_mode);
     check_for_devices();
 }
 
