@@ -1,0 +1,22 @@
+{
+    "app": {
+        "background": {
+            "scripts": ["js/background.js"]
+        }
+    },
+    "manifest_version": 2,
+    "name": "Temperature Logger",
+    "version": "0.1",
+
+    "description": "ariel.open.water temperature logger",
+    //  "icons": {...},
+
+    "author": "Simon Schubert <2-ariel@0x2c.org>",
+    "kiosk_enabled": false,
+    "kiosk_only": false,
+    "minimum_chrome_version": "26",
+    "offline_enabled": true,
+    "permissions": ["clipboardWrite", "fileSystem", "usb",
+                    { "usbDevices" : [{ "vendorId": 8995, "productId": 257 }]}],
+    "short_name": "Temp Logger"
+}
