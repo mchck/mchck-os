@@ -1,0 +1,3 @@
+- bootstrap 3.2.2
+- jquery 2.1.3
+- sugarjs 1.4.1
