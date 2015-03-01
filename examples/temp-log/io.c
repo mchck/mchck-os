@@ -79,7 +79,7 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
         }
         case REQ_SET_TIME:
                 usb_ep0_rx(&time, sizeof(time), time_done_cb, NULL);
-                break;
+                goto out_no_status;
         case REQ_GET_TIME: {
                 uint32_t curtime = rtc_get_time();
                 usb_ep0_tx_cp(&curtime, sizeof(curtime), req->wLength, NULL, NULL);
@@ -146,6 +146,7 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
 
 out:
         usb_handle_control_status(fail);
+out_no_status:
         return (1);
 }
 
