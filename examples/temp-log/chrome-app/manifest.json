@@ -16,7 +16,10 @@
     "kiosk_only": false,
     "minimum_chrome_version": "31",
     "offline_enabled": true,
-    "permissions": ["clipboardWrite", "fileSystem", "usb",
+    "permissions": ["clipboardWrite",
+                    "fileSystem",
+                    {"fileSystem": ["write"]},
+                    "usb",
                     { "usbDevices" : [{ "vendorId": 8995, "productId": 257 }]}],
     "short_name": "Temp Logger"
 }

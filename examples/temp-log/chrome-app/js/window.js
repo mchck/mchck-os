@@ -210,6 +210,34 @@ function sync_mode(ev, state) {
     set_mode(state ? 1 : 0);
 }
 
+function make_csv(data) {
+    var csv = "";
+
+    data.each(function(e) {
+        var time = e[0].format("{dd}.{MM}.{yyyy} {HH}:{mm}:{ss}");
+        var temp = e[1];
+        var line = time + "," + temp + "\n";
+        csv += line;
+    });
+
+    return csv;
+}
+
+function save_data() {
+    chrome.fileSystem.chooseEntry({
+        type: 'saveFile',
+        suggestedName: 'templog.csv',
+        accepts: [{extensions: ['csv']}]
+    }, function(writableFileEntry) {
+        writableFileEntry.createWriter(function(writer) {
+            get_data(function(data) {
+                var csv = make_csv(data);
+                writer.write(new Blob([csv], {type: 'text/csv'}));
+            });
+        });
+    });
+}
+
 function update_status() {
     get_time(function(time) {
         $('#current-time').text(time.format("{dd}.{MM}.{yyyy} {HH}:{mm}:{ss}"));
@@ -234,6 +262,7 @@ function onLoad() {
     $('#sync-time-button').click(sync_time);
     $('#current-mode-checkbox').bootstrapSwitch();
     $('#current-mode-checkbox').bootstrapSwitch('onSwitchChange', sync_mode);
+    $('#save-data-button').click(save_data);
     check_for_devices();
 }
 
