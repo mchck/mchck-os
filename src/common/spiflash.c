@@ -205,7 +205,7 @@ spiflash_read_page(struct spiflash_device *dev, struct spiflash_transaction *tra
 
 static int
 spiflash_write_cmd(struct spiflash_device *dev, struct spiflash_transaction *trans,
-                   uint8_t cmd, uint32_t addr, const uint8_t *src, uint8_t len,
+                   uint8_t cmd, uint32_t addr, const uint8_t *src, uint16_t len,
                    spi_cb cb, void *cbdata)
 {
         trans->spi_query[0] = cmd;
@@ -227,7 +227,7 @@ spiflash_write_cmd(struct spiflash_device *dev, struct spiflash_transaction *tra
 
 int
 spiflash_program_page(struct spiflash_device *dev, struct spiflash_transaction *trans,
-                      uint32_t addr, const uint8_t *src, uint8_t len,
+                      uint32_t addr, const uint8_t *src, uint16_t len,
                       spi_cb cb, void *cbdata)
 {
         return spiflash_write_cmd(dev, trans, PAGE_PROGRAM, addr, src, len, cb, cbdata);

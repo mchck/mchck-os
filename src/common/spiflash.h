@@ -62,7 +62,7 @@ spiflash_get_status(struct spiflash_device *dev, struct spiflash_transaction *tr
 
 extern int
 spiflash_program_page(struct spiflash_device *dev, struct spiflash_transaction *trans,
-                      uint32_t addr, const uint8_t *src, uint8_t len, spi_cb cb, void *cbdata);
+                      uint32_t addr, const uint8_t *src, uint16_t len, spi_cb cb, void *cbdata);
 
 extern int
 spiflash_read_page(struct spiflash_device *dev, struct spiflash_transaction *trans,
