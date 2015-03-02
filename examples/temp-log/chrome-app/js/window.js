@@ -97,6 +97,10 @@ function get_mode(cb) {
     });
 }
 
+function erase_data(cb) {
+    do_req({'req': 'ERASE_DATA'}, cb);
+}
+
 function get_count(cb) {
     do_req('GET_COUNT', function(ti) {
         var dv = new DataView(ti.data);
@@ -118,8 +122,13 @@ function get_temp(cb) {
 }
 
 function get_data(cb) {
+    var result = [];
+
     var tail = function(count, first) {
-        var result = [];
+        if (count == 0) {
+            cb(result);
+            return;
+        }
 
         var count_now = count;
         if (count_now > 1024) {
@@ -141,11 +150,7 @@ function get_data(cb) {
             });
 
             count -= len;
-            if (count > 0) {
-                tail(count);
-            } else {
-                cb(result);
-            }
+            tail(count);
         });
     };
 
