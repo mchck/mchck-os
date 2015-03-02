@@ -84,7 +84,7 @@ sg_move(struct sg **psg, uint16_t amount)
         sg->len -= amount;
 
         if (sg->len == 0) {
-                *psg = sg_get_next(sg);
+                *psg = sg_simplify(sg_get_next(sg));
                 if (*psg == NULL)
                         return (SG_END);
                 else
