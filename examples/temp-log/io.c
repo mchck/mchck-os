@@ -135,8 +135,14 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
                 if (req->wValue == 0)
                         get_data_pos = 0;
                 get_data_remaining = req->wLength;
-                get_data_next(NULL, 0, NULL);
-                return (1);
+                if (get_data_remaining == 0) {
+                        /* get_data_next() does not handle zero sized transfers */
+                        usb_ep0_tx_cp(NULL, 0, 1 /* short packet */, NULL, NULL);
+                        break;
+                } else {
+                        get_data_next(NULL, 0, NULL);
+                        return (1);
+                }
 
         default:
                 goto out;
