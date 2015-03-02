@@ -115,8 +115,8 @@ control_func(struct usb_ctrl_req_t *req, void *cbdata)
                 break;
         case REQ_GET_COUNT: {
                 struct {
-                        uint32_t count;
-                        uint32_t free;
+                        uint32_t total;
+                        uint32_t used;
                 } count = {
                         flash_total(),
                         flash_used(),
