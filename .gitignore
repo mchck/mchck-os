@@ -6,6 +6,7 @@
 *.map
 examples/**/*.ld
 bootloader/**/*.ld
+cache
 *.svd
 *.ld-template
 *.linkdep
