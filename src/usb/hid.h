@@ -482,12 +482,18 @@ struct hid_ctx {
 	uint8_t set_report_id;
 };
 
+enum hid_report_req {
+	HID_REPORT_REQ_UNKNOWN,
+	HID_REPORT_REQ_CONTROL,
+	HID_REPORT_REQ_INT,
+};
+
 /* standard requests */
 typedef void (hid_set_report_descriptor_t)(const enum hid_report_descriptor_type type, const uint8_t index, const void *data_in, const size_t data_len);
 typedef size_t (hid_get_report_descriptor_t)(enum hid_report_descriptor_type type, uint8_t index, const void **data_out);
 /* class specific requests */
-typedef int (hid_set_report_t)(const enum hid_report_type type, const uint8_t report_id, void **data_in, size_t data_len);
-typedef int (hid_get_report_t)(struct hid_ctx *ctx, enum hid_report_type type, uint8_t report_id);
+typedef int (hid_set_report_t)(const enum hid_report_type type, const uint8_t report_id, void **data_in, size_t data_len, const enum hid_report_req req);
+typedef int (hid_get_report_t)(struct hid_ctx *ctx, enum hid_report_type type, uint8_t report_id, enum hid_report_req req);
 typedef void (hid_set_idle_t)(const uint8_t duration, const uint8_t report_id);
 typedef uint8_t (hid_get_idle_t)(uint8_t report_id);
 typedef void (hid_set_protocol_t)(const enum hid_protocol_t protocol);

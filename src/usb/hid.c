@@ -19,7 +19,7 @@ hid_set_report_done(void *buf, ssize_t len, void *cbdata)
 	struct hid_ctx *ctx = cbdata;
 	int ret = -1;
 
-	ret = ctx->hidf->set_report(ctx->set_report_type, ctx->set_report_id, &buf, ctx->set_report_length);
+	ret = ctx->hidf->set_report(ctx->set_report_type, ctx->set_report_id, &buf, ctx->set_report_length, HID_REPORT_REQ_UNKNOWN);
 
 	if (ret > 0)
 		usb_handle_control_status(0);
@@ -47,8 +47,8 @@ hid_handle_control_class(struct usb_ctrl_req_t *req, struct hid_ctx *ctx)
 
 		ctx->get_report_outstanding_length = req->wLength;
 		if (ctx->hidf->get_report)
-			ret = ctx->hidf->get_report(ctx, report_type, report_id);
-		if (ret <= 0) {
+			ret = ctx->hidf->get_report(ctx, report_type, report_id, HID_REPORT_REQ_CONTROL);
+		if (ret < 0) {
 			ctx->get_report_outstanding_length = 0;
 			usb_handle_control_status(1);
 		}
@@ -63,7 +63,7 @@ hid_handle_control_class(struct usb_ctrl_req_t *req, struct hid_ctx *ctx)
 		ctx->set_report_id = req->wValue & 0xff;
 
 		if (ctx->hidf->set_report)
-			ret = ctx->hidf->set_report(ctx->set_report_type, ctx->set_report_id, &buf, ctx->set_report_length);
+			ret = ctx->hidf->set_report(ctx->set_report_type, ctx->set_report_id, &buf, ctx->set_report_length, HID_REPORT_REQ_CONTROL);
 		if (ret > 0)
 			usb_ep0_rx(buf, ctx->set_report_length, hid_set_report_done, ctx);
 		else
@@ -151,6 +151,15 @@ hid_init(const struct usbd_function *f, int enable)
 }
 
 void
+tx_report_done(void *buf, ssize_t len, void *cbdata)
+{
+	struct hid_ctx *ctx = cbdata;
+
+	if (ctx->hidf->get_report)
+		ctx->hidf->get_report(ctx, USB_HID_REPORT_TYPE_INPUT, 0, HID_REPORT_REQ_INT);
+}
+
+void
 hid_update_data(struct hid_ctx *ctx, uint8_t report_id, const void *data, size_t len)
 {
 	if (ctx->get_report_outstanding_length != 0) {
@@ -158,6 +167,6 @@ hid_update_data(struct hid_ctx *ctx, uint8_t report_id, const void *data, size_t
 		ctx->get_report_outstanding_length = 0;
 		usb_handle_control_status(0);
 	} else if (ctx->hidf->report_max_size > 0)  {
-		usb_tx(ctx->tx_pipe, data, len, ctx->hidf->report_max_size, NULL, NULL);
+		usb_tx(ctx->tx_pipe, data, len, ctx->hidf->report_max_size, tx_report_done, ctx);
 	}
 }
