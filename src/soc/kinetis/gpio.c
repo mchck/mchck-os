@@ -55,5 +55,5 @@ gpio_toggle(enum gpio_pin_id pin)
 enum gpio_pin_value
 gpio_read(enum gpio_pin_id pin)
 {
-        return (bf_get(GPIO_PDOR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin), 1));
+        return (bf_get(GPIO_PDIR_REG(gpio_physgpio_from_pin(pin)), pin_physpin_from_pin(pin), 1));
 }
