@@ -26,7 +26,7 @@ dfu_dnload_complete(void *buf, ssize_t len, void *cbdata)
 {
         struct dfu_ctx *ctx = cbdata;
 
-        enum dfu_status s = ctx->dfuf->segment[ctx->segment].finish_write(buf, ctx->off, len);
+        enum dfu_status s = ctx->dfuf->segment[ctx->segment].finish_write(ctx, buf, ctx->off, len);
         ctx->off += len;
         ctx->len = len;
 
@@ -72,7 +72,7 @@ dfu_handle_control(struct usb_ctrl_req_t *req, void *data)
                  * XXX we are not allowed to STALL here, and we need to eat all transferred data.
                  * better not allow setup_write to break the protocol.
                  */
-                ctx->status = ctx->dfuf->segment[ctx->segment].setup_write(ctx->off, req->wLength, &buf);
+                ctx->status = ctx->dfuf->segment[ctx->segment].setup_write(ctx, ctx->off, req->wLength, &buf);
                 if (ctx->status != DFU_STATUS_OK) {
                         ctx->state = DFU_STATE_dfuERROR;
                         goto err_have_status;

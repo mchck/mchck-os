@@ -74,8 +74,10 @@ struct dfu_status_t {
 CTASSERT_SIZE_BYTE(struct dfu_status_t, 6);
 
 
-typedef enum dfu_status (dfu_setup_write_t)(size_t off, size_t len, void **buf);
-typedef enum dfu_status (dfu_finish_write_t)(void *, size_t off, size_t len);
+struct dfu_ctx;
+
+typedef enum dfu_status (dfu_setup_write_t)(struct dfu_ctx *ctx, size_t off, size_t len, void **buf);
+typedef enum dfu_status (dfu_finish_write_t)(struct dfu_ctx *ctx, void *, size_t off, size_t len);
 typedef void (*dfu_detach_t)(void);
 
 struct dfu_function;
