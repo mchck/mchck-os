@@ -9,6 +9,11 @@ class DFUDesc < FunctionDesc
       super()
       @id = id
     end
+
+    def get_desc
+      return @desc if !@desc.nil?
+      @id.to_s if @id
+    end
   end
 
   child_block :dfu
