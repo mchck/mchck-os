@@ -52,7 +52,7 @@ const static uint8_t staging[LOADER_SIZE] __attribute__((__aligned__(FLASH_SECTO
 static uint8_t staging_buf[FLASH_SECTOR_SIZE];
 
 enum dfu_status
-setup_write(size_t off, size_t len, void **buf)
+setup_write(struct dfu_ctx *ctx, size_t off, size_t len, void **buf)
 {
         if (off + len > sizeof(staging))
                 return (DFU_STATUS_errADDRESS);
@@ -61,7 +61,7 @@ setup_write(size_t off, size_t len, void **buf)
 }
 
 enum dfu_status
-finish_write(void *buf, size_t off, size_t len)
+finish_write(struct dfu_ctx *ctx, void *buf, size_t off, size_t len)
 {
         if (len != 0) {
                 flash_program_sector(staging_buf, (uintptr_t)staging + off, FLASH_SECTOR_SIZE);

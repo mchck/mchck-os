@@ -9,7 +9,7 @@
 static char staging[FLASH_SECTOR_SIZE];
 
 enum dfu_status
-setup_write(size_t off, size_t len, void **buf)
+setup_write(struct dfu_ctx *ctx, size_t off, size_t len, void **buf)
 {
         static int last = 0;
 
@@ -32,7 +32,7 @@ setup_write(size_t off, size_t len, void **buf)
 }
 
 enum dfu_status
-finish_write(void *buf, size_t off, size_t len)
+finish_write(struct dfu_ctx *ctx, void *buf, size_t off, size_t len)
 {
         if (len == 0)
                 return (DFU_STATUS_OK);
