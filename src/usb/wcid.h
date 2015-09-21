@@ -51,9 +51,8 @@ struct wcid_extended_prop_header {
 } __packed;
 
 struct wcid_function {
-        struct usbd_function func;
+        struct usbd_global head;
         const struct wcid_compat_id_header *compat_id;
 };
 
-usbd_func_init_t wcid_init;
-usbd_func_control_t wcid_handle_control;
+int wcid_handle_control(const struct usbd_global *f, struct usb_ctrl_req_t *req);

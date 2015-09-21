@@ -1,28 +1,11 @@
 #include <mchck.h>
 #include <usb/usb.h>
 
-struct wcid_ctx {
-        struct usbd_function_ctx_header header;
-        const struct wcid_function *wcid;
-};
-
-static struct wcid_ctx wcid_ctx;
-
-void
-wcid_init(const struct usbd_function *f, int enable)
-{
-        const struct wcid_function *wcidf = (const void *)f;
-
-        if (enable) {
-                wcid_ctx.wcid = wcidf;
-        } else {
-                wcid_ctx.wcid = NULL;
-        }
-}
-
 int
-wcid_handle_control(struct usb_ctrl_req_t *req, void *data)
+wcid_handle_control(const struct usbd_global *f, struct usb_ctrl_req_t *req)
 {
+        const struct wcid_function *wcid = (const void *)f;
+
         if (req->bRequest != WCID_REQ_ID)
                 return (0);
 
@@ -31,7 +14,7 @@ wcid_handle_control(struct usb_ctrl_req_t *req, void *data)
 
         switch (req->wIndex) {
         case WCID_DESC_COMPAT_OS:
-                desc = wcid_ctx.wcid->compat_id;
+                desc = wcid->compat_id;
                 break;
 
         case WCID_DESC_EXTENDED_PROP: {

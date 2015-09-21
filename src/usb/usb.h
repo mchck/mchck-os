@@ -315,7 +315,6 @@ struct usbd_function {
 	int interface_count;
 	int ep_rx_count;
 	int ep_tx_count;
-	int global : 1;
 };
 
 struct usbd_function_ctx_header {
@@ -348,6 +347,12 @@ struct usbd_config {
 	const struct usbd_function *function[];
 };
 
+struct usbd_global {
+	struct usbd_global *next;
+	void (*init)(const struct usbd_global *, int);
+	int (*control)(const struct usbd_global *, struct usb_ctrl_req_t *);
+};
+
 struct usbd_string_entry {
 	uint8_t index;
 	const struct usb_desc_string_t *string;
@@ -361,6 +366,7 @@ struct usbd_string_entry {
 struct usbd_device {
 	const struct usb_desc_dev_t *dev_desc;
 	const struct usbd_string_entry *string_descs;
+	const struct usbd_global *global;
 	const struct usbd_config *configs[];
 };
 

@@ -115,10 +115,7 @@ class FunctionDesc < DslItem
   field :bFunctionProtocol, :optional => true
 
   field :init_func, :optional => true
-  field :configure_func, :optional => true
   field :control_func, :optional => true
-
-  field :global, :optional => true
 
   field :wcid, :optional => true
 
@@ -151,7 +148,6 @@ class FunctionDesc < DslItem
   def gen_defs
     s = ""
     s += "usbd_func_init_t #{@init_func.to_loc_s};\n" if !@init_func.nil?
-    s += "usbd_func_configure_t #{@configure_func.to_loc_s};\n" if !@configure_func.nil?
     s += "usbd_func_control_t #{@control_func.to_loc_s};\n" if !@control_func.nil?
     s
   end
@@ -169,10 +165,8 @@ _end_
   def gen_func_init
     s = "\t{\n"
     s += "\t\t.init = #{@init_func.to_loc_s},\n" if !@init_func.nil?
-    s += "\t\t.configure = #{@configure_func.to_loc_s},\n" if !@configure_func.nil?
     s += "\t\t.control = #{@control_func.to_loc_s},\n" if !@control_func.nil?
     s += "\t\t.interface_count = #{@interface.count},\n"
-    s += "\t\t.global = 1,\n" if !@global.nil?
     s += "\t},"
   end
 
@@ -220,6 +214,31 @@ _end_
     else
       self.class::FunctionVarName
     end
+  end
+end
+
+class GlobalDesc < DslItem
+  field :init_func, :optional => true
+  field :control_func, :optional => true
+
+  def device
+    @parent
+  end
+
+  def renumber!(id)
+    @var_name = "usb_global_#{id}"
+  end
+
+  def gen_init(nextid)
+    s = "\t{\n"
+    s += "\t\t.next = &#{nextid}\n" if nextid
+    s += "\t\t.init = #{@init_func.to_loc_s},\n" if !@init_func.nil?
+    s += "\t\t.control = #{@control_func.to_loc_s},\n" if !@control_func.nil?
+    s += "\t},"
+  end
+
+  def get_var(func="head")
+    "#@var_name.#{func}"
   end
 end
 
@@ -311,6 +330,8 @@ class DeviceDesc < DslItem
   field(:iManufacturer) {|s| @iManufacturer = add_string(s)}
   field(:iProduct) {|s| @iProduct = add_string(s)}
 
+  block :global, GlobalDesc, :list => true
+
   def initialize(name)
     super()
     @name = name
@@ -341,6 +362,9 @@ class DeviceDesc < DslItem
     @config.each_with_index do |c, i|
       c.renumber!(i + 1)
     end
+    @global.each_with_index do |g, i|
+      g.renumber!(i)
+    end
   end
 
   def gen_defs
@@ -350,6 +374,7 @@ class DeviceDesc < DslItem
 
   def gen_vars
     # XXX change class/subclass to declare IAD when present
+    (@global + [nil]).each_cons(2).map{|f, fn| f.gen_vars(fn ? fn.get_var : nil)}.join("\n") +
     @config.map{|c| c.gen_vars}.join("\n") +
       <<_end_
 
@@ -380,6 +405,7 @@ static const struct usbd_string_entry #{@name.to_loc_s}_str_desc[] = {
 const struct usbd_device #{@name.to_loc_s} = {
 	.dev_desc = &#{@name.to_loc_s}_dev_desc,
 	.string_descs = #{@name.to_loc_s}_str_desc,
+	.global = #{@global.empty? ? "NULL" : "&"+@global.first.get_var},
 	.configs = {
 		#{@config.map{|c| "&#{c.get_var},"}.join("\n")}
 		NULL

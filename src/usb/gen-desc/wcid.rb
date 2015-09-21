@@ -1,7 +1,4 @@
-class WcidDesc < FunctionDesc
-  #TypeName = "struct wcid_function"
-  #FunctionVarName = "wcid_function"
-
+class WcidDesc < GlobalDesc
   @@wcid_id = 0
 
   child_block :wcid
@@ -9,9 +6,7 @@ class WcidDesc < FunctionDesc
   def initialize
     super
 
-    init_func :wcid_init
     control_func :wcid_handle_control
-    global true
 
     @wcid_id = @@wcid_id
     @@wcid_id += 1
@@ -19,19 +14,15 @@ class WcidDesc < FunctionDesc
     self.device.add_string_raw("USB_DESC_WCID_OS", "WCID_REQ_ID")
   end
 
-  def gen_func_defs
-
-  end
-
-  def gen_func_init
+  def gen_init(nextid)
     <<_end_
-#{super}
+#{super(nextid)}
 	.compat_id = &wcid_data_#@wcid_id.header,
 _end_
   end
 
-  def gen_vars
-    wfs = parent.get_function.map do |f|
+  def gen_vars(nextid)
+    wfs = parent.get_config.first.get_function.map do |f|
       wcid = f.get_wcid
       next if wcid.nil?
       [f.get_interface.first.ifacenum, wcid]
@@ -72,7 +63,7 @@ _end_
 };
 
 const struct wcid_function #@var_name = {
-#{gen_func_init}
+#{gen_init(nextid)}
 };
 
 _end_

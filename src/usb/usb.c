@@ -243,6 +243,17 @@ usb_get_config_data(int config)
 		return (NULL);
 }
 
+__noinline
+static void
+usb_init_config(const struct usbd_config *config, int init)
+{
+	for (const struct usbd_function * const *fp = config->function; *fp != NULL; ++fp) {
+		const struct usbd_function *f = *fp;
+		if (f->init)
+			f->init(f, init);
+	}
+}
+
 static int
 usb_set_config(int config)
 {
@@ -252,11 +263,7 @@ usb_set_config(int config)
 		if (config_data->init != NULL)
 			config_data->init(0);
 
-		for (const struct usbd_function * const *fp = config_data->function; *fp != NULL; ++fp) {
-			const struct usbd_function *f = *fp;
-			if (f->init != NULL)
-				f->init(f, 0);
-		}
+		usb_init_config(config_data, 0);
 	}
 
 	if (config != 0) {
@@ -266,11 +273,7 @@ usb_set_config(int config)
 		if (!config_data)
 			return (-1);
 
-		for (const struct usbd_function * const *fp = config_data->function; *fp != NULL; ++fp) {
-			const struct usbd_function *f = *fp;
-			if (f->init != NULL)
-				f->init(f, 1);
-		}
+		usb_init_config(config_data, 1);
 
 		if (config_data->init != NULL)
 			config_data->init(1);
@@ -376,15 +379,10 @@ usb_handle_control_nonstddev(struct usb_ctrl_req_t *req)
 			return (1);
 	}
 
-	for (const struct usbd_config *const *cfg = usb.identity->configs; *cfg != NULL; ++cfg) {
-		for (const struct usbd_function *const *fp = (*cfg)->function; *fp != NULL; ++fp) {
-			const struct usbd_function *f = *fp;
-
-			if (f->global &&
-			    f->control &&
-			    f->control(req, NULL))
-				return (1);
-		}
+	for (const struct usbd_global *g = usb.identity->global; g != NULL; g = g->next) {
+		if (g->control &&
+		    g->control(g, req))
+			return (1);
 	}
 
 	usb_handle_control_status(-1);
@@ -588,13 +586,9 @@ usb_restart(void)
 	usb_init_ep(&usb.functions, 0, USB_EP_TX, EP0_BUFSIZE);
 	usb_setup_control();
 
-	for (const struct usbd_config *const *cfg = usb.identity->configs; *cfg != NULL; ++cfg) {
-		for (const struct usbd_function *const *fp = (*cfg)->function; *fp != NULL; ++fp) {
-			const struct usbd_function *f = *fp;
-
-			if (f->global && f->init)
-				f->init(f, 1);
-		}
+	for (const struct usbd_global *g = usb.identity->global; g != NULL; g = g->next) {
+		if (g->init)
+			g->init(g, 1);
 	}
 }
 
