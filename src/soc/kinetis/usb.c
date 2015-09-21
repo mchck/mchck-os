@@ -266,6 +266,8 @@ USB0_Handler(void)
                 struct usb_xfer_info stat = {.raw = USB0_STAT};
                 usb_handle_transaction(&stat);
         }
+
+        const struct usbd_config *c = usb_get_config_data(-1);
         if (istat & USB_ISTAT_SLEEP_MASK) {
                 bf_set_reg(USB0_INTEN, USB_INTEN_SLEEPEN, 0);
                 bf_set_reg(USB0_INTEN, USB_INTEN_RESUMEEN, 1);
@@ -278,7 +280,6 @@ USB0_Handler(void)
                  */
                 USB0_ISTAT = istat;
 
-                const struct usbd_config *c = usb_get_config_data(-1);
                 if (c && c->suspend)
                         c->suspend();
         }
@@ -293,7 +294,6 @@ USB0_Handler(void)
                 bf_set_reg(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
                 bf_set_reg(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
 
-                const struct usbd_config *c = usb_get_config_data(-1);
                 if (c && c->resume)
                         c->resume();
 
