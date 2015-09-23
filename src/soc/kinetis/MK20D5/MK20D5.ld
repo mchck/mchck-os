@@ -7,18 +7,10 @@ MEMORY
          *
          * Do the same for memory to make size debugging easier.
          */
-        loader_rom (rx) : ORIGIN = LOADER_ADDR, LENGTH = 1M
-        app_rom (rx) : ORIGIN = APP_ADDR, LENGTH = 1M
-        ram (rwx) : ORIGIN = 0x20000000 - RAM_SIZE / 2, LENGTH = 1M
+        loader_rom (rx) : ORIGIN = 0, LENGTH = 1M
+        app_rom (rx) : ORIGIN = 0xc00, LENGTH = 1M
+        ram (rwx) : ORIGIN = 0x20000000 - 32*1024 / 2, LENGTH = 1M
 }
-
-#define TARGET_SECTIONS_LDSCRIPT "MK20D5-sections.ld"
-
-/* common peripheral / misc data for K20 series MCUs */
 
 _app_rom = ORIGIN(app_rom);
 _eram = ORIGIN(ram) + LENGTH(ram);
-
-/* PACK SECTIONS FIX .isr_vector = 0 */
-/* PACK SECTIONS FIX .flash_config = 0x400 */
-/* PACK SECTIONS IGNORE .pin_hooks.* */

@@ -2,8 +2,7 @@ SOC+= kinetis
 
 CFLAGS+=	-mcpu=cortex-m4 -msoft-float -mthumb
 
-TARGETLD= MK20D5.ld
-CPPFLAGS.ld+= -I$(call srcpath,src/soc/kinetis/MK20D5) #XXX thispath
+LDSCRIPTS+= $(call srcpath,src/soc/kinetis/MK20D5/MK20D5.ld)
 
 ifneq ($(findstring 32,${TARGET}),)
 RAM_SIZE=8192
@@ -14,9 +13,6 @@ RAM_SIZE=16384
 FLASH_SIZE=131072
 endif
 endif
-
-FIXED_SECTIONS+=	-s 0:.isr_vector
-FIXED_SECTIONS+=	-s 0x400:.flash_config
 
 ifneq ($(filter noboot,${TARGET_MODE}),)
 LOADER=		yes

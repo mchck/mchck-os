@@ -2,14 +2,10 @@ SOC+= kinetis
 
 CFLAGS+=	-mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb
 
-TARGETLD= MK24F12.ld
-CPPFLAGS.ld+= -I$(call srcpath,src/soc/kinetis/MK24F12) #XXX thispath
+LDSCRIPTS+= $(call srcpath,src/soc/kinetis/MK24F12/MK24F12.ld) #XXX thispath
 
 RAM_SIZE=256*1024
 FLASH_SIZE=1024*1024
-
-FIXED_SECTIONS+=	-s 0:.isr_vector
-FIXED_SECTIONS+=	-s 0x400:.flash_config
 
 ifneq ($(filter noboot,${TARGET_MODE}),)
 LOADER=		yes

@@ -2,8 +2,7 @@ SOC+= kinetis
 
 CFLAGS+=	-mcpu=cortex-m0 -msoft-float -mthumb
 
-TARGETLD= MKL26Z4.ld
-CPPFLAGS.ld+= -I$(call srcpath,src/soc/kinetis/MKL26Z4) #XXX thispath
+LDSCRIPTS+= $(call srcpath,src/soc/kinetis/MKL26Z4/MKL26Z4.ld)
 
 ifneq ($(findstring 32,${TARGET}),)
 RAM_SIZE=4096
@@ -14,9 +13,6 @@ RAM_SIZE=16384
 FLASH_SIZE=131072
 endif
 endif
-
-FIXED_SECTIONS+=	-s 0:.isr_vector
-FIXED_SECTIONS+=	-s 0x400:.flash_config
 
 ifneq ($(filter noboot,${TARGET_MODE}),)
 LOADER=		yes

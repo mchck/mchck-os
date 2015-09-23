@@ -3,10 +3,6 @@ _libdir:=       $(abspath $(dir $(lastword ${MAKEFILE_LIST}))/..)
 -include .mchckrc
 -include ${_libdir}/.mchckrc
 
-ifndef MAKECMDGOALS
-.DEFAULT_GOAL:=
-endif
-
 is-make-clean=	$(filter clean realclean,${MAKECMDGOALS})
 
 define srcpath
@@ -105,8 +101,7 @@ PATH:=	${SATDIR}/bin:${PATH}
 export PATH
 endif
 
-COMPILER_PATH=	${_libdir}/build/scripts
-export COMPILER_PATH
+LINKER_COMPILER_PATH=	${_libdir}/build/scripts
 
 BOARD?=	mchck
 
@@ -125,41 +120,24 @@ endef
 include $(call srcpath,${BOARD}/build.mk,src/board)
 $(call includesoc)
 
+ifndef MAKECMDGOALS
+.DEFAULT_GOAL:=
+endif
+
 COPTFLAGS?=	-Os
 CWARNFLAGS?=	-Wall -Wno-main -Wshadow -fno-common
 
 CFLAGS+=	-fstrict-volatile-bitfields
 ifndef NO_LTO
-CFLAGS+=	-flto -fno-use-linker-plugin
+CFLAGS+=	-flto
 endif
 
-LDFLAGS+=	-Wl,--gc-sections
-LDFLAGS+=	-fwhole-program -specs nano.specs
-CPPFLAGS.ld+=	-P -CC -I${_libdir}/build/ld -I.
-CPPFLAGS.ld+=	-DTARGET_LDSCRIPT='"${TARGETLD}"'
-CPPFLAGS.ld+=	-DLOADER_ADDR='${LOADER_ADDR}'
-CPPFLAGS.ld+=	-DLOADER_SIZE='${LOADER_SIZE}'
-CPPFLAGS.ld+=	-DAPP_ADDR='${APP_ADDR}'
-CPPFLAGS.ld+=	-DAPP_SIZE='${APP_SIZE}'
-CPPFLAGS.ld+=	-DRAM_SIZE='${RAM_SIZE}'
+LDFLAGS.first+= ${LDFLAGS}
+LDFLAGS.first+=	-fwhole-program -specs nano.specs -nostartfiles
 
-ifdef LOADER
-CPPFLAGS.ld+=	-DMEMCFG_LDSCRIPT='"loader.ld"'
-LDSCRIPTS+=	${_libdir}/build/ld/loader.ld
-BINSIZE=	${LOADER_SIZE}
-LOADADDR=	${LOADER_ADDR}
-else
-CPPFLAGS.ld+=	-DMEMCFG_LDSCRIPT='"app.ld"'
-LDSCRIPTS+=	${_libdir}/build/ld/app.ld
-BINSIZE=	${APP_SIZE}
-LOADADDR=	${APP_ADDR}
-endif
-
-LDTEMPLATE=	${PROG}.ld-template
-LDFLAGS+=	-T ${LDTEMPLATE}
-LDFLAGS+=       -nostartfiles
-LDFLAGS+=	-Wl,-Map=${PROG}.map
-LDFLAGS+=	-Wl,-output-linker-script=${PROG}.ld
+LDFLAGS.final+=	${LDFLAGS}
+LDFLAGS.final+=	-nostartfiles -nostdlib
+LDFLAGS.final+=	-Wl,-Map=${PROG}.map
 
 
 CLEANFILES+=	${PROG}.hex ${PROG}.elf ${PROG}.bin ${PROG}.map
@@ -178,8 +156,18 @@ CPPFLAGS+=	$(addprefix -I,$(call srcpath,${INCLUDEDIRS},src))
 # linkdep defines LINKOBJS
 include ${_libdir}/build/mk/linkdep.mk
 
-${PROG}.elf: ${LINKOBJS} ${LDLIBS} ${LDTEMPLATE}
-	${CC} -o $@ ${CFLAGS} ${LDFLAGS} -Wl,--start-group ${LINKOBJS} ${LDLIBS} -Wl,--end-group
+${PROG}.elf: ${PROG}.lto.o ${PROG}.ld
+	${CC} -o $@ ${CFLAGS} ${LDFLAGS.final} -T ${PROG}.ld $<
+
+${PROG}.lto.o: ${LINKOBJS} ${LDLIBS}
+	${CC} -o $@ -Wl,-i ${CFLAGS} ${LDFLAGS.first} -Wl,--start-group ${LINKOBJS} ${LDLIBS} -Wl,--end-group
+
+ifndef HAVE_LDSCRIPT_GENERATOR
+${PROG}.ld: ${LDSCRIPTS}
+	rm -f $@; cat $+ > $@
+endif
+CLEANFILES+=	${PROG}.ld ${PROG}.lto.o
+
 
 define check-size
 	@${SIZE} $< | awk 'END { \
@@ -202,10 +190,6 @@ endef
 %.hex: %.elf
 	$(check-size)
 	${OBJCOPY} -O ihex $< $@
-
-${LDTEMPLATE}: ${_libdir}/build/ld/link.ld.S ${LDSCRIPTS}
-	${CPP} -o $@ ${CPPFLAGS.ld} $<
-CLEANFILES+=	${LDTEMPLATE} ${PROG}.ld
 
 gdb: check-programmer ${PROG}.elf
 	${RUBY} ${_libdir}/programmer/gdbserver.rb ${MCHCKADAPTER} -- ${GDB} -readnow -ex 'target extended-remote :1234' ${PROG}.elf

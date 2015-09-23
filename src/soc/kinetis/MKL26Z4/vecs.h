@@ -8,8 +8,7 @@
  *     default default handler.
  */
 
-/* Generic ARM M4 */
-VH(1, Reset, Default_Reset_Handler)
+/* Generic ARM M0+ */
 V(2, NMI)
 V(3, Hard_Fault)
 #ifndef SHORT_ISR

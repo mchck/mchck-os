@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+
+# This script is called by gcc's collect2 during link phase.  We
+# intercept linking to fix section packing.  This is really only
+# necessary for link-time-optimization (-flto) and loaders, because
+# gcc replaces the original object files with an optimized one.
+
+require 'tempfile'
+require 'optparse'
+
+$: << File.dirname(__FILE__)
+require 'pack-sections'
+
+scripts = []
+outfile = nil
+
+OptionParser.new do |opts|
+  opts.on("-T SCRIPT", "input linker script") do |script|
+    scripts << script
+  end
+  opts.on("-o FILE", "output linker script") do |script|
+    if script == '-'
+      outfile = nil
+    else
+      outfile = script
+    end
+  end
+end.parse!
+
+object_files = ARGV
+
+ln = scripts.map{|f| File.readlines(f)}.flatten
+
+fixed_sects = []
+linker_out = []
+
+ln.grep(/[.]\s*=\s*(0x[[:xdigit:]]+|[[:digit:]]+)\s*;\s*KEEP\([^(]*\((.*)\)\)/) do |m|
+  s = Objdump::Section.new
+  s.name = $2
+  s.addr = Integer($1)
+  fixed_sects << s
+end
+
+all_sect = Objdump.new object_files
+ln.grep(/PACK SECTIONS IGNORE\s+([^\s]+)/) do |m|
+  all_sect.delete_if{|s| File.fnmatch($1, s.name)}
+end
+
+fixed_sects.delete_if do |fs|
+  all_sect.select{|s| s.name == fs.name}.empty?
+end
+
+l = Linker.new(all_sect, fixed_sects)
+
+skipping = false
+ln.each do |line|
+  case line
+  when /PACK SECTIONS START/
+    linker_out << line
+    linker_out += l.pack.map{|l| "#{l}\n"}
+    skipping = true
+  when /PACK SECTIONS END/
+    skipping = false
+  end
+  next if skipping
+  linker_out << line
+end
+
+if outfile
+  File.open(outfile, 'w') do |f|
+    f.puts linker_out.join
+  end
+else
+  $stdout.puts linker_out.join
+end

@@ -9,7 +9,6 @@
  */
 
 /* Generic ARM M4 */
-VH(1, Reset, Default_Reset_Handler)
 V(2, NMI)
 V(3, Hard_Fault)
 V(4, Mem_Manage_Fault)

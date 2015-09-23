@@ -14,6 +14,7 @@
 
 void main(void);
 
+__attribute__((__externally_visible__))
 void
 Default_Reset_Handler(void)
 {

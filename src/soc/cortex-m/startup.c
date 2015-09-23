@@ -31,6 +31,7 @@ typedef void (isr_handler_t)(void);
 
 isr_handler_t Default_Handler __attribute__((__weak__, __alias__("__Default_Handler")));
 isr_handler_t Default_Reset_Handler;
+isr_handler_t Reset_Handler __attribute__((__weak__, __alias__("Default_Reset_Handler"), __externally_visible__));
 
 
 #define VH(num, handler, default)                               \
@@ -55,10 +56,11 @@ isr_handler_t Default_Reset_Handler;
  * and the occasional `0' for the reserved entries.
  */
 
-__attribute__ ((__section__(".isr_vector"), __used__))
+__attribute__ ((__section__(".isr_vector"), __used__, __visibility__("default"), __externally_visible__))
 isr_handler_t * const isr_vectors[] =
 {
-	(isr_handler_t *)&sys_stack[sizeof(sys_stack)/sizeof(*sys_stack)],
+	[0] = (isr_handler_t *)&sys_stack[sizeof(sys_stack)/sizeof(*sys_stack)],
+	[1] = Reset_Handler,
 #define V_handler(num, name, handler, default)	[num] = handler,
 #include "vecs.h"
 #undef V_handler
