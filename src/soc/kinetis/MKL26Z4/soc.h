@@ -30,7 +30,6 @@
 #include <soc/kinetis/pit.h>
 #include <soc/kinetis/rtc.h>
 #include <soc/kinetis/spi.h>
-#include <soc/kinetis/stdio.h>
 #include <soc/kinetis/timeout.h>
 #include <soc/kinetis/uart.h>
 #include <soc/kinetis/usb.h>

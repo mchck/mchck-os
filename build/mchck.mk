@@ -37,6 +37,7 @@ GENERATE.d=	$(CC) -MM ${CPPFLAGS} -MT $@ -MT ${@:.d=.o} -MP -MF $@ $<
 INCLUDEDIRS+=	include . $(call srcpath,${BOARD},src/board) $(foreach _soc,${SOC},$(call srcpath,${_soc},src/soc))
 CPPFLAGS+=	-std=gnu11
 CFLAGS+=	-fplan9-extensions
+CFLAGS+=	-ffreestanding
 CFLAGS+=	-ggdb3 -ffunction-sections -fdata-sections
 ifndef DEBUG
 CFLAGS+=	${COPTFLAGS}
@@ -134,13 +135,13 @@ endif
 
 LDFLAGS.first+= ${LDFLAGS}
 LDFLAGS.first+=	-fwhole-program -specs nano.specs -nostartfiles
+LDFLAGS.first+= -Wl,-Map=${PROG}.lto.map
 
-LDFLAGS.final+=	${LDFLAGS}
 LDFLAGS.final+=	-nostartfiles -nostdlib
 LDFLAGS.final+=	-Wl,-Map=${PROG}.map
 
 
-CLEANFILES+=	${PROG}.hex ${PROG}.elf ${PROG}.bin ${PROG}.map
+CLEANFILES+=	${PROG}.hex ${PROG}.elf ${PROG}.bin ${PROG}.map ${PROG}.lto.map
 
 all: ${PROG}.bin ${PROG}.hex
 
@@ -164,11 +165,12 @@ ${PROG}.lto.o: ${LINKOBJS} ${LDLIBS}
 
 ifndef HAVE_LDSCRIPT_GENERATOR
 ${PROG}.ld: ${LDSCRIPTS}
-	rm -f $@; cat $+ > $@
+	rm -f $@; cat </dev/null $+ > $@
 endif
 CLEANFILES+=	${PROG}.ld ${PROG}.lto.o
 
 
+ifneq ('${BINSIZE}','')
 define check-size
 	@${SIZE} $< | awk 'END { \
 		used_flash=$$1; \
@@ -182,6 +184,7 @@ define check-size
 		} \
 	}'
 endef
+endif
 
 %.bin: %.elf
 	$(check-size)

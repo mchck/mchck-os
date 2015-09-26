@@ -1,8 +1,25 @@
 #include <mchck.h>
 
-static FILE _stdout_instance;
+static size_t
+devzero_write(const uint8_t *buf, size_t len, void *ops_data)
+{
+        return (len);
+}
+
+static const struct _stdio_file_ops _stdout_devzero_ops = {
+        .init = NULL,
+        .write = devzero_write
+};
+
+extern const struct _stdio_file_ops _stdout_default_ops __attribute__((weak, alias("_stdout_devzero_ops")));
+
+static FILE _stdout_instance = {
+        .ops = &_stdout_default_ops
+};
+
 
 FILE *stdout = &_stdout_instance;
+
 
 void
 fflush(FILE *f)
@@ -45,7 +62,7 @@ fputc(int c, FILE *f)
         f->outbuf_head = (f->outbuf_head + 1) % sizeof(f->outbuf);
 
         /* flush on newline or if more than half full */
-        if (f->ops && (c == '\n' || buf_count(f) > sizeof(f->outbuf) / 2))
+        if (c == '\n' || buf_count(f) > sizeof(f->outbuf) / 2)
                 fflush(f);
         crit_exit();
 
@@ -70,7 +87,7 @@ buffer_file_write(const uint8_t *buf, size_t len, void *ops_data)
         return n;
 }
 
-struct _stdio_file_ops buffer_opts = {
+static struct _stdio_file_ops buffer_ops = {
         .init = NULL,
         .write = buffer_file_write
 };
@@ -82,6 +99,7 @@ buffer_file_init(FILE *f, struct buffer_file_ctx *ctx,
         ctx->buf = buf;
         ctx->buflen = buflen;
         ctx->len = 0;
+        f->ops = &buffer_ops;
         f->ops_data = ctx;
 }
 
