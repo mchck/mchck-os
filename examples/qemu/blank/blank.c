@@ -42,6 +42,8 @@ struct thread *curthread;
 uint8_t supervisor_stack[512] __attribute__((aligned(8)));
 struct thread initial;
 
+uint32_t scheduler_timeslice = 10000;
+
 
 __attribute__((naked))
 uint32_t
@@ -107,6 +109,9 @@ enter_thread_mode(void)
 
         __set_MSP((uintptr_t)supervisor_stack + sizeof(supervisor_stack));
 
+        SysTick->LOAD = scheduler_timeslice;
+        SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+
         /* enter scheduler */
         curthread = &initial;
         curthread->state = thread_state_running;
@@ -171,6 +176,12 @@ sys_wakeup(uint32_t ident)
 }
 
 void
+SysTick_Handler(void)
+{
+        sys_yield();
+}
+
+void
 SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
 {
         int ret = 0;
@@ -205,10 +216,15 @@ PendSV_Handler(void)
         scheduler();
 
         /* idle -> sleep */
-        if (curthread)
+        if (curthread) {
                 SCB->SCR &= SCB_SCR_SLEEPDEEP_Msk;
-        else
+                SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+        } else {
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+                SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
+        }
+        SysTick->VAL = 0;       /* trigger reload */
+
         /* XXX need idle thread to cope with spurious wakeups */
 
         /* restore remaining registers from task stack */
@@ -228,14 +244,14 @@ uint8_t stack2[512] __attribute__((aligned(8)));
 void
 foo(void *arg)
 {
-        for (;;) {
+        for (int rep = 200; rep; --rep) {
                 for (int i = (int)arg; i >= 0; --i) {
                         printf("hi %u %d\n", (unsigned)arg, i);
-                        yield();
                 }
                 wakeup(foo);
                 wait(foo);
         }
+        wait(NULL);
 }
 
 void
@@ -244,8 +260,9 @@ main(void)
         thread_init(stack, sizeof(stack), foo, (void *)5);
         thread_init(stack2, sizeof(stack2), foo, (void *)8);
         enter_thread_mode();
-        for (;;) {
+        for (int rep = 5000; rep; --rep) {
                 printf("main\n");
-                yield();
         }
+        printf("end\n");
+        wait(NULL);
 }
