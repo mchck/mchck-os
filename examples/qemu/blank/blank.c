@@ -21,7 +21,8 @@ struct thread {
         struct exception_frame *sp;
         STAILQ_ENTRY(thread) queue;
         enum thread_state state;
-        uintptr_t ident;
+        uint32_t ident;
+        uint32_t slice_remaining;
 };
 
 
@@ -115,6 +116,7 @@ enter_thread_mode(void)
         /* enter scheduler */
         curthread = &initial;
         curthread->state = thread_state_running;
+        curthread->slice_remaining = 0;
         yield();
 }
 
@@ -138,13 +140,29 @@ scheduler(void)
         if (curthread) {
                 STAILQ_REMOVE_HEAD(&runq, queue);
                 curthread->state = thread_state_running;
+                if (!curthread->slice_remaining)
+                        curthread->slice_remaining = scheduler_timeslice;
         }
         crit_exit();
 }
 
 void
+sched_update_timeslice(void)
+{
+        curthread->slice_remaining = SysTick->VAL;
+        /* overflow or very little left */
+        if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) ||
+            curthread->slice_remaining < scheduler_timeslice / 256)
+                curthread->slice_remaining = 0;
+}
+
+void
 sys_yield(void)
 {
+        if (curthread->state == thread_state_running)
+                curthread->slice_remaining = 0;
+        else
+                sched_update_timeslice();
         SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
@@ -168,7 +186,10 @@ sys_wakeup(uint32_t ident)
                         continue;
                 STAILQ_REMOVE(&blockedq, t, thread, queue);
                 t->state = thread_state_runq;
-                STAILQ_INSERT_TAIL(&runq, t, queue);
+                if (t->slice_remaining)
+                        STAILQ_INSERT_HEAD(&runq, t, queue);
+                else
+                        STAILQ_INSERT_TAIL(&runq, t, queue);
                 found = 1;
         }
         crit_exit();
@@ -205,6 +226,7 @@ void __attribute__((naked))
 PendSV_Handler(void)
 {
         /* save remaining registers on task stack */
+        /* XXX what if curthread is NULL? */
         __asm__ volatile (
                 "push {lr}\n"
                 "mrs %[savesp], PSP\n"
@@ -218,6 +240,7 @@ PendSV_Handler(void)
         /* idle -> sleep */
         if (curthread) {
                 SCB->SCR &= SCB_SCR_SLEEPDEEP_Msk;
+                SysTick->LOAD = curthread->slice_remaining;
                 SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
         } else {
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
@@ -244,8 +267,8 @@ uint8_t stack2[512] __attribute__((aligned(8)));
 void
 foo(void *arg)
 {
-        for (int rep = 200; rep; --rep) {
-                for (int i = (int)arg; i >= 0; --i) {
+        for (int rep = 10000; rep;) {
+                for (int i = (int)arg; i >= 0 && rep; --i, --rep) {
                         printf("hi %u %d\n", (unsigned)arg, i);
                 }
                 wakeup(foo);
@@ -260,7 +283,7 @@ main(void)
         thread_init(stack, sizeof(stack), foo, (void *)5);
         thread_init(stack2, sizeof(stack2), foo, (void *)8);
         enter_thread_mode();
-        for (int rep = 5000; rep; --rep) {
+        for (int rep = 20000; rep; --rep) {
                 printf("main\n");
         }
         printf("end\n");
