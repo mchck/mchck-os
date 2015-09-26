@@ -84,7 +84,9 @@ thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
         f->xpsr = 1 << 24;
         t->sp = f;
         t->state = thread_state_runq;
+        crit_enter();
         STAILQ_INSERT_TAIL(&runq, t, queue);
+        crit_exit();
         return (t);
 }
 
@@ -114,6 +116,7 @@ enter_thread_mode(void)
 void
 scheduler(void)
 {
+        crit_enter();
         if (curthread) {
                 struct runq *q;
 
@@ -131,6 +134,7 @@ scheduler(void)
                 STAILQ_REMOVE_HEAD(&runq, queue);
                 curthread->state = thread_state_running;
         }
+        crit_exit();
 }
 
 void
@@ -152,6 +156,7 @@ sys_wakeup(uint32_t ident)
 {
         int found = 0;
 
+        crit_enter();
         struct thread *t, *tnext;
         STAILQ_FOREACH_SAFE(t, &blockedq, queue, tnext) {
                 if (t->ident != ident)
@@ -161,6 +166,7 @@ sys_wakeup(uint32_t ident)
                 STAILQ_INSERT_TAIL(&runq, t, queue);
                 found = 1;
         }
+        crit_exit();
         return (found);
 }
 
@@ -189,6 +195,7 @@ PendSV_Handler(void)
 {
         /* save remaining registers on task stack */
         __asm__ volatile (
+                "push {lr}\n"
                 "mrs %[savesp], PSP\n"
                 "stmdb %[savesp]!, {r4-r11}\n"
                 : [savesp] "=r" (curthread->sp)
@@ -202,11 +209,13 @@ PendSV_Handler(void)
                 SCB->SCR &= SCB_SCR_SLEEPDEEP_Msk;
         else
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+        /* XXX need idle thread to cope with spurious wakeups */
 
         /* restore remaining registers from task stack */
         __asm__ volatile (
                 "ldmia %[savesp]!, {r4-r11}\n"
                 "msr PSP, %[savesp]\n"
+                "pop {lr}\n"
                 "bx lr\n"
                 :: [savesp] "r" (curthread->sp) : "0"
                 );
