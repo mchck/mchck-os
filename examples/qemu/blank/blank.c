@@ -17,6 +17,14 @@ struct thread {
         int runnable;
 };
 
+
+enum sys_op {
+        sys_op_yield,
+        sys_op_wait,
+        sys_op_wakeup,
+};
+
+
 STAILQ_HEAD(runq, thread);
 
 struct runq runq = STAILQ_HEAD_INITIALIZER(runq);
@@ -24,12 +32,9 @@ struct runq blockedq = STAILQ_HEAD_INITIALIZER(blockedq);
 
 struct thread *curthread;
 
+uint8_t supervisor_stack[512] __attribute__((aligned(8)));
+struct thread initial;
 
-enum sys_op {
-        sys_op_yield,
-        sys_op_wait,
-        sys_op_wakeup,
-};
 
 __attribute__((naked))
 uint32_t
@@ -76,7 +81,7 @@ thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
         return (t);
 }
 
-void __attribute__((noreturn))
+void
 enter_thread_mode(void)
 {
         /**
@@ -91,19 +96,12 @@ enter_thread_mode(void)
         __set_CONTROL(ctrl.w);
         __ISB();
 
-        /* XXX offset MSP? */
+        __set_MSP((uintptr_t)supervisor_stack + sizeof(supervisor_stack));
 
         /* enter scheduler */
+        curthread = &initial;
+        curthread->runnable = 1;
         yield();
-
-        /**
-         * We should never get here (because of SLEEPONEXIT), but ARM
-         * says that there might be spurious returns.
-         */
-        for (;;)
-                __WFI();
-
-        __builtin_unreachable();
 }
 
 void
@@ -224,4 +222,8 @@ main(void)
         thread_init(stack, sizeof(stack), foo, (void *)5);
         thread_init(stack2, sizeof(stack2), foo, (void *)8);
         enter_thread_mode();
+        for (;;) {
+                printf("main\n");
+                yield();
+        }
 }
