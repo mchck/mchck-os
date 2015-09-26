@@ -10,11 +10,18 @@ struct exception_frame {
         uint32_t r0, r1, r2, r3, r12, lr, ret, xpsr;
 };
 
+enum thread_state {
+        thread_state_invalid,
+        thread_state_running,
+        thread_state_runq,
+        thread_state_blocked,
+};
+
 struct thread {
         struct exception_frame *sp;
         STAILQ_ENTRY(thread) queue;
+        enum thread_state state;
         uintptr_t ident;
-        int runnable;
 };
 
 
@@ -76,7 +83,7 @@ thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
         f->r0 = (uintptr_t)arg;
         f->xpsr = 1 << 24;
         t->sp = f;
-        t->runnable = 1;
+        t->state = thread_state_runq;
         STAILQ_INSERT_TAIL(&runq, t, queue);
         return (t);
 }
@@ -100,7 +107,7 @@ enter_thread_mode(void)
 
         /* enter scheduler */
         curthread = &initial;
-        curthread->runnable = 1;
+        curthread->state = thread_state_running;
         yield();
 }
 
@@ -109,15 +116,21 @@ scheduler(void)
 {
         if (curthread) {
                 struct runq *q;
-                if (curthread->runnable)
+
+                if (curthread->state == thread_state_running)
+                        curthread->state = thread_state_runq;
+
+                if (curthread->state == thread_state_runq)
                         q = &runq;
                 else
                         q = &blockedq;
                 STAILQ_INSERT_TAIL(q, curthread, queue);
         }
         curthread = STAILQ_FIRST(&runq);
-        if (curthread)
+        if (curthread) {
                 STAILQ_REMOVE_HEAD(&runq, queue);
+                curthread->state = thread_state_running;
+        }
 }
 
 void
@@ -130,7 +143,7 @@ void
 sys_wait(uint32_t ident)
 {
         curthread->ident = ident;
-        curthread->runnable = 0;
+        curthread->state = thread_state_blocked;
         sys_yield();
 }
 
@@ -144,7 +157,7 @@ sys_wakeup(uint32_t ident)
                 if (t->ident != ident)
                         continue;
                 STAILQ_REMOVE(&blockedq, t, thread, queue);
-                t->runnable = 1;
+                t->state = thread_state_runq;
                 STAILQ_INSERT_TAIL(&runq, t, queue);
                 found = 1;
         }
