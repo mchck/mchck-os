@@ -1,3 +1,3 @@
-PROG= blank
+PROG= sched
 
 include ../build.mk
