@@ -1,3 +1,4 @@
+TARGET.cortex-m+= m4
 SOC+=	cortex-m
 
 CFLAGS+=	-mcpu=cortex-m4 -mfloat-abi=soft -mthumb

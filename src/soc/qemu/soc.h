@@ -9,5 +9,6 @@ typedef enum IRQn_Type {
 
 #include <soc/cortex-m/core_cm4.h>
 #include <soc/cortex-m/soc.h>
+#include <soc/cortex-m/sched-m3.h>
 
 void semihosting_exit(int fail) __attribute__((noreturn));
