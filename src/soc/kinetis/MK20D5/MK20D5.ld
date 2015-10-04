@@ -7,9 +7,9 @@ MEMORY
          *
          * Do the same for memory to make size debugging easier.
          */
-        loader_rom (rx) : ORIGIN = 0, LENGTH = 1M
-        app_rom (rx) : ORIGIN = 0xc00, LENGTH = 1M
-        ram (rwx) : ORIGIN = 0x20000000 - 32*1024 / 2, LENGTH = 1M
+        loader_rom (rx) : ORIGIN = 0, LENGTH = 0xc00
+        app_rom (rx) : ORIGIN = 0xc00, LENGTH = 32K-0xc00
+        ram (rwx) : ORIGIN = 0x20000000 - 8K / 2, LENGTH = 8K
 }
 
 _app_rom = ORIGIN(app_rom);

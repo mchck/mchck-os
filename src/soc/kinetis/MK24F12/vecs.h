@@ -17,7 +17,7 @@ V(6, Usage_Fault)
 #ifndef SHORT_ISR
 V(11, SVCall)
 V(12, DebugMonitor)
-V(14, PendableSrvReq)
+V(14, PendSV)
 #undef SysTick
 V(15, SysTick)
 

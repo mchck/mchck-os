@@ -1,10 +1,14 @@
 #include <mchck.h>
 
 struct exception_frame {
-        /* saved by scheduler entry */
-        uint32_t r4, r5, r6, r7, r8, r9, r10, r11;
         /* saved by CPU */
         uint32_t r0, r1, r2, r3, r12, lr, ret, xpsr;
+};
+
+struct extended_exception_frame {
+        /* saved by scheduler entry */
+        uint32_t r4, r5, r6, r7, r8, r9, r10, r11;
+        struct exception_frame;
 };
 
 static uint8_t supervisor_stack[512] __attribute__((aligned(8)));
@@ -32,7 +36,7 @@ struct thread *
 thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
 {
         struct thread *t = (void *)stackbase;
-        struct exception_frame *f = (void *)((uintptr_t)stackbase + stacksize);
+        struct extended_exception_frame *f = (void *)((uintptr_t)stackbase + stacksize);
 
         f--;
         f->ret = (uintptr_t)fun;
@@ -76,6 +80,12 @@ SysTick_Handler(void)
 void
 SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
 {
+        struct exception_frame *ex;
+        __asm__ volatile (
+                "mrs %[savesp], PSP\n"
+                : [savesp] "=r" (ex)
+                );
+
         int ret = 0;
 
         switch (op) {
@@ -90,7 +100,7 @@ SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
                 break;
         }
 
-        curthread->md.sp->r0 = ret;
+        ex->r0 = ret;
 }
 
 void __attribute__((naked))

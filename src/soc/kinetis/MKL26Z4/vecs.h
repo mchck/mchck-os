@@ -13,7 +13,7 @@ V(2, NMI)
 V(3, Hard_Fault)
 #ifndef SHORT_ISR
 V(11, SVCall)
-V(14, PendableSrvReq)
+V(14, PendSV)
 V(15, SysTick)
 V(16, DMA0)
 V(17, DMA1)
