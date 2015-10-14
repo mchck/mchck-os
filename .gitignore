@@ -4,6 +4,8 @@
 *.bin
 *.hex
 *.map
+*.tmp
+.buildflags
 examples/**/*.ld
 bootloader/**/*.ld
 cache

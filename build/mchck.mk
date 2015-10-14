@@ -1,5 +1,13 @@
 _libdir:=       $(abspath $(dir $(lastword ${MAKEFILE_LIST}))/..)
 
+ifneq ($(filter environment command,$(origin CFLAGS)),)
+_saved_CFLAGS:= ${CFLAGS}
+endif
+ifneq ($(filter environment command,$(origin BOARD)),)
+_saved_BOARD:= ${BOARD}
+endif
+-include .buildflags
+
 -include .mchckrc
 -include ${_libdir}/.mchckrc
 
@@ -214,6 +222,8 @@ endif
 ifeq ($(call is-make-clean),)
 -include $(patsubst %.o,%.d,${LINKOBJS})
 endif
+
+-include ${_libdir}/build/mk/buildflags.mk
 
 ${_objs} $(patsubst %.o,%.d,${_objs}): ${_gensrc}
 
