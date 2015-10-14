@@ -26,7 +26,7 @@ PORTC_Handler(void)
 void
 PORTD_Handler(void)
 {
-        pin_change_handler(PORTC_BASE_PTR, &pin_hooks_D, &pin_hooks_D_end);
+        pin_change_handler(PORTD_BASE_PTR, &pin_hooks_D, &pin_hooks_D_end);
 }
 
 void
