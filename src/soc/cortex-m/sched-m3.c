@@ -14,6 +14,9 @@ struct extended_exception_frame {
 static uint8_t supervisor_stack[512] __attribute__((aligned(8)));
 static struct thread initial;
 
+static uint8_t idle_stack[16*4] __attribute__((aligned(8)));
+static struct thread idle;
+
 uint32_t scheduler_timeslice = 10000;
 
 void
@@ -32,8 +35,8 @@ syscall(enum sys_op op, ...)
                 );
 }
 
-struct thread *
-thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
+static struct thread *
+md_thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
 {
         struct thread *t = (void *)stackbase;
         struct extended_exception_frame *f = (void *)((uintptr_t)stackbase + stacksize);
@@ -43,15 +46,37 @@ thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
         f->r0 = (uintptr_t)arg;
         f->xpsr = 1 << 24;
         t->md.sp = f;
+        return (t);
+}
+
+struct thread *
+thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
+{
+        struct thread *t;
+
+        t = md_thread_init(stackbase, stacksize, fun, arg);
         mi_thread_init(t);
         return (t);
+}
+
+static void
+idle_thread(void *arg)
+{
+        for (;;)
+                __WFI();
 }
 
 void
 enter_thread_mode(void)
 {
         /**
-         * Idle (first) thread setup.
+         * Idle thread setup.  Only use md_thread_init to prevent the
+         * thread from being placed on the runq.
+         */
+        md_thread_init(idle_stack, sizeof(idle_stack), idle_thread, NULL);
+
+        /**
+         * Initial thread setup.
          */
         /* set up PSP == current (MSP) sp */
         __set_PSP(__get_MSP());
@@ -118,12 +143,15 @@ PendSV_Handler(void)
         SCB->ICSR |= SCB_ICSR_PENDSVCLR_Msk;
         scheduler();
 
+        struct thread *returnthread = curthread;
+
         /* idle -> sleep */
-        if (curthread) {
+        if (returnthread) {
                 SCB->SCR &= SCB_SCR_SLEEPDEEP_Msk;
                 SysTick->LOAD = curthread->slice_remaining;
                 SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
         } else {
+                returnthread = &idle;
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
                 SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
         }
@@ -137,6 +165,6 @@ PendSV_Handler(void)
                 "msr PSP, %[savesp]\n"
                 "pop {lr}\n"
                 "bx lr\n"
-                :: [savesp] "r" (curthread->md.sp) : "0"
+                :: [savesp] "r" (returnthread->md.sp) : "0"
                 );
 }
