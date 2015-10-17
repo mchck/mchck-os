@@ -1,3 +1,5 @@
+#define EXTERNAL_XTAL 10000000
+
 enum onboard_led_state {
         ONBOARD_LED_OFF = 0,
         ONBOARD_LED_ON = 1,

@@ -180,6 +180,10 @@ usb_reset(void)
         memset(kinetis_bdt, 0, (uintptr_t)&_usb_bdt_end - (uintptr_t)kinetis_bdt);
         USB0_ADDR = 0;
 
+#if defined(USB_CLK_RECOVER_IRC_EN_REG)
+        bf_set_reg(USB0_CLK_RECOVER_CTRL, USB_CLK_RECOVER_CTRL_RESET_RESUME_ROUGH_EN, 1);
+#endif
+
         usb_restart();
 
         USB0_CTL = USB_CTL_USBENSOFEN_MASK;
@@ -198,8 +202,15 @@ usb_reset(void)
 void
 usb_enable(void)
 {
+#if defined(USB_CLK_RECOVER_IRC_EN_REG)
+        bf_set_reg(SIM_SOPT2, SIM_SOPT2_PLLFLLSEL, SIM_PLLFLLSEL_IRC48M);
+#endif
         bf_set_reg(SIM_SOPT2, SIM_SOPT2_USBSRC, 1);   /* usb from mcg */
         bf_set_reg(SIM_SCGC4, SIM_SCGC4_USBOTG, 1);   /* enable usb clock */
+#if defined(USB_CLK_RECOVER_IRC_EN_REG)
+        bf_set_reg(USB0_CLK_RECOVER_IRC_EN, USB_CLK_RECOVER_IRC_EN_IRC_EN, 1);
+        bf_set_reg(USB0_CLK_RECOVER_CTRL, USB_CLK_RECOVER_CTRL_CLOCK_RECOVER_EN, 1);
+#endif
 
 #if USB_FMC_MASTER == 3
         /* Allow USB to access the Flash */

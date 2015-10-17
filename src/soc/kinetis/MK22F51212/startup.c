@@ -20,43 +20,29 @@ Default_Reset_Handler(void)
 {
         watchdog_disable();
 
-#ifdef EXTERNAL_XTAL
-        OSC_CR = OSC_CR_SC16P_MASK;
-        MCG.c2.raw = ((struct MCG_C2_t){
-                        .range0 = MCG_RANGE_VERYHIGH,
-                                .erefs0 = MCG_EREF_OSC
-                                }).raw;
-        MCG.c1.raw = ((struct MCG_C1_t){
-                        .clks = MCG_CLKS_EXTERNAL,
-                                .frdiv = 4, /* log2(EXTERNAL_XTAL) - 20 */
-                                .irefs = 0
-                                }).raw;
+#if EXTERNAL_XTAL
+        /* 10MHz crystal -> 2.5MHz PLL input -> 120MHz system */
 
-        while (!MCG.s.oscinit0)
+        MCG_C2 = MCG_C2_RANGE(MCG_RANGE_VERYHIGH) | MCG_C2_EREFS(MCG_EREF_OSC);
+        MCG_C1 = MCG_C1_CLKS(MCG_CLKS_EXTERNAL);
+
+        while (!bf_get_reg(MCG_S, MCG_S_OSCINIT0))
                 /* NOTHING */;
-        while (MCG.s.clkst != MCG_CLKST_EXTERNAL)
+        while (bf_get_reg(MCG_S, MCG_S_CLKST) != MCG_CLKST_EXTERNAL)
                 /* NOTHING */;
 
-        MCG.c5.raw = ((struct MCG_C5_t){
-                        .prdiv0 = ((EXTERNAL_XTAL / 2000000L) - 1),
-                                .pllclken0 = 1
-                                }).raw;
-        MCG.c6.raw = ((struct MCG_C6_t){
-                        .vdiv0 = 0,
-                        .plls = 1
-                                }).raw;
+        MCG_C5 = MCG_C5_PRDIV0(0b00011) | MCG_C5_PLLCLKEN0(1);
+        MCG_C6 = MCG_C6_VDIV0(0b11000) | MCG_C6_PLLS(1);
 
-        while (!MCG.s.pllst)
+        while (!bf_get_reg(MCG_S, MCG_S_PLLST))
                 /* NOTHING */;
-        while (!MCG.s.lock0)
+        while (!bf_get_reg(MCG_S, MCG_S_LOCK0))
                 /* NOTHING */;
 
-        MCG.c1.clks = MCG_CLKS_FLLPLL;
+        MCG_C1 = MCG_C1_CLKS(MCG_CLKS_FLLPLL);
 
-        while (MCG.s.clkst != MCG_CLKST_PLL)
+        while (bf_get_reg(MCG_S, MCG_S_CLKST) != MCG_CLKST_PLL)
                 /* NOTHING */;
-
-        SIM.sopt2.pllfllsel = SIM_PLLFLLSEL_PLL;
 #else
         /* FLL at 48MHz */
         MCG_C4 = MCG_C4_DRST_DRS(1) | MCG_C4_DMX32_MASK;

@@ -35,8 +35,9 @@ enum {
 };
 
 enum {
-        SIM_PLLFLLSEL_FLL = 0,
-        SIM_PLLFLLSEL_PLL = 1
+        SIM_PLLFLLSEL_FLL = 0b00,
+        SIM_PLLFLLSEL_PLL = 0b01,
+        SIM_PLLFLLSEL_IRC48M = 0b11,
 };
 
 enum {

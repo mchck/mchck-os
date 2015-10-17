@@ -22,6 +22,7 @@
 #include <soc/kinetis/periph/flashconfig.h>
 #include <soc/kinetis/periph/fmc.h>
 #include <soc/kinetis/periph/usbotg.h>
+#include <soc/kinetis/periph/mcg.h>
 #include <soc/kinetis/periph/sim.h>
 #include <soc/kinetis/periph/dspi.h>
 #include <soc/kinetis/periph/ftm.h>
