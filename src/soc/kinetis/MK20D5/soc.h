@@ -47,6 +47,8 @@ typedef struct MCM_MemMap {
 #define MCM_PLAMC                                MCM_PLAMC_REG(MCM_BASE_PTR)
 #define MCM_PLACR                                MCM_PLACR_REG(MCM_BASE_PTR)
 
+#define ADC0                                     ADC0_BASE_PTR
+
 
 #include <soc/cortex-m/soc.h>
 #include <soc/cortex-m/sched-m3.h>

@@ -15,28 +15,28 @@ static void
 adc_calibrate_cb(uint16_t val, int error, void *cbdata)
 {
         /* base ADC calibration */
-        if (error || bf_get_reg(ADC0_SC3, ADC_SC3_CALF))
+        if (error || bf_get_reg(ADC_SC3_REG(ADC0), ADC_SC3_CALF))
                 return;
 
         uint32_t calib = 0;
-        calib += ADC0_CLPD;
-        calib += ADC0_CLPS;
-        calib += ADC0_CLP4;
-        calib += ADC0_CLP3;
-        calib += ADC0_CLP2;
-        calib += ADC0_CLP1;
-        calib += ADC0_CLP0;
-        ADC0_PG = (calib >> 1) | 0x8000;
+        calib += ADC_CLPD_REG(ADC0);
+        calib += ADC_CLPS_REG(ADC0);
+        calib += ADC_CLP4_REG(ADC0);
+        calib += ADC_CLP3_REG(ADC0);
+        calib += ADC_CLP2_REG(ADC0);
+        calib += ADC_CLP1_REG(ADC0);
+        calib += ADC_CLP0_REG(ADC0);
+        ADC_PG_REG(ADC0) = (calib >> 1) | 0x8000;
 
         calib = 0;
-        calib += ADC0_CLMD;
-        calib += ADC0_CLMS;
-        calib += ADC0_CLM4;
-        calib += ADC0_CLM3;
-        calib += ADC0_CLM2;
-        calib += ADC0_CLM1;
-        calib += ADC0_CLM0;
-        ADC0_MG = (calib >> 1) | 0x8000;
+        calib += ADC_CLMD_REG(ADC0);
+        calib += ADC_CLMS_REG(ADC0);
+        calib += ADC_CLM4_REG(ADC0);
+        calib += ADC_CLM3_REG(ADC0);
+        calib += ADC_CLM2_REG(ADC0);
+        calib += ADC_CLM1_REG(ADC0);
+        calib += ADC_CLM0_REG(ADC0);
+        ADC_MG_REG(ADC0) = (calib >> 1) | 0x8000;
 
         adc_calibrate_voltage(0);
 }
@@ -118,29 +118,29 @@ adc_init(void)
         adc_ctx.stat_a.active = 1;
 
         /* enable interrupt */
-        ADC0_SC1A =
+        ADC_SC1_REG(ADC0,0) =
                 ADC_SC1_AIEN_MASK |
                 ADC_SC1_ADCH(ADC_ADCH_DISABLED); /* do not start ADC */
 
         /* start calibration */
-        bf_set_reg(ADC0_SC3, ADC_SC3_CAL, 1);
+        bf_set_reg(ADC_SC3_REG(ADC0), ADC_SC3_CAL, 1);
 }
 
 void
 adc_sample_prepare(enum adc_mode mode)
 {
-        ADC0_CFG1 =
+        ADC_CFG1_REG(ADC0) =
                 ((mode & ADC_MODE_POWER_LOW) ? ADC_CFG1_ADLPC_MASK : 0) |
                 ADC_CFG1_ADIV(ADC_DIV_1) |
                 ((mode & ADC_MODE_SAMPLE_LONG) ? ADC_CFG1_ADLSMP_MASK : 0) |
                 ADC_CFG1_MODE(ADC_BIT_16) |
                 ADC_CFG1_ADICLK(ADC_CLK_ADACK);
-        ADC0_CFG2 =
+        ADC_CFG2_REG(ADC0) =
                 ADC_CFG2_MUXSEL_MASK | /* we only have b channels on the K20 */
                 ((mode & ADC_MODE_KEEP_CLOCK) ? ADC_CFG2_ADACKEN_MASK : 0) |
                 ((mode & ADC_MODE_SPEED_HIGH) ? ADC_CFG2_ADHSC_MASK : 0);
-        ADC0_SC2 = ADC_SC2_REFSEL(ADC_REF_DEFAULT);
-        ADC0_SC3 =
+        ADC_SC2_REG(ADC0) = ADC_SC2_REFSEL(ADC_REF_DEFAULT);
+        ADC_SC3_REG(ADC0) =
                 ((mode & ADC_MODE_CONTINUOUS) ? ADC_SC3_ADCO_MASK : 0) |
                 ((mode & ADC_MODE__AVG) ? ADC_SC3_AVGE_MASK : 0 ) |
                 ADC_SC3_AVGS((mode & ADC_MODE__AVG_MASK) / ADC_MODE__AVG / 2); /* XXX ugly */
@@ -157,7 +157,7 @@ adc_sample_start(enum adc_channel channel, adc_result_cb_t *cb, void *cbdata)
         adc_ctx.stat_a.cbdata = cbdata;
 
         /* trigger conversion */
-        ADC0_SC1A =
+        ADC_SC1_REG(ADC0, 0) =
                 ADC_SC1_AIEN_MASK |
                 ADC_SC1_ADCH(channel);
         /* XXX diff */
@@ -168,7 +168,7 @@ int
 adc_sample_abort(void)
 {
         crit_enter();
-        ADC0_SC1A = ADC_SC1_ADCH(ADC_ADCH_DISABLED);
+        ADC_SC1_REG(ADC0, 0) = ADC_SC1_ADCH(ADC_ADCH_DISABLED);
         if (adc_ctx.stat_a.active) {
                 adc_result_cb_t *cb = adc_ctx.stat_a.cb;
                 void *cbdata = adc_ctx.stat_a.cbdata;
@@ -186,7 +186,7 @@ adc_sample_abort(void)
 void
 ADC0_Handler(void)
 {
-        if (bf_get_reg(ADC0_SC1A, ADC_SC1_COCO)) {
+        if (bf_get_reg(ADC_SC1_REG(ADC0, 0), ADC_SC1_COCO)) {
                 adc_result_cb_t *cb;
                 void *cbdata;
                 uint16_t val;
@@ -194,9 +194,9 @@ ADC0_Handler(void)
                 crit_enter();
                 cb = adc_ctx.stat_a.cb;
                 cbdata = adc_ctx.stat_a.cbdata;
-                if (!bf_get_reg(ADC0_SC3, ADC_SC3_ADCO))
+                if (!bf_get_reg(ADC_SC3_REG(ADC0), ADC_SC3_ADCO))
                         adc_ctx.stat_a.active = 0;
-                val = ADC0_RA;  /* clears interrupt */
+                val = ADC_R_REG(ADC0, 0);  /* clears interrupt */
                 crit_exit();
 
                 cb(val, 0, cbdata);
