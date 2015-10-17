@@ -74,6 +74,13 @@ adc_calibrate_voltage_cb(uint16_t val, int error, void *cbdata)
         adc_calibration_done();
 }
 
+static void
+calibration_done(void)
+{
+}
+
+void adc_calibration_done(void) __attribute__((weak, alias("calibration_done")));
+
 void
 adc_calibrate_voltage(unsigned accum reference)
 {

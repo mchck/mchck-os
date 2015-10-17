@@ -57,7 +57,6 @@ adc_queue_sample(struct adc_queue_ctx *ctx,
         crit_exit();
 }
 
-#pragma weak adc_calibration_done
 void
 adc_calibration_done(void)
 {
