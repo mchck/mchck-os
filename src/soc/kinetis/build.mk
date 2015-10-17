@@ -14,6 +14,8 @@ endif
 
 LDSCRIPTS+= $(call srcpath,src/soc/kinetis/kinetis.ld)
 
+ifdef LOADER
 HAVE_LDSCRIPT_GENERATOR= yes
 ${PROG}.ld: ${LDSCRIPTS} ${PROG}.lto.o
 	${_libdir}/src/soc/kinetis/scripts/pack-linker-script -o $@ $(addprefix -T ,${LDSCRIPTS}) ${PROG}.lto.o
+endif

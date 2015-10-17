@@ -22,19 +22,20 @@ class Objdump < Array
 
   def parse(f)
     rec = nil
-    objdump = ENV["OBJDUMP"] || "arm-none-eabi-objdump"
-    `#{objdump} -h #{f}`.split("\n").each do |l|
+    flags = {W: "write", A: "alloc", X: "execute", M: "merge", S: "strings",
+             I: "info", L: "link order", G: "group", T: "TLS", E: "exclude",
+             x: "unknown", O: "OS processing", o: "OS specific", p: "processor specific"}
+    readelf = ENV["READELF"] || "arm-none-eabi-readelf"
+    `#{readelf} -SW #{f}`.split("\n").each do |l|
       case l
-      when /^ *\d+ ([.][^\s]+)\s+([0-9a-f]{8})\s+.*?2[*][*](\d+)$/
+      when /^\s*\[[^\]]*\]\s+([.][^\s]+)\s+(?:[^\s]*)\s+(?:[^\s]*)\s+(?:[^\s]*)\s+([0-9a-f]+)\s+..\s+([^0-9]*)\s+(?:[0-9]+)\s+(?:[0-9]+)\s+([0-9]+)/
         rec = Section.new
         rec.file = f
         rec.name = $1
         rec.size = $2.to_i(16)
-        rec.align = $3.to_i
-      when /^\s+((?:[A-Z]+, )*[A-Z]+)/
-        rec.flags = $1.split(", ")
+        rec.align = $4.to_i
+        rec.flags = $3.each_char.map{|v| flags[v.to_sym]}
         push(rec)
-        rec = nil
       end
     end
   end
@@ -79,8 +80,9 @@ end
 class Linker
   def initialize(sect, fixed)
     @all = sect.select do |s|
-      s.flags.include?("READONLY") &&
-        s.flags.include?("LOAD") &&
+      !s.flags.include?("write") &&
+        s.flags.include?("alloc") &&
+        !s.flags.include?("link order") &&
         s.size > 0
     end
 
