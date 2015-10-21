@@ -8,10 +8,9 @@ void
 foo(void *arg)
 {
         for (;;) {
-                wait(foo);
-                onboard_led(0);
+                //wait(foo);
                 for (volatile int i = 1000000; i; --i)
-                        /* NOTHING */;
+                        onboard_led(0);
                 wakeup(main);
         }
 }
@@ -27,10 +26,9 @@ main(void)
          */
         yield();
         for (;;) {
-                onboard_led(1);
                 for (volatile int i = 1000000; i; --i)
-                        /* NOTHING */;
+                        onboard_led(1);
                 wakeup(foo);
-                wait(main);
+                //wait(main);
         }
 }

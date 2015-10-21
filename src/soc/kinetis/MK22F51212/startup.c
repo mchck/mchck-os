@@ -2,6 +2,8 @@
 
 #include <mchck.h>
 
+uint32_t core_clk;
+
 /**
  * The following variables are only used for their addresses;
  * their symbols are defined by the linker script.
@@ -43,14 +45,19 @@ Default_Reset_Handler(void)
 
         while (bf_get_reg(MCG_S, MCG_S_CLKST) != MCG_CLKST_PLL)
                 /* NOTHING */;
+
+        uint32_t clock = 120000000;
 #else
         /* FLL at 48MHz */
         MCG_C4 = MCG_C4_DRST_DRS(1) | MCG_C4_DMX32_MASK;
         bf_set_reg(SIM_SOPT2, SIM_SOPT2_PLLFLLSEL, SIM_PLLFLLSEL_FLL);
+
+        uint32_t clock = 48000000;
 #endif
 
         memcpy(&_sdata, &_sidata, (uintptr_t)&_edata - (uintptr_t)&_sdata);
         memset(&_sbss, 0, (uintptr_t)&_ebss - (uintptr_t)&_sbss);
+        core_clk = clock;
 
         main();
 }

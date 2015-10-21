@@ -4,6 +4,8 @@ extern void main(void);
 
 static uint8_t stack[2048] __attribute__((aligned(16), used));
 
+uint32_t core_clk = 1000000;
+
 __attribute__((__externally_visible__))
 void
 _start(void)

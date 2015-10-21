@@ -17,7 +17,6 @@ static struct thread initial;
 static uint8_t idle_stack[16*4] __attribute__((aligned(8)));
 static struct thread idle;
 
-uint32_t scheduler_timeslice = 10000;
 
 void
 md_yield(void)
@@ -69,6 +68,9 @@ idle_thread(void *arg)
 void
 enter_thread_mode(void)
 {
+        /* 100Hz time slice */
+        scheduler_timeslice = core_clk / 100;
+
         /**
          * Idle thread setup.  Only use md_thread_init to prevent the
          * thread from being placed on the runq.
@@ -149,11 +151,14 @@ PendSV_Handler(void)
         if (returnthread) {
                 SCB->SCR &= SCB_SCR_SLEEPDEEP_Msk;
                 SysTick->LOAD = curthread->slice_remaining;
-                SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+                SysTick->CTRL =
+                        SysTick_CTRL_CLKSOURCE_Msk |
+                        SysTick_CTRL_TICKINT_Msk |
+                        SysTick_CTRL_ENABLE_Msk;
         } else {
                 returnthread = &idle;
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-                SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
+                SysTick->CTRL = 0;
         }
         SysTick->VAL = 0;       /* trigger reload */
 
@@ -167,4 +172,14 @@ PendSV_Handler(void)
                 "bx lr\n"
                 :: [savesp] "r" (returnthread->md.sp) : "0"
                 );
+}
+
+void
+md_sched_update_timeslice(void)
+{
+        curthread->slice_remaining = SysTick->VAL;
+        /* overflow or very little left */
+        if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) ||
+            curthread->slice_remaining < scheduler_timeslice / 256)
+                curthread->slice_remaining = 0;
 }

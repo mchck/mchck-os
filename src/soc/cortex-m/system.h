@@ -24,3 +24,5 @@ bitband_bitp(volatile void *addr, size_t bit)
         }
 
 extern const uint8_t sys_reset_to_loader_magic[22];
+
+extern uint32_t core_clk;

@@ -5,3 +5,4 @@ struct thread_md {
 };
 
 void md_yield(void);
+void md_sched_update_timeslice(void);

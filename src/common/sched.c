@@ -5,6 +5,8 @@ STAILQ_HEAD(runq, thread);
 static struct runq runq = STAILQ_HEAD_INITIALIZER(runq);
 static struct runq blockedq = STAILQ_HEAD_INITIALIZER(blockedq);
 
+uint32_t scheduler_timeslice;
+
 struct thread *curthread;
 
 
@@ -62,22 +64,12 @@ scheduler(void)
 }
 
 void
-sched_update_timeslice(void)
-{
-        curthread->slice_remaining = SysTick->VAL;
-        /* overflow or very little left */
-        if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) ||
-            curthread->slice_remaining < scheduler_timeslice / 256)
-                curthread->slice_remaining = 0;
-}
-
-void
 sys_yield(void)
 {
         if (curthread->state == thread_state_running)
                 curthread->slice_remaining = 0;
         else
-                sched_update_timeslice();
+                md_sched_update_timeslice();
         md_yield();
 }
 
