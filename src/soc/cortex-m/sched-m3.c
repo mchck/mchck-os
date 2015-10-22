@@ -12,14 +12,13 @@ struct extended_exception_frame {
 };
 
 static uint8_t supervisor_stack[512] __attribute__((aligned(8)));
-static struct thread initial;
 
 static uint8_t idle_stack[16*4] __attribute__((aligned(8)));
 static struct thread idle;
 
 
 void
-md_yield(void)
+md_need_reschedule(void)
 {
         SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
@@ -66,7 +65,7 @@ idle_thread(void *arg)
 }
 
 void
-enter_thread_mode(void)
+md_enter_thread_mode(void)
 {
         /* 100Hz time slice */
         scheduler_timeslice = core_clk / 100;
@@ -90,12 +89,6 @@ enter_thread_mode(void)
         __ISB();
 
         __set_MSP((uintptr_t)supervisor_stack + sizeof(supervisor_stack));
-
-        /* enter scheduler */
-        curthread = &initial;
-        curthread->state = thread_state_running;
-        curthread->slice_remaining = 0;
-        yield();
 }
 
 void
@@ -125,6 +118,9 @@ SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
         case sys_op_wakeup:
                 ret = sys_wakeup(arg1);
                 break;
+        case sys_op_setprio:
+                ret = sys_setprio(arg1);
+                break;
         }
 
         ex->r0 = ret;
@@ -151,10 +147,16 @@ PendSV_Handler(void)
         if (returnthread) {
                 SCB->SCR &= SCB_SCR_SLEEPDEEP_Msk;
                 SysTick->LOAD = curthread->slice_remaining;
-                SysTick->CTRL =
-                        SysTick_CTRL_CLKSOURCE_Msk |
-                        SysTick_CTRL_TICKINT_Msk |
-                        SysTick_CTRL_ENABLE_Msk;
+
+                if (curthread->prio == THREAD_PRIO_REALTIME) {
+                        /* realtime threads do not get interrupted */
+                        SysTick->CTRL = 0;
+                } else {
+                        SysTick->CTRL =
+                                SysTick_CTRL_CLKSOURCE_Msk |
+                                SysTick_CTRL_TICKINT_Msk |
+                                SysTick_CTRL_ENABLE_Msk;
+                }
         } else {
                 returnthread = &idle;
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
