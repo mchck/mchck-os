@@ -3,9 +3,9 @@ device(:cdc_device) {
   idProduct 0x0101
   iManufacturer "mchck.org"
   iProduct "temperature logger"
+  wcid {}
 
   config {
-    wcid {}
 
     function {
       wcid :WINUSB
