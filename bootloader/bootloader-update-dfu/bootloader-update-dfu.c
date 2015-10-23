@@ -8,38 +8,6 @@
  */
 extern uint32_t flash_ALLOW_BRICKABLE_ADDRESSES;
 
-static void
-onboard_led_morse_raw(const char *signs)
-{
-        for (const char *p = signs; *p != 0; ++p) {
-                const int scale = 1000000;
-                int dur;
-
-                onboard_led(1);
-                switch (*p) {
-                case '.':
-                        dur = 1;
-                        break;
-                case '-':
-                        dur = 3;
-                        break;
-                default:
-                        onboard_led(0);
-                        /**
-                         * Actually 5, but there is
-                         * one space anyways.
-                         */
-                        dur = 4;
-                        break;
-                }
-                for (volatile int i = 0; i < dur * scale; ++i)
-                        /* NOTHING */;
-                onboard_led(0);
-                for (volatile int i = 0; i < scale; ++i)
-                        /* NOTHING */;
-        }
-}
-
 /**
  * We buffer the whole bootloader in this flash area before we go on
  * to flash it to the final location.
