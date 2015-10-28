@@ -8,6 +8,8 @@
  *     default default handler.
  */
 
+/* XXX match with header IRQn names */
+
 /* Generic ARM M4 */
 V(2, NMI)
 V(3, Hard_Fault)
