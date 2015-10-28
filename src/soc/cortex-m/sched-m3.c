@@ -14,7 +14,7 @@ struct extended_exception_frame {
 static uint8_t supervisor_stack[512] __attribute__((aligned(8)));
 
 static uint8_t idle_stack[16*4] __attribute__((aligned(8)));
-static struct thread idle;
+static struct thread *idle;
 
 
 void
@@ -74,7 +74,7 @@ md_enter_thread_mode(void)
          * Idle thread setup.  Only use md_thread_init to prevent the
          * thread from being placed on the runq.
          */
-        md_thread_init(idle_stack, sizeof(idle_stack), idle_thread, NULL);
+        idle = md_thread_init(idle_stack, sizeof(idle_stack), idle_thread, NULL);
 
         /**
          * Initial thread setup.
@@ -129,14 +129,20 @@ SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
 void __attribute__((naked))
 PendSV_Handler(void)
 {
+        uint32_t savesp;
+
         /* save remaining registers on task stack */
-        /* XXX what if curthread is NULL? */
         __asm__ volatile (
                 "push {lr}\n"
                 "mrs %[savesp], PSP\n"
                 "stmdb %[savesp]!, {r4-r11}\n"
-                : [savesp] "=r" (curthread->md.sp)
+                : [savesp] "=r" (savesp)
                 );
+
+        if (curthread)
+                curthread->md.sp = (void *)savesp;
+        else
+                idle->md.sp = (void *)savesp;
 
         SCB->ICSR |= SCB_ICSR_PENDSVCLR_Msk;
         scheduler();
@@ -145,7 +151,7 @@ PendSV_Handler(void)
 
         /* idle -> sleep */
         if (returnthread) {
-                SCB->SCR &= SCB_SCR_SLEEPDEEP_Msk;
+                SCB->SCR &= ~SCB_SCR_SLEEPONEXIT_MASK;
                 SysTick->LOAD = curthread->slice_remaining;
 
                 if (curthread->prio == THREAD_PRIO_REALTIME) {
@@ -158,13 +164,11 @@ PendSV_Handler(void)
                                 SysTick_CTRL_ENABLE_Msk;
                 }
         } else {
-                returnthread = &idle;
-                SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+                returnthread = idle;
+                SCB->SCR |= SCB_SCR_SLEEPONEXIT_MASK;
                 SysTick->CTRL = 0;
         }
         SysTick->VAL = 0;       /* trigger reload */
-
-        /* XXX need idle thread to cope with spurious wakeups */
 
         /* restore remaining registers from task stack */
         __asm__ volatile (
