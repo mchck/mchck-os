@@ -18,6 +18,7 @@
 
 #define HAVE_PIT_SEPARATE_IRQ
 #define USB_FMC_MASTER 3
+#define DMA_NUM_CHAN 4
 
 /* Missing from header */
 typedef struct MCM_MemMap {
@@ -49,6 +50,50 @@ typedef struct MCM_MemMap {
 
 #define ADC0                                     ADC0_BASE_PTR
 
+enum dmamux_channel {
+  DMAMUX_DISABLED = 0,
+  DMAMUX_UART0_Receive = 2,
+  DMAMUX_UART0_Transmit = 3,
+  DMAMUX_UART1_Receive = 4,
+  DMAMUX_UART1_Transmit = 5,
+  DMAMUX_UART2_Receive = 6,
+  DMAMUX_UART2_Transmit = 7,
+  DMAMUX_I2S0_Receive = 14,
+  DMAMUX_I2S0_Transmit = 15,
+  DMAMUX_SPI0_Receive = 16,
+  DMAMUX_SPI0_Transmit = 17,
+  DMAMUX_I2C0 = 22,
+  DMAMUX_FTM0_Channel_0 = 24,
+  DMAMUX_FTM0_Channel_1 = 25,
+  DMAMUX_FTM0_Channel_2 = 26,
+  DMAMUX_FTM0_Channel_3 = 27,
+  DMAMUX_FTM0_Channel_4 = 28,
+  DMAMUX_FTM0_Channel_5 = 29,
+  DMAMUX_FTM0_Channel_6 = 30,
+  DMAMUX_FTM0_Channel_7 = 31,
+  DMAMUX_FTM1_Channel_0 = 32,
+  DMAMUX_FTM1_Channel_1 = 33,
+  DMAMUX_ADC0 = 40,
+  DMAMUX_CMP0 = 42,
+  DMAMUX_CMP1 = 43,
+  DMAMUX_CMT = 47,
+  DMAMUX_PDB = 48,
+  DMAMUX_PORTA = 49,
+  DMAMUX_PORTB = 50,
+  DMAMUX_PORTC = 51,
+  DMAMUX_PORTD = 52,
+  DMAMUX_PORTE = 53,
+  DMAMUX_ALWAYSON_0 = 54,
+  DMAMUX_ALWAYSON_1 = 55,
+  DMAMUX_ALWAYSON_2 = 56,
+  DMAMUX_ALWAYSON_3 = 57,
+  DMAMUX_ALWAYSON_4 = 58,
+  DMAMUX_ALWAYSON_5 = 59,
+  DMAMUX_ALWAYSON_6 = 60,
+  DMAMUX_ALWAYSON_7 = 61,
+  DMAMUX_ALWAYSON_8 = 62,
+  DMAMUX_ALWAYSON_9 = 63,
+};
 
 #include <soc/cortex-m/soc.h>
 #include <soc/cortex-m/sched-m3.h>
@@ -69,6 +114,7 @@ typedef struct MCM_MemMap {
 
 #include <soc/kinetis/adc.h>
 #include <soc/kinetis/crc.h>
+#include <soc/kinetis/dma.h>
 #include <soc/kinetis/flash.h>
 #include <soc/kinetis/ftm.h>
 #include <soc/kinetis/i2c.h>
