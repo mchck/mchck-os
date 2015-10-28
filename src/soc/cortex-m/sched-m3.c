@@ -23,16 +23,6 @@ md_need_reschedule(void)
         SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
-__attribute__((naked))
-uint32_t
-syscall(enum sys_op op, ...)
-{
-        __asm__ volatile (
-                "svc 0\n"
-                "bx lr\n"
-                );
-}
-
 static struct thread *
 md_thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
 {
@@ -98,7 +88,7 @@ SysTick_Handler(void)
 }
 
 void
-SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
+SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2, uint32_t arg3)
 {
         struct exception_frame *ex;
         __asm__ volatile (
@@ -112,8 +102,8 @@ SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
         case sys_op_yield:
                 sys_yield();
                 break;
-        case sys_op_wait:
-                sys_wait(arg1);
+        case sys_op_wait_cond:
+                sys_wait_cond(arg1, (void *)arg2, arg3);
                 break;
         case sys_op_wakeup:
                 ret = sys_wakeup(arg1);
@@ -125,6 +115,34 @@ SVCall_Handler(enum sys_op op, uint32_t arg1, uint32_t arg2)
 
         ex->r0 = ret;
 }
+
+static int
+md_handler_syscall(enum sys_op op, uint32_t arg1)
+{
+        switch (op) {
+        case sys_op_wakeup:
+                return (sys_wakeup(arg1));
+        default:
+                panic("invalid syscall from handler mode");
+        }
+}
+
+__attribute__((naked))
+uint32_t
+syscall(enum sys_op op, ...)
+{
+        __asm__ volatile (
+                "mov r12, r0\n"
+                "mrs r0, IPSR\n"
+                "cmp r0, 0\n"
+                "mov r0, r12\n"
+                "bne.n %0\n"
+                "svc 0\n"
+                "bx lr\n"
+                :: "i" (md_handler_syscall)
+                );
+}
+
 
 void __attribute__((naked))
 PendSV_Handler(void)

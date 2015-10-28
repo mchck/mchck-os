@@ -22,9 +22,15 @@ yield(void)
 }
 
 void
+wait_cond(const void *ident, const volatile uint32_t *p, uint32_t val)
+{
+        syscall(sys_op_wait_cond, ident, p, val);
+}
+
+void
 wait(const void *ident)
 {
-        syscall(sys_op_wait, ident);
+        wait_cond(ident, NULL, 0);
 }
 
 void
@@ -110,11 +116,17 @@ sys_yield(void)
 }
 
 void
-sys_wait(uint32_t ident)
+sys_wait_cond(uint32_t ident, const volatile uint32_t *ptr, uint32_t val)
 {
+        crit_enter();
+        if (ptr && *ptr != val)
+                goto exit;
+
         curthread->ident = ident;
         curthread->state = thread_state_blocked;
         sys_yield();
+exit:
+        crit_exit();
 }
 
 int
