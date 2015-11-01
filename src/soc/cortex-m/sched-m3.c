@@ -169,7 +169,7 @@ PendSV_Handler(void)
 
         /* idle -> sleep */
         if (returnthread) {
-                SCB->SCR &= ~SCB_SCR_SLEEPONEXIT_MASK;
+                SCB->SCR &= ~SCB_SCR_SLEEPONEXIT_Msk;
                 SysTick->LOAD = curthread->slice_remaining;
 
                 if (curthread->prio == THREAD_PRIO_REALTIME) {
@@ -183,7 +183,7 @@ PendSV_Handler(void)
                 }
         } else {
                 returnthread = idle;
-                SCB->SCR |= SCB_SCR_SLEEPONEXIT_MASK;
+                SCB->SCR |= SCB_SCR_SLEEPONEXIT_Msk;
                 SysTick->CTRL = 0;
         }
         SysTick->VAL = 0;       /* trigger reload */
