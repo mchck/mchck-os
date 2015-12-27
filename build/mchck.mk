@@ -10,6 +10,7 @@ endif
 
 -include .mchckrc
 -include ${_libdir}/.mchckrc
+-include ${_libdir}/../.mchckrc
 
 is-make-clean=	$(filter clean realclean,${MAKECMDGOALS})
 
