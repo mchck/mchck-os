@@ -250,6 +250,7 @@ class ConfigDesc < DslItem
   field :initfun, :optional => true
   field :suspendfun, :optional => true
   field :resumefun, :optional => true
+  field :resetfun, :optional => true
 
   block :function, FunctionDesc, :list => true
 
@@ -278,6 +279,7 @@ class ConfigDesc < DslItem
     s += "usbd_init_fun_t #{@initfun.to_loc_s};\n" if !@initfun.nil?
     s += "usbd_suspend_resume_fun_t #{@suspendfun.to_loc_s};\n" if !@suspendfun.nil?
     s += "usbd_suspend_resume_fun_t #{@resumefun.to_loc_s};\n" if !@resumefun.nil?
+    s += "usbd_suspend_resume_fun_t #{@resetfun.to_loc_s};\n" if !@resetfun.nil?
 
     s + @function.map{|f| f.gen_defs}.join + <<_end_
 struct #@config_name {
@@ -309,6 +311,7 @@ static const struct usbd_config #@var_name = {
 	.init = #{@initfun.to_loc_s{|s| s or "NULL"}},
 	.suspend = #{@suspendfun.to_loc_s{|s| s or "NULL"}},
 	.resume = #{@resumefun.to_loc_s{|s| s or "NULL"}},
+	.reset = #{@resetfun.to_loc_s{|s| s or "NULL"}},
 	.desc = &#@config_name.config,
 	.function = {
 		#{@function.map{|f| "&#{f.get_function_var}"}.join(",\n\t")},

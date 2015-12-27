@@ -42,6 +42,15 @@ finish_write(struct dfu_ctx *ctx, void *buf, size_t off, size_t len)
         return (DFU_STATUS_OK);
 }
 
+/*
+ * Called on USB reset
+ */
+void
+reset_to_app(void)
+{
+        sys_reset();
+}
+
 
 void
 main(void)

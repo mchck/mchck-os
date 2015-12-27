@@ -262,9 +262,13 @@ void
 USB0_Handler(void)
 {
         uint8_t istat = USB0_ISTAT;
+        const struct usbd_config *c = usb_get_config_data(-1);
 
         if (istat & USB_ISTAT_USBRST_MASK) {
                 usb_reset();
+
+                if (c && c->reset)
+                        c->reset();
                 return;
         }
         if (istat & USB_ISTAT_STALL_MASK) {
@@ -278,7 +282,6 @@ USB0_Handler(void)
                 usb_handle_transaction(&stat);
         }
 
-        const struct usbd_config *c = usb_get_config_data(-1);
         if (istat & USB_ISTAT_SLEEP_MASK) {
                 bf_set_reg(USB0_INTEN, USB_INTEN_SLEEPEN, 0);
                 bf_set_reg(USB0_INTEN, USB_INTEN_RESUMEEN, 1);

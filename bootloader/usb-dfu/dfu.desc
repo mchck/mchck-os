@@ -4,6 +4,7 @@ device(:dfu_device) {
   iManufacturer "mchck.org"
   iProduct "DFU bootloader"
   config {
+    resetfun :reset_to_app
     dfu {
       segment {
         setup_write_func :setup_write

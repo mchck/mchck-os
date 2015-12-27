@@ -337,6 +337,7 @@ struct usbd_config {
 	usbd_init_fun_t *init;
 	usbd_suspend_resume_fun_t *suspend;
 	usbd_suspend_resume_fun_t *resume;
+	usbd_suspend_resume_fun_t *reset;
 	/**
 	 * We will not set a config for now, because there is not much to
 	 * configure, except for power
