@@ -23,7 +23,7 @@ Default_Reset_Handler(void)
         watchdog_disable();
 
 #if EXTERNAL_XTAL
-        /* 10MHz crystal -> 2.5MHz PLL input -> 120MHz system */
+        /* 24MHz crystal -> 4MHz PLL input -> 120MHz system */
 
         MCG_C2 = MCG_C2_RANGE(MCG_RANGE_VERYHIGH) | MCG_C2_EREFS(MCG_EREF_OSC);
         MCG_C1 = MCG_C1_CLKS(MCG_CLKS_EXTERNAL);
@@ -33,13 +33,23 @@ Default_Reset_Handler(void)
         while (bf_get_reg(MCG_S, MCG_S_CLKST) != MCG_CLKST_EXTERNAL)
                 /* NOTHING */;
 
-        MCG_C5 = MCG_C5_PRDIV0(0b00011) | MCG_C5_PLLCLKEN0(1);
-        MCG_C6 = MCG_C6_VDIV0(0b11000) | MCG_C6_PLLS(1);
+        /* 4MHz PLL input */
+        MCG_C5 = MCG_C5_PRDIV0(0b00101) | MCG_C5_PLLCLKEN0(1);
+        /* 120MHz PLL output */
+        MCG_C6 = MCG_C6_VDIV0(0b00110) | MCG_C6_PLLS(1);
 
         while (!bf_get_reg(MCG_S, MCG_S_PLLST))
                 /* NOTHING */;
         while (!bf_get_reg(MCG_S, MCG_S_LOCK0))
                 /* NOTHING */;
+
+        /* system clock = 120MHz (max 120MHz) */
+        /* bus clock = 60MHz (max 60MHz) */
+        bf_set_reg(SIM_CLKDIV1, SIM_CLKDIV1_OUTDIV2, 1);
+        /* flexbus clock = 30MHz (max 30MHz) */
+        bf_set_reg(SIM_CLKDIV1, SIM_CLKDIV1_OUTDIV3, 3);
+        /* flash clock = 24MHz (max 26.67MHz) */
+        bf_set_reg(SIM_CLKDIV1, SIM_CLKDIV1_OUTDIV4, 4);
 
         MCG_C1 = MCG_C1_CLKS(MCG_CLKS_FLLPLL);
 
