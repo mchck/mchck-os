@@ -8,6 +8,7 @@
 #define FLASH_SECTOR_SIZE 1024
 
 #include <soc/cortex-m/soc.h>
+#include <soc/cortex-m/sched-m0.h>
 
 #include <soc/kinetis/bme.h>
 #include <soc/kinetis/bitfield-bme.h>

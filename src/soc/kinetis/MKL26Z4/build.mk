@@ -1,3 +1,4 @@
+TARGET.cortex-m+= m0
 SOC+= kinetis
 
 CFLAGS+=	-mcpu=cortex-m0 -msoft-float -mthumb
