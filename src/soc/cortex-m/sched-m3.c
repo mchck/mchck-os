@@ -192,8 +192,7 @@ PendSV_Handler(void)
         __asm__ volatile (
                 "ldmia %[savesp]!, {r4-r11}\n"
                 "msr PSP, %[savesp]\n"
-                "pop {lr}\n"
-                "bx lr\n"
+                "pop {pc}\n"
                 :: [savesp] "r" (returnthread->md.sp) : "0"
                 );
 }
