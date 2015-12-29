@@ -24,7 +24,6 @@
 #endif
 #endif
 
-#include <board.h>
 #include <soc.h>
 
 extern uint32_t _sidata, _sdata, _edata, _sbss, _ebss, _app_rom;
@@ -43,10 +42,9 @@ extern "C" {
 #endif
 
 #include <common/common.h>
-
 #include <usb/usb.h>
-
 #include <nrf/nrf.h>
+#include <board.h>
 
 #ifdef __cplusplus
 }
