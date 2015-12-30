@@ -7,8 +7,6 @@ static struct timeout_ctx overflow;
 
 static unsigned int timeout_ref_count = 0;
 
-/* Here we use timeout_ctx.cb == NULL to indicate an unqueued context */
-
 /* call with crit_active() */
 static void
 timeout_update_time(void)
@@ -108,12 +106,6 @@ timeout_add(struct timeout_ctx *t, uint32_t ms, timeout_cb_t *cb, void *cbdata)
         crit_enter();
         timeout_update_time();
 
-        // Ensure this context isn't already queued
-        if (t->cb) {
-                crit_exit();
-                return;
-        }
-
         *t = (struct timeout_ctx){
                 .time.time = ms + timeout_lazy_now.time + 1,
                 .cb = cb,
@@ -146,7 +138,6 @@ timeout_cancel(struct timeout_ctx *t)
                         return (-1);
         }
         *p = t->next;
-        t->cb = NULL;
         if (*p == timeout_queue)
                 timeout_reschedule();
         crit_exit();
@@ -169,9 +160,7 @@ LPTMR0_Handler(void)
         while (timeout_queue->time.time <= timeout_lazy_now.time) {
                 struct timeout_ctx *t = timeout_queue;
                 timeout_queue = t->next;
-                timeout_cb_t *cb = t->cb;
-                t->cb = NULL;
-                cb(t->cbdata);
+                t->cb(t->cbdata);
 
                 timeout_update_time();
                 if (!timeout_queue)
