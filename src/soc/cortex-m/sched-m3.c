@@ -136,7 +136,7 @@ syscall(enum sys_op op, ...)
                 "mrs r0, IPSR\n"
                 "cmp r0, 0\n"
                 "mov r0, r12\n"
-                "bne.n %0\n"
+                "bne md_handler_syscall\n"
                 "svc 0\n"
                 "bx lr\n"
                 :: "i" (md_handler_syscall)
