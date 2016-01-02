@@ -99,6 +99,7 @@ class Linker
   def pack
     res = []
 
+    # XXX consider alignment requirements
     remaining = @all
     @fixed.each_cons(2) do |startsect, endsect|
       space = endsect.addr - startsect.addr - startsect.size
@@ -112,7 +113,7 @@ class Linker
       res += best
     end
     res << @fixed[-1] if @fixed[-1]
-    res += remaining
+    res += remaining.sort_by{|s| -s.align}
   end
 end
 
