@@ -189,13 +189,20 @@ usb_reset(void)
         USB0_CTL = USB_CTL_USBENSOFEN_MASK;
 
         /* we're only interested in reset and transfers */
+#ifndef SAVE_SPACE_AT_ALL_COST
         USB0_INTEN =
                 USB_INTEN_TOKDNEEN_MASK |
                 USB_INTEN_USBRSTEN_MASK |
                 USB_INTEN_STALLEN_MASK |
                 USB_INTEN_SLEEPEN_MASK;
-
         bf_set_reg(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 0);
+#else
+        USB0_INTEN =
+                USB_INTEN_TOKDNEEN_MASK |
+                USB_INTEN_USBRSTEN_MASK |
+                USB_INTEN_STALLEN_MASK;
+#endif
+
         bf_set_reg(USB0_USBCTRL, USB_USBCTRL_SUSP, 0);
 }
 
@@ -247,11 +254,13 @@ usb_enable(void)
         /* really only one thing we want */
         USB0_INTEN = USB_INTEN_USBRSTEN_MASK;
 
+#ifndef SAVE_SPACE_AT_ALL_COST
         /**
          * Suspend transceiver now - we'll wake up at reset again.
          */
         bf_set_reg(USB0_USBCTRL, USB_USBCTRL_SUSP, 1);
         bf_set_reg(USB0_USBTRC0, USB_USBTRC0_USBRESMEN, 1);
+#endif
 
 #ifndef SHORT_ISR
         int_enable(IRQ_USB0);
@@ -282,6 +291,7 @@ USB0_Handler(void)
                 usb_handle_transaction(&stat);
         }
 
+#ifndef SAVE_SPACE_AT_ALL_COST
         if (istat & USB_ISTAT_SLEEP_MASK) {
                 bf_set_reg(USB0_INTEN, USB_INTEN_SLEEPEN, 0);
                 bf_set_reg(USB0_INTEN, USB_INTEN_RESUMEEN, 1);
@@ -313,6 +323,7 @@ USB0_Handler(void)
 
                 istat |= USB_ISTAT_RESUME_MASK; /* always clear bit */
         }
+#endif
         USB0_ISTAT = istat;
 }
 
