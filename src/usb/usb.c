@@ -327,18 +327,18 @@ usb_handle_control_done(void *data, ssize_t len, void *cbdata)
 
 __noinline
 void
-usb_handle_control_status_cb(ep_callback_t cb)
+usb_handle_control_status_cb(ep_callback_t cb, void *cbdata)
 {
 	/* empty status transfer */
 	switch (usb.ctrl_dir) {
 	case USB_CTRL_REQ_IN:
 		usbd_ep_state[0].rx.data01 = USB_DATA01_DATA1;
-		usb_rx(&usbd_ep_state[0].rx, NULL, 0, cb, NULL);
+		usb_rx(&usbd_ep_state[0].rx, NULL, 0, cb, cbdata);
 		break;
 
 	default:
 		usbd_ep_state[0].tx.data01 = USB_DATA01_DATA1;
-		usb_ep0_tx_cp(NULL, 0, 1 /* short packet */, cb, NULL);
+		usb_ep0_tx_cp(NULL, 0, 1 /* short packet */, cb, cbdata);
 		break;
 	}
 }
@@ -351,7 +351,7 @@ usb_handle_control_status(int fail)
 		usb_pipe_stall(&usbd_ep_state[0].rx);
 		usb_pipe_stall(&usbd_ep_state[0].tx);
 	} else {
-		usb_handle_control_status_cb(usb_handle_control_done);
+		usb_handle_control_status_cb(usb_handle_control_done, NULL);
 	}
 }
 

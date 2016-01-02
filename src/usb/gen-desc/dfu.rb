@@ -125,25 +125,64 @@ _end_
 end
 
 class DFUAppDesc < FunctionDesc
-  TypeName = "struct dfu_function_desc"
-  FunctionVarName = "dfu_app_function"
-
   child_block :dfu_app
 
-  def initialize
-    super
+  field :detach_func
+
+  def initialize(name=nil)
+    super()
+
+    @name = name
 
     interface(:iface) {
       bInterfaceClass :USB_DEV_CLASS_APP
       bInterfaceSubClass :USB_DEV_SUBCLASS_APP_DFU
       bInterfaceProtocol :USB_DEV_PROTO_DFU_APP
+      iInterface name.to_s if !name.nil?
     }
+
+    init_func :dfu_init
+    control_func :dfu_app_handle_control
+
+    wcid :WINUSB
+  end
+
+  def gen_defs
+    s = super
+    s += <<_end_
+dfu_detach_t #{@detach_func.to_loc_s};
+_end_
+    s
+  end
+
+  def gen_func_var
+    <<_end_
+struct dfu_app_ctx dfu_app_ctx;
+
+static const struct dfu_app_function #@var_name = {
+#{gen_func_init}
+};
+_end_
+  end
+
+  def gen_func_init
+    <<_end_
+#{super}
+	.ctx = &dfu_app_ctx,
+	.detach_cb = #{@detach_func.to_loc_s},
+_end_
+  end
+
+  def get_desc_struct
+    <<_end_
+#{super}
+	struct dfu_desc_functional dfu;
+_end_
   end
 
   def gen_desc_init
     <<_end_
-.#@var_name = {
-	#{@interface.first.gen_desc_init}
+#{super}
 	.dfu = {
 		.bLength = sizeof(struct dfu_desc_functional),
 		.bDescriptorType = {
@@ -157,8 +196,7 @@ class DFUAppDesc < FunctionDesc
 		.wDetachTimeOut = 0,
 		.wTransferSize = USB_DFU_TRANSFER_SIZE,
 		.bcdDFUVersion = { .maj = 1, .min = 1 }
-	}
-},
+	},
 _end_
   end
 end

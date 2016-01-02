@@ -1,26 +1,21 @@
 #include <mchck.h>
 
-struct dfu_app_ctx {
-        struct usbd_function_ctx_header header;
-        dfu_detach_t detachcb;
-};
-
-static struct dfu_app_ctx dfu_app_ctx;
-
-
 static void
 dfu_app_detach(void *buf, ssize_t len, void *data)
 {
-        if (dfu_app_ctx.detachcb)
-                dfu_app_ctx.detachcb();
+        struct dfu_app_ctx *ctx = data;
+
+        ctx->dfuf->detach_cb();
 }
 
-static int
+int
 dfu_app_handle_control(struct usb_ctrl_req_t *req, void *data)
 {
+        struct dfu_app_ctx *ctx = data;
+
         switch ((enum dfu_ctrl_req_code)req->bRequest) {
         case USB_CTRL_REQ_DFU_DETACH:
-                usb_handle_control_status_cb(dfu_app_detach);
+                usb_handle_control_status_cb(dfu_app_detach, ctx);
                 return (1);
 
         /**
@@ -49,15 +44,14 @@ dfu_app_handle_control(struct usb_ctrl_req_t *req, void *data)
         return (1);
 }
 
-
 void
-dfu_app_init(dfu_detach_t detachcb)
+dfu_app_init(const struct usbd_function *f, int enable)
 {
-        dfu_app_ctx.detachcb = detachcb;
-        usb_attach_function(&dfu_app_function, &dfu_app_ctx.header);
-}
+        const struct dfu_app_function *dfuf = (void *)f;
+        struct dfu_app_ctx *ctx = dfuf->ctx;
 
-const struct usbd_function dfu_app_function = {
-        .control = dfu_app_handle_control,
-        .interface_count = USB_FUNCTION_DFU_IFACE_COUNT,
-};
+        if (enable) {
+                ctx->dfuf = dfuf;
+                usb_attach_function(&dfuf->func, &ctx->header);
+        }
+}

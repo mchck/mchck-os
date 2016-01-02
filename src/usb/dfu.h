@@ -78,7 +78,7 @@ struct dfu_ctx;
 
 typedef enum dfu_status (dfu_setup_write_t)(struct dfu_ctx *ctx, size_t off, size_t len, void **buf);
 typedef enum dfu_status (dfu_finish_write_t)(struct dfu_ctx *ctx, void *, size_t off, size_t len);
-typedef void (*dfu_detach_t)(void);
+typedef void (dfu_detach_t)(void);
 
 struct dfu_function;
 
@@ -123,10 +123,26 @@ struct dfu_desc_functional {
 CTASSERT_SIZE_BYTE(struct dfu_desc_functional, 9);
 
 
-extern const struct usbd_function dfu_function;
-extern const struct usbd_function dfu_app_function;
-
 void dfu_write_done(enum dfu_status, struct dfu_ctx *ctx);
-void dfu_app_init(dfu_detach_t detachcb);
+int dfu_handle_control(struct usb_ctrl_req_t *req, void *data);
+void dfu_init(const struct usbd_function *f, int enable);
+
+
+struct dfu_app_function;
+
+struct dfu_app_ctx {
+        struct usbd_function_ctx_header header;
+        const struct dfu_app_function *dfuf;
+};
+
+struct dfu_app_function {
+        struct usbd_function func;
+        struct dfu_app_ctx *ctx;
+        dfu_detach_t *detach_cb;
+};
+
+int dfu_app_handle_control(struct usb_ctrl_req_t *req, void *data);
+void dfu_app_init(const struct usbd_function *f, int enable);
+
 
 #endif
