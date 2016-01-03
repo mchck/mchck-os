@@ -313,16 +313,12 @@ struct usbd_function {
 	usbd_func_init_t *init;
 	usbd_func_control_t *control;
 	int interface_count;
-	int ep_rx_count;
-	int ep_tx_count;
 };
 
 struct usbd_function_ctx_header {
 	struct usbd_function_ctx_header *next;
 	const struct usbd_function *function;
 	int interface_offset;
-	int ep_rx_offset;
-	int ep_tx_offset;
 };
 
 

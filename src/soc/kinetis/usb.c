@@ -282,7 +282,7 @@ USB0_Handler(void)
         }
         if (istat & USB_ISTAT_STALL_MASK) {
                 /* XXX need more work for non-0 ep */
-                volatile struct USB_BD_t *bd = usb_get_bd(&usbd_ep_state[0].rx);
+                volatile struct USB_BD_t *bd = usb_get_bd(&usbd_pipe_state[USBD_PIPE_EP0_RX]);
                 if (bd->stall)
                         usb_setup_control();
         }

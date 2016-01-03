@@ -198,7 +198,7 @@ usb_rx(struct usbd_ep_pipe_state_t *s, void *buf, size_t len, ep_callback_t cb, 
 int
 usb_ep0_tx_cp(const void *buf, size_t len, size_t reqlen, ep_callback_t cb, void *cb_data)
 {
-	struct usbd_ep_pipe_state_t *s = &usbd_ep_state[0].tx;
+	struct usbd_ep_pipe_state_t *s = &usbd_pipe_state[USBD_PIPE_EP0_TX];
 	enum usb_ep_pingpong pp = s->pingpong;
 
 	setup_tx(s, ep0_buf[pp], len, reqlen, cb, cb_data);
@@ -210,7 +210,7 @@ usb_ep0_tx_cp(const void *buf, size_t len, size_t reqlen, ep_callback_t cb, void
 void *
 usb_ep0_tx_inplace_prepare(size_t len)
 {
-	enum usb_ep_pingpong pp = usbd_ep_state[0].tx.pingpong;
+	enum usb_ep_pingpong pp = usbd_pipe_state[USBD_PIPE_EP0_TX].pingpong;
 
 	if (len > EP0_BUFSIZE)
 		return (NULL);
@@ -221,13 +221,13 @@ usb_ep0_tx_inplace_prepare(size_t len)
 int
 usb_ep0_tx(const void *buf, size_t len, size_t reqlen, ep_callback_t cb, void *cb_data)
 {
-	return (usb_tx(&usbd_ep_state[0].tx, buf, len, reqlen, cb, cb_data));
+	return (usb_tx(&usbd_pipe_state[USBD_PIPE_EP0_TX], buf, len, reqlen, cb, cb_data));
 }
 
 int
 usb_ep0_rx(void *buf, size_t len, ep_callback_t cb, void *cb_data)
 {
-	return (usb_rx(&usbd_ep_state[0].rx, buf, len, cb, cb_data));
+	return (usb_rx(&usbd_pipe_state[USBD_PIPE_EP0_RX], buf, len, cb, cb_data));
 }
 
 
@@ -332,12 +332,12 @@ usb_handle_control_status_cb(ep_callback_t cb, void *cbdata)
 	/* empty status transfer */
 	switch (usb.ctrl_dir) {
 	case USB_CTRL_REQ_IN:
-		usbd_ep_state[0].rx.data01 = USB_DATA01_DATA1;
-		usb_rx(&usbd_ep_state[0].rx, NULL, 0, cb, cbdata);
+		usbd_pipe_state[USBD_PIPE_EP0_RX].data01 = USB_DATA01_DATA1;
+		usb_rx(&usbd_pipe_state[USBD_PIPE_EP0_RX], NULL, 0, cb, cbdata);
 		break;
 
 	default:
-		usbd_ep_state[0].tx.data01 = USB_DATA01_DATA1;
+		usbd_pipe_state[USBD_PIPE_EP0_TX].data01 = USB_DATA01_DATA1;
 		usb_ep0_tx_cp(NULL, 0, 1 /* short packet */, cb, cbdata);
 		break;
 	}
@@ -348,8 +348,8 @@ void
 usb_handle_control_status(int fail)
 {
 	if (fail) {
-		usb_pipe_stall(&usbd_ep_state[0].rx);
-		usb_pipe_stall(&usbd_ep_state[0].tx);
+		usb_pipe_stall(&usbd_pipe_state[USBD_PIPE_EP0_RX]);
+		usb_pipe_stall(&usbd_pipe_state[USBD_PIPE_EP0_TX]);
 	} else {
 		usb_handle_control_status_cb(usb_handle_control_done, NULL);
 	}
@@ -516,11 +516,11 @@ err:
 void
 usb_setup_control(void)
 {
-	void *buf = ep0_buf[usbd_ep_state[0].rx.pingpong];
+	void *buf = ep0_buf[usbd_pipe_state[USBD_PIPE_EP0_RX].pingpong];
 
-	usbd_ep_state[0].rx.data01 = USB_DATA01_DATA0;
-	usbd_ep_state[0].tx.data01 = USB_DATA01_DATA1;
-	usb_rx(&usbd_ep_state[0].rx, buf, EP0_BUFSIZE, usb_handle_control, NULL);
+	usbd_pipe_state[USBD_PIPE_EP0_RX].data01 = USB_DATA01_DATA0;
+	usbd_pipe_state[USBD_PIPE_EP0_TX].data01 = USB_DATA01_DATA1;
+	usb_rx(&usbd_pipe_state[USBD_PIPE_EP0_RX], buf, EP0_BUFSIZE, usb_handle_control, NULL);
 }
 
 
@@ -530,10 +530,18 @@ usb_setup_control(void)
 void
 usb_handle_transaction(struct usb_xfer_info *info)
 {
-	enum usb_tok_pid pid = usb_get_xfer_pid(info);
-	struct usbd_ep_state_t *eps = &usbd_ep_state[usb_get_xfer_ep(info)];
-	struct usbd_ep_pipe_state_t *s = &eps->pipe[usb_get_xfer_dir(info)];
+	enum usb_ep_dir ep_dir = usb_get_xfer_dir(info);
+	int ep_num = usb_get_xfer_ep(info);
 
+	struct usbd_ep_pipe_state_t *s = usbd_pipe_state;
+	for (;;) {
+		if (s->ep_num == ep_num && s->ep_dir == ep_dir) {
+			break;
+		}
+		++s;
+	}
+
+	enum usb_tok_pid pid = usb_get_xfer_pid(info);
 	switch (pid) {
 	case USB_PID_SETUP:
 	case USB_PID_OUT:
@@ -561,11 +569,8 @@ usb_init_ep(struct usbd_function_ctx_header *ctx, int ep, enum usb_ep_dir dir, s
 {
 	struct usbd_ep_pipe_state_t *s;
 
-	if (dir == USB_EP_RX)
-		s = &usbd_ep_state[ctx->ep_rx_offset + ep].rx;
-	else
-		s = &usbd_ep_state[ctx->ep_tx_offset + ep].tx;
-
+	s = &usbd_pipe_state[usb.pipe_count];
+	usb.pipe_count += 1;
 	memset(s, 0, sizeof(*s));
 	s->ep_maxsize = size;
 	s->ep_num = ep;
@@ -582,6 +587,7 @@ usb_restart(void)
 	memset(&usb, 0, sizeof(usb));
 	usb.functions.function = &usb.control_function;
 	usb.identity = identity;
+	usb.pipe_count = 0;
 	usb_init_ep(&usb.functions, 0, USB_EP_RX, EP0_BUFSIZE);
 	usb_init_ep(&usb.functions, 0, USB_EP_TX, EP0_BUFSIZE);
 	usb_setup_control();
@@ -603,8 +609,6 @@ usb_attach_function(const struct usbd_function *function, struct usbd_function_c
 	ctx->next = NULL;
 	ctx->function = function;
 	ctx->interface_offset = prev->interface_offset + prev->function->interface_count;
-	ctx->ep_rx_offset = prev->ep_rx_offset + prev->function->ep_rx_count;
-	ctx->ep_tx_offset = prev->ep_tx_offset + prev->function->ep_tx_count;
 	prev->next = ctx;
 }
 

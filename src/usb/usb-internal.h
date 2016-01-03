@@ -37,16 +37,6 @@ struct usbd_ep_pipe_state_t {
 	int ep_num : 8;
 };
 
-struct usbd_ep_state_t {
-	union {
-		struct usbd_ep_pipe_state_t pipe[2];
-		struct {
-			struct usbd_ep_pipe_state_t rx;
-			struct usbd_ep_pipe_state_t tx;
-		};
-	};
-};
-
 struct usbd_t {
 	struct usbd_function_ctx_header functions;
 	struct usbd_function control_function;
@@ -61,15 +51,18 @@ struct usbd_t {
 		USBD_STATE_CONFIGURED
 	} state;
 	enum usb_ctrl_req_dir ctrl_dir;
+	uint8_t pipe_count;
 };
 
 extern struct usbd_t usb;
 
 #define USB_DECL_BUFS(ep_in, ep_out)					\
 	USB_DECL_BUFS_MD(ep_in, ep_out);				\
-	struct usbd_ep_state_t usbd_ep_state[ep_in > ep_out ? ep_in : ep_out]
+	struct usbd_ep_pipe_state_t usbd_pipe_state[ep_in + ep_out]
 
-extern struct usbd_ep_state_t usbd_ep_state[];
+#define USBD_PIPE_EP0_RX 0
+#define USBD_PIPE_EP0_TX 1
+extern struct usbd_ep_pipe_state_t usbd_pipe_state[];
 
 
 void usb_restart(void);
