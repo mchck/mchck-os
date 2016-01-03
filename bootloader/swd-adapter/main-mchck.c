@@ -4,8 +4,6 @@
 #include "swduino/swd.h"
 
 
-static struct cdc_ctx cdc;
-
 /* Glue for SWD */
 
 void
@@ -50,7 +48,7 @@ reply_write(const uint8_t *buf, size_t len)
 
 static int draining = 0;
 
-static void
+void
 new_data(uint8_t *data, size_t len)
 {
         draining = process_data(data, len);
@@ -59,7 +57,7 @@ new_data(uint8_t *data, size_t len)
                 cdc_read_more(&cdc);
 }
 
-static void
+void
 space_available(size_t len)
 {
         if (draining)
@@ -69,7 +67,7 @@ space_available(size_t len)
 void
 init_cdc(int config)
 {
-        cdc_init(new_data, space_available, &cdc);
+        cdc_read_more(&cdc);
 }
 
 void

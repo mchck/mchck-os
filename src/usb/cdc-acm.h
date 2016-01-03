@@ -12,11 +12,10 @@
 
 struct cdc_ctx {
         struct usbd_function_ctx_header header;
+	const struct cdc_function *cdcf;
         struct usbd_ep_pipe_state_t *notice_pipe;
         struct usbd_ep_pipe_state_t *tx_pipe;
         struct usbd_ep_pipe_state_t *rx_pipe;
-        void (*data_sent_cb)(size_t);
-        void (*data_ready_cb)(uint8_t *, size_t);
         size_t out_pos;
         size_t out_sent;
         int out_queued;
@@ -209,15 +208,21 @@ struct cdc_function_desc {
         }                                                               \
 }
 
-struct cdc_ctx;
+typedef void (cdc_data_ready_cb_t)(uint8_t *, size_t);
+typedef void (cdc_data_sent_cb_t)(size_t);
 
-extern const struct usbd_function cdc_function;
+struct cdc_function {
+	struct usbd_function usb_func;
+	struct cdc_ctx *ctx;
+        cdc_data_ready_cb_t *data_ready_cb;
+        cdc_data_sent_cb_t *data_sent_cb;
+};
 
 void cdc_read_more(struct cdc_ctx *ctx);
 size_t cdc_write_space(struct cdc_ctx *ctx);
 ssize_t cdc_write(const uint8_t *buf, size_t len, struct cdc_ctx *ctx);
 ssize_t cdc_write_string(const char *, struct cdc_ctx *ctx);
-void cdc_init(void (*data_ready_cb)(uint8_t *, size_t), void (*data_sent_cb)(size_t), struct cdc_ctx *ctx);
+void cdc_init(const struct usbd_function *, int enable);
 
 void cdc_set_stdout(struct cdc_ctx *cdc);
 

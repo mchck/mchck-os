@@ -2,21 +2,19 @@
 
 #include "usb-serial-loopback.desc.h"
 
-static struct cdc_ctx cdc;
-
-static void
+void
 new_data(uint8_t *data, size_t len)
 {
         onboard_led(-1);
-        cdc_write(data, len, &cdc);
-        cdc_read_more(&cdc);
+        cdc_write(data, len, &loopback);
+        cdc_read_more(&loopback);
 }
 
 void
-init_vcdc(int enable)
+loopback_init(int enable)
 {
         if (enable) {
-                cdc_init(new_data, NULL, &cdc);
+                new_data(NULL, 0);
         }
 }
 

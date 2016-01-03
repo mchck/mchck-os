@@ -5,9 +5,10 @@ device(:cdc_device) {
   iProduct "MC HCK serial test"
 
   config {
-    initfun :init_vcdc
+    initfun :loopback_init
 
-    cdc {
+    cdc(:loopback) {
+      data_ready :new_data
     }
   }
 }

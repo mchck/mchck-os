@@ -7,7 +7,9 @@ device(:cdc_device) {
   config {
     initfun :init_cdc
 
-    cdc {
+    cdc(:cdc) {
+      data_ready :new_data
+      data_sent :space_available
     }
   }
 }

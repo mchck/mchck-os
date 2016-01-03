@@ -10,8 +10,8 @@ cdc_rx_done(void *buf, ssize_t len, void *data)
 {
         struct cdc_ctx *ctx = data;
 
-        if (ctx->data_ready_cb)
-                ctx->data_ready_cb(buf, len);
+        if (ctx->cdcf->data_ready_cb)
+                ctx->cdcf->data_ready_cb(buf, len);
 }
 
 void
@@ -35,8 +35,8 @@ cdc_tx_done(void *buf, ssize_t len, void *data)
         ctx->out_sent = 0;
         ctx->out_queued = 0;
         crit_exit();
-        if (ctx->data_sent_cb != NULL)
-                ctx->data_sent_cb(sizeof(ctx->outbuf) - ctx->out_pos);
+        if (ctx->cdcf->data_sent_cb != NULL)
+                ctx->cdcf->data_sent_cb(sizeof(ctx->outbuf) - ctx->out_pos);
 queue:
         crit_enter();
         if (ctx->out_pos > 0 && !ctx->out_queued) {
@@ -84,20 +84,16 @@ cdc_write_string(const char *s, struct cdc_ctx *ctx)
  */
 
 
-const struct usbd_function cdc_function = {
-        .interface_count = USB_FUNCTION_CDC_IFACE_COUNT,
-};
-
 void
-cdc_init(void (*data_ready_cb)(uint8_t *, size_t), void (*data_sent_cb)(size_t), struct cdc_ctx *ctx)
+cdc_init(const struct usbd_function *f, int enable)
 {
-        usb_attach_function(&cdc_function, &ctx->header);
-        ctx->data_ready_cb = data_ready_cb;
-        ctx->data_sent_cb = data_sent_cb;
+        const struct cdc_function *cdcf = (void *)f;
+        struct cdc_ctx *ctx = cdcf->ctx;
+
+        ctx->cdcf = cdcf;
+        usb_attach_function(&cdcf->usb_func, &ctx->header);
         ctx->out_queued = 0;
         ctx->notice_pipe = usb_init_ep(&ctx->header, CDC_NOTICE_EP, USB_EP_TX, CDC_NOTICE_SIZE);
 	ctx->tx_pipe = usb_init_ep(&ctx->header, CDC_TX_EP, USB_EP_TX, CDC_TX_SIZE);
 	ctx->rx_pipe = usb_init_ep(&ctx->header, CDC_RX_EP, USB_EP_RX, CDC_RX_SIZE);
-        cdc_read_more(ctx);
-        cdc_tx_done(ctx->outbuf, -1, ctx);
 }

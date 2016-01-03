@@ -1,11 +1,16 @@
 class CDCDesc < FunctionDesc
   TypeName = "struct cdc_function_desc"
-  FunctionVarName = "cdc_function"
 
   child_block :cdc
 
-  def initialize
+  field :data_ready, :optional => true
+  field :data_sent, :optional => true
+
+  def initialize(name)
+    @name = name
     super()
+
+    init_func :cdc_init
 
     bFunctionClass :USB_DEV_CLASS_CDC
     bFunctionSubClass :USB_DEV_CLASS_CDC
@@ -39,6 +44,48 @@ class CDCDesc < FunctionDesc
         bInterval 0xff
       }
     }
+  end
+
+  def gen_defs
+    s = <<_end_
+extern struct cdc_ctx #{@name.to_loc_s};
+_end_
+    s += "cdc_data_ready_cb_t #{@data_ready.to_loc_s};\n" if !@data_ready.nil?
+    s += "cdc_data_sent_cb_t #{@data_sent.to_loc_s};\n" if !@data_sent.nil?
+    s
+  end
+
+  def gen_vars
+    s = <<_end_
+struct cdc_ctx #{@name.to_loc_s};
+_end_
+    s += super
+  end
+
+  def gen_func_defs
+    <<_end_
+	struct cdc_function cdc_func;
+_end_
+  end
+
+  def gen_func_init
+    s = <<_end_
+	.cdc_func = {
+		.usb_func = #{super}
+		.ctx = &#{@name.to_loc_s},
+_end_
+
+    s += "\t\t.data_ready_cb = #{@data_ready.to_loc_s},\n" if !@data_ready.nil?
+    s += "\t\t.data_sent_cb = #{@data_sent.to_loc_s},\n" if !@data_sent.nil?
+    s +=
+<<_end_
+	},
+_end_
+    s
+  end
+
+  def get_function_var
+    super("cdc_func.usb_func")
   end
 
   def gen_desc_init
