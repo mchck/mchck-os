@@ -51,7 +51,8 @@ struct usbd_t {
 		USBD_STATE_CONFIGURED
 	} state;
 	enum usb_ctrl_req_dir ctrl_dir;
-	uint8_t pipe_count;
+	uint8_t rx_pipe_count;
+	uint8_t tx_pipe_count;
 };
 
 extern struct usbd_t usb;

@@ -569,12 +569,17 @@ usb_init_ep(struct usbd_function_ctx_header *ctx, int ep, enum usb_ep_dir dir, s
 {
 	struct usbd_ep_pipe_state_t *s;
 
-	s = &usbd_pipe_state[usb.pipe_count];
-	usb.pipe_count += 1;
+	s = &usbd_pipe_state[usb.rx_pipe_count + usb.tx_pipe_count];
 	memset(s, 0, sizeof(*s));
-	s->ep_maxsize = size;
-	s->ep_num = ep;
+	if (dir == USB_EP_RX) {
+		s->ep_num = usb.rx_pipe_count;
+		usb.rx_pipe_count += 1;
+	} else {
+		s->ep_num = usb.tx_pipe_count;
+		usb.tx_pipe_count += 1;
+	}
 	s->ep_dir = dir;
+	s->ep_maxsize = size;
 	usb_pipe_enable(s);
 	return (s);
 }
@@ -587,7 +592,7 @@ usb_restart(void)
 	memset(&usb, 0, sizeof(usb));
 	usb.functions.function = &usb.control_function;
 	usb.identity = identity;
-	usb.pipe_count = 0;
+	usb.rx_pipe_count = usb.tx_pipe_count = 0;
 	usb_init_ep(&usb.functions, 0, USB_EP_RX, EP0_BUFSIZE);
 	usb_init_ep(&usb.functions, 0, USB_EP_TX, EP0_BUFSIZE);
 	usb_setup_control();
