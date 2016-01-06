@@ -32,7 +32,7 @@ typedef void	(i2c_cb)(enum i2c_result result,
 		    );
 
 struct i2c_transaction {
-	// destination address and whether read or write 
+	// destination address and whether read or write
 	uint8_t address;
 	enum i2c_direction direction;
 
@@ -51,6 +51,10 @@ struct i2c_transaction {
 	struct i2c_transaction *next;
 };
 
-void	i2c_init(enum i2c_rate rate);
+struct i2c_ctx;
+extern struct i2c_ctx i2c0_ctx;
+extern struct i2c_ctx i2c1_ctx;
 
-void	i2c_queue(struct i2c_transaction *transaction);
+void	i2c_init(struct i2c_ctx *ctx, enum i2c_rate rate);
+
+void	i2c_queue(struct i2c_ctx *ctx, struct i2c_transaction *transaction);
