@@ -52,14 +52,19 @@ enum adc_channel {
         ADC__MASK = 0x1f,
 };
 
-typedef void (adc_result_cb_t)(uint16_t val, int error, void *cbdata);
 
-void adc_init(void);
-void adc_sample_prepare(enum adc_mode mode);
-int adc_sample_start(enum adc_channel channel, adc_result_cb_t *cb, void *cbdata);
-int adc_sample_abort(void);
-void adc_calibrate_voltage(unsigned accum reference);
-unsigned accum adc_as_voltage(uint16_t val);
+struct adc_ctx;
+extern struct adc_ctx adc0_ctx;
+extern struct adc_ctx adc1_ctx;
+
+typedef void (adc_result_cb_t)(struct adc_ctx *ctx, uint16_t val, int error, void *cbdata);
+
+void adc_init(struct adc_ctx *ctx);
+void adc_sample_prepare(struct adc_ctx *ctx, enum adc_mode mode);
+int adc_sample_start(struct adc_ctx *ctx, enum adc_channel channel, adc_result_cb_t *cb, void *cbdata);
+int adc_sample_abort(struct adc_ctx *ctx);
+void adc_calibrate_voltage(struct adc_ctx *ctx, unsigned accum reference);
+unsigned accum adc_as_voltage(struct adc_ctx *ctx, uint16_t val);
 
 /* Weakly defined by adc_queue. Override if adc_queue is not used. */
-void adc_calibration_done(void);
+void adc_calibration_done(void *);
