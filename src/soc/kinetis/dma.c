@@ -12,7 +12,7 @@ dma_init(void)
                 DMA_CR_ERCA_MASK |
                 DMA_CR_EDBG_MASK;
         DMA_CERR = DMA_CERR_CAEI_MASK;
-        int_enable(IRQ_DMA_error);
+        int_enable(IRQ_DMA_Error);
 }
 
 static int
