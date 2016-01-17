@@ -10,9 +10,7 @@
 static void
 init(struct uart_ctx *ctx)
 {
-        UART_MemMapPtr uart = ctx->uart;
-
-        switch ((uintptr_t)uart) {
+        switch ((uintptr_t)ctx->uart) {
         case (uintptr_t)UART0_BASE_PTR:
                 bf_set_reg(SIM_SCGC4, SIM_SCGC4_UART0, 1);
                 int_enable(IRQ_UART0_RX_TX);
@@ -46,44 +44,41 @@ init(struct uart_ctx *ctx)
         }
 
         // Enable FIFOs
-        bf_set_reg(UART_PFIFO_REG(uart), UART_PFIFO_RXFE, 1);
-        bf_set_reg(UART_PFIFO_REG(uart), UART_PFIFO_TXFE, 1);
+        bf_set_reg(UART_PFIFO_REG(ctx->uart), UART_PFIFO_RXFE, 1);
+        bf_set_reg(UART_PFIFO_REG(ctx->uart), UART_PFIFO_TXFE, 1);
 
         // XXX arbitrary FIFO watermarks
-        bf_set_reg(UART_TWFIFO_REG(uart), UART_TWFIFO_TXWATER, 8); /* XXX other fifos have only 1 */
-        bf_set_reg(UART_RWFIFO_REG(uart), UART_RWFIFO_RXWATER, 1); // FIXME: See comment at end of uart_start_rx
+        bf_set_reg(UART_TWFIFO_REG(ctx->uart), UART_TWFIFO_TXWATER, 8); /* XXX other fifos have only 1 */
+        bf_set_reg(UART_RWFIFO_REG(ctx->uart), UART_RWFIFO_RXWATER, 1); // FIXME: See comment at end of uart_start_rx
 
-        bf_set_reg(UART_C2_REG(uart), UART_C2_RE, 1);
-        bf_set_reg(UART_C2_REG(uart), UART_C2_TE, 1);
+        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_RE, 1);
+        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_TE, 1);
 }
 
 static void
 set_baudrate(struct uart_ctx *ctx, unsigned int baudrate)
 {
-        UART_MemMapPtr uart = ctx->uart;
         unsigned int clockrate = 48000000; /* XXX use real clock rate */
         unsigned int sbr = clockrate / 16 / baudrate;
         unsigned int brfa = (2 * clockrate / baudrate) % 32;
 
-        bf_set_reg(UART_BDH_REG(uart), UART_BDH_SBR, sbr >> 8);
-        bf_set_reg(UART_BDL_REG(uart), UART_BDL_SBR, sbr & 0xff);
-        bf_set_reg(UART_C4_REG(uart), UART_C4_BRFA, brfa);
+        bf_set_reg(UART_BDH_REG(ctx->uart), UART_BDH_SBR, sbr >> 8);
+        bf_set_reg(UART_BDL_REG(ctx->uart), UART_BDL_SBR, sbr & 0xff);
+        bf_set_reg(UART_C4_REG(ctx->uart), UART_C4_BRFA, brfa);
 }
 
 static void
 start_tx(struct uart_ctx *ctx)
 {
-        UART_MemMapPtr uart = ctx->uart;
-
-        unsigned int depth = 1 << (bf_get_reg(UART_PFIFO_REG(uart), UART_PFIFO_TXFIFOSIZE) + 1);
+        unsigned int depth = 1 << (bf_get_reg(UART_PFIFO_REG(ctx->uart), UART_PFIFO_TXFIFOSIZE) + 1);
         if (depth == 2)
                 depth = 1;
 
-        while (bf_get_reg(UART_TCFIFO_REG(uart), UART_TCFIFO_TXCOUNT) < depth) {
+        while (bf_get_reg(UART_TCFIFO_REG(ctx->uart), UART_TCFIFO_TXCOUNT) < depth) {
                 struct uart_trans_ctx *tctx = ctx->tx_queue;
                 if (!tctx)
                         return;
-                UART_D_REG(uart) = *tctx->pos;
+                UART_D_REG(ctx->uart) = *tctx->pos;
                 tctx->pos++;
                 tctx->remaining--;
                 if (tctx->remaining == 0) {
@@ -97,17 +92,16 @@ start_tx(struct uart_ctx *ctx)
 static void
 start_rx(struct uart_ctx *ctx)
 {
-        UART_MemMapPtr uart = ctx->uart;
         int remaining;
 
-        while ((remaining = bf_get_reg(UART_RCFIFO_REG(uart), UART_RCFIFO_RXCOUNT)) != 0) {
+        while ((remaining = bf_get_reg(UART_RCFIFO_REG(ctx->uart), UART_RCFIFO_RXCOUNT)) != 0) {
                 struct uart_trans_ctx *rctx = ctx->rx_queue;
                 if (!rctx)
                         return;
                 /* clear flags */
                 if (remaining == 1)
-                        (void)UART_S1_REG(uart);
-                *rctx->pos = UART_D_REG(uart);
+                        (void)UART_S1_REG(ctx->uart);
+                *rctx->pos = UART_D_REG(ctx->uart);
                 rctx->pos++;
                 rctx->remaining--;
 
@@ -140,40 +134,36 @@ start_rx(struct uart_ctx *ctx)
 static void
 start(struct uart_ctx *ctx)
 {
-        UART_MemMapPtr uart = ctx->uart;
-
         if (ctx->rx_queue)
-                bf_set_reg(UART_C2_REG(uart), UART_C2_RIE, 1);
+                bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_RIE, 1);
         if (ctx->tx_queue)
-                bf_set_reg(UART_C2_REG(uart), UART_C2_TIE, 1);
+                bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_TIE, 1);
 }
 
 static void
 irq_handler(struct uart_ctx *ctx)
 {
-        UART_MemMapPtr uart = ctx->uart;
-
-        uint8_t s1 = UART_S1_REG(uart);
+        uint8_t s1 = UART_S1_REG(ctx->uart);
 
         if (bf_get_reg(s1, UART_S1_TDRE)) {
                 if (ctx->tx_queue != NULL)
                         start_tx(ctx);
                 else
-                        bf_set_reg(UART_C2_REG(uart), UART_C2_TIE, 0);
+                        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_TIE, 0);
         }
-        if (bf_get_reg(UART_RCFIFO_REG(uart), UART_RCFIFO_RXCOUNT) > 0) {
+        if (bf_get_reg(UART_RCFIFO_REG(ctx->uart), UART_RCFIFO_RXCOUNT) > 0) {
                 if (ctx->rx_queue != NULL)
                         start_rx(ctx);
                 else
-                        bf_set_reg(UART_C2_REG(uart), UART_C2_RIE, 0);
+                        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_RIE, 0);
         }
         if (bf_get_reg(s1, UART_S1_FE)) {
                 /* simply clear flag and hope for the best */
-                (void)UART_D_REG(uart);
+                (void)UART_D_REG(ctx->uart);
         }
 
         /* final clear of watermark flags */
-        (void)UART_S1_REG(uart);
+        (void)UART_S1_REG(ctx->uart);
 }
 
 const struct uart_methods uart_fifo_methods = {
