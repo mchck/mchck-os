@@ -86,6 +86,7 @@ enum dmamux_channel {
 
 #include <soc/kinetis/adc.h>
 #include <soc/kinetis/crc.h>
+#include <soc/kinetis/dac.h>
 #include <soc/kinetis/dma.h>
 #include <soc/kinetis/flash.h>
 #include <soc/kinetis/ftm.h>
