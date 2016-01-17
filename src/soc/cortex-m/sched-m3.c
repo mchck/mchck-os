@@ -7,7 +7,7 @@ struct exception_frame {
 
 struct extended_exception_frame {
         /* saved by scheduler entry */
-        uint32_t r4, r5, r6, r7, r8, r9, r10, r11;
+        uint32_t r4, r5, r6, r7, r8, r9, r10, r11, ex_lr;
         struct exception_frame;
 };
 
@@ -30,6 +30,7 @@ md_thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg
         struct extended_exception_frame *f = (void *)((uintptr_t)stackbase + stacksize);
 
         f--;
+        f->ex_lr = 0xfffffffd;  /* basic frame, process stack */
         f->ret = (uintptr_t)fun;
         f->r0 = (uintptr_t)arg;
         f->xpsr = 1 << 24;
@@ -151,9 +152,8 @@ PendSV_Handler(void)
 
         /* save remaining registers on task stack */
         __asm__ volatile (
-                "push {lr}\n"
                 "mrs %[savesp], PSP\n"
-                "stmdb %[savesp]!, {r4-r11}\n"
+                "stmdb %[savesp]!, {r4-r11,lr}\n"
                 : [savesp] "=r" (savesp)
                 );
 
@@ -191,9 +191,9 @@ PendSV_Handler(void)
 
         /* restore remaining registers from task stack */
         __asm__ volatile (
-                "ldmia %[savesp]!, {r4-r11}\n"
+                "ldmia %[savesp]!, {r4-r11,lr}\n"
                 "msr PSP, %[savesp]\n"
-                "pop {pc}\n"
+                "bx lr\n"
                 :: [savesp] "r" (returnthread->md.sp) : "0"
                 );
 }
