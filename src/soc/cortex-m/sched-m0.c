@@ -169,7 +169,7 @@ PendSV_Handler(void)
         else
                 idle->md.sp = (void *)savesp;
 
-        SCB->ICSR |= SCB_ICSR_PENDSVCLR_Msk;
+        SCB->ICSR = SCB_ICSR_PENDSVCLR_Msk;
         scheduler();
 
         struct thread *returnthread = curthread;
@@ -193,6 +193,7 @@ PendSV_Handler(void)
                 SCB->SCR |= SCB_SCR_SLEEPONEXIT_Msk;
                 SysTick->CTRL = 0;
         }
+        SCB->ICSR = SCB_ICSR_PENDSTCLR_Msk;
         SysTick->VAL = 0;       /* trigger reload */
 
         /* restore remaining registers from task stack */
