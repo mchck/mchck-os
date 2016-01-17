@@ -31,3 +31,5 @@ typedef __CHAR16_TYPE__ char16_t;
 
 #define lambda(_ret, _body) _lambda(_CONCAT(_lambda_fn_, __COUNTER__), _ret, _body)
 #define _lambda(_name, _ret, _body) ({_ret _name _body _name;})
+
+#define container_of(ptr, type, member) ((type *)((uintptr_t)ptr - offsetof(type, member)))
