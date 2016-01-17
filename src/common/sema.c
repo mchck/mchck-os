@@ -1,5 +1,14 @@
 #include <mchck.h>
 
+bool
+sema_try_wait_count(struct sema *sema, int count)
+{
+        uint32_t oldcount = sema->count;
+        if (oldcount < count)
+                return (false);
+        return (__sync_bool_compare_and_swap(&sema->count, oldcount, oldcount - count));
+}
+
 void
 sema_wait_count(struct sema *sema, int count)
 {
