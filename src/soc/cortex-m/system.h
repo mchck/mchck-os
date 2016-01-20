@@ -9,6 +9,7 @@ void __attribute__((noreturn)) panic(const char *reason);
 
 void int_enable(size_t intno);
 void int_disable(size_t intno);
+void sys_debug_enable_precise_errors(void);
 
 static inline volatile uint32_t *
 bitband_bitp(volatile void *addr, size_t bit)

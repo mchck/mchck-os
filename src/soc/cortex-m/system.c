@@ -63,3 +63,12 @@ int_disable(size_t intno)
 {
         NVIC_DisableIRQ(intno);
 }
+
+void
+sys_debug_enable_precise_errors(void)
+{
+#ifdef SCnSCB
+        /* XXX disable selectively? */
+        SCnSCB->ACTLR = 0xffffffff;
+#endif
+}
