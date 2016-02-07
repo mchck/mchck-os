@@ -36,10 +36,10 @@ finish_write(struct dfu_ctx *ctx, void *buf, size_t off, size_t len)
                 return (DFU_STATUS_OK);
         }
 
-        NV_MemMapPtr flashconfig = (void *)&staging[(uintptr_t)FlashConfig_BASE_PTR];
+        NV_Type *flashconfig = (void *)&staging[(uintptr_t)FlashConfig_BASE_PTR];
 
         /* Make sure we don't brick ourselves */
-        if (bf_get_reg(NV_FSEC_REG(flashconfig), NV_FSEC_SEC) != NV_FSEC_SEC_UNSECURE)
+        if (bf_get_reg(flashconfig->FSEC, NV_FSEC_SEC) != NV_FSEC_SEC_UNSECURE)
                 return (DFU_STATUS_errFILE);
 
         /* We know what we're doing, part 2. */

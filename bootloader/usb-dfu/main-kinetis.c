@@ -97,7 +97,7 @@ Reset_Handler(void)
          * pointer and check for valid app code.  This is no fool
          * proof method, but it should help for the first flash.
          */
-        if (bf_get_reg(RCM_SRS0, RCM_SRS0_PIN) ||
+        if (bf_get_reg(RCM->SRS0, RCM_SRS0_PIN) ||
             _app_rom == 0xffffffff ||
             memcmp(sys_register_file, sys_reset_to_loader_magic, sizeof(sys_reset_to_loader_magic)) == 0) {
                 extern void Default_Reset_Handler(void);

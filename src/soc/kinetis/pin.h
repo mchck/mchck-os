@@ -115,5 +115,5 @@ pin_physpin_from_pin(enum pin_id pin)
         return (pin & 0xffff);
 }
 
-PORT_MemMapPtr pin_physport_from_pin(enum pin_id pin);
+PORT_Type *pin_physport_from_pin(enum pin_id pin);
 void pin_mode(enum pin_id pin, enum pin_mode mode);

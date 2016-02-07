@@ -1,19 +1,19 @@
 #include <mchck.h>
 
-PORT_MemMapPtr
+PORT_Type *
 pin_physport_from_pin(enum pin_id pin)
 {
         switch (pin_port_from_pin(pin)) {
         case PIN_PORTA:
-                return (PORTA_BASE_PTR);
+                return (PORTA);
         case PIN_PORTB:
-                return (PORTB_BASE_PTR);
+                return (PORTB);
         case PIN_PORTC:
-                return (PORTC_BASE_PTR);
+                return (PORTC);
         case PIN_PORTD:
-                return (PORTD_BASE_PTR);
+                return (PORTD);
         case PIN_PORTE:
-                return (PORTE_BASE_PTR);
+                return (PORTE);
         default:
                 return (NULL);
         }
@@ -25,9 +25,9 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
         int pinnum = pin_physpin_from_pin(pin);
 
         /* enable port clock */
-        bf_set(SIM_SCGC5, pin_portnum_from_pin(pin) + 8, 1, 1);
+        bf_set(SIM->SCGC5, pin_portnum_from_pin(pin) + 8, 1, 1);
 
-        uint32_t pcr = PORT_PCR_REG(pin_physport_from_pin(pin), pinnum);
+        uint32_t pcr = pin_physport_from_pin(pin)->PCR[pinnum];
 
         if (mode & PIN_MODE_RESET) {
                 pcr &= ~0xff;
@@ -102,5 +102,5 @@ pin_mode(enum pin_id pin, enum pin_mode mode)
                 bf_set_reg(pcr, PORT_PCR_MUX, (mode & PIN_MODE__MUX_MASK) >> 13);
         }
 
-        PORT_PCR_REG(pin_physport_from_pin(pin), pinnum) = pcr;
+        pin_physport_from_pin(pin)->PCR[pinnum] = pcr;
 }

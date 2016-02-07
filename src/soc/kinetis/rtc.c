@@ -5,34 +5,34 @@ static struct rtc_alarm_ctx *alarm_head = NULL;
 void
 rtc_init(void)
 {
-        bf_set_reg(SIM_SCGC6, SIM_SCGC6_RTC, 1);
-        bf_set_reg(RTC_CR, RTC_CR_OSCE, 1);
+        bf_set_reg(SIM->SCGC6, SIM_SCGC6_RTC, 1);
+        bf_set_reg(RTC->CR, RTC_CR_OSCE, 1);
 }
 
 int
 rtc_start_counter(void)
 {
-        if (bf_get_reg(RTC_SR, RTC_SR_TIF))
+        if (bf_get_reg(RTC->SR, RTC_SR_TIF))
                 return 1;
-        bf_set_reg(RTC_SR, RTC_SR_TCE, 1);
+        bf_set_reg(RTC->SR, RTC_SR_TCE, 1);
         return 0;
 }
 
 uint32_t
 rtc_get_time(void)
 {
-        return (RTC_TSR);
+        return (RTC->TSR);
 }
 
 void
 rtc_set_time(uint32_t seconds)
 {
-        int started = bf_get_reg(RTC_SR, RTC_SR_TCE);
+        int started = bf_get_reg(RTC->SR, RTC_SR_TCE);
 
-        bf_set_reg(RTC_SR, RTC_SR_TCE, 0);
-        RTC_TSR = seconds;
+        bf_set_reg(RTC->SR, RTC_SR_TCE, 0);
+        RTC->TSR = seconds;
         if (started)
-                bf_set_reg(RTC_SR, RTC_SR_TCE, 1);
+                bf_set_reg(RTC->SR, RTC_SR_TCE, 1);
 }
 
 static void
@@ -42,7 +42,7 @@ rtc_alarm_update(void)
                 return;
 
         if (alarm_head) {
-                RTC_TAR = alarm_head->time;
+                RTC->TAR = alarm_head->time;
                 int_enable(IRQ_RTC);
         } else {
                 int_disable(IRQ_RTC);

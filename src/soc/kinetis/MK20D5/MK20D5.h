@@ -9,13 +9,13 @@
 **                          K20P32M50SF0RM Rev. 1, Oct 2011
 **                          K20P48M50SF0RM Rev. 1, Oct 2011
 **
-**     Version:             rev. 3.0, 2012-03-19
+**     Version:             rev. 3.1, 2012-04-13
 **
 **     Abstract:
 **         This header file implements peripheral memory map for MK20D5
 **         processor.
 **
-**     Copyright: 1997 - 2012 Freescale Semiconductor, Inc. All Rights Reserved.
+**     Copyright: 1997 - 2012 Freescale, Inc. All Rights Reserved.
 **
 **     http:                 www.freescale.com
 **     mail:                 support@freescale.com
@@ -28,14 +28,17 @@
 **     - rev. 3.0 (2012-03-19)
 **         PDB Peripheral register structure updated.
 **         DMA Registers and bits for unsupported DMA channels removed.
+**     - rev. 3.1 (2012-04-13)
+**         Added new #define symbol MCU_MEM_MAP_VERSION_MINOR.
+**         Added new #define symbols <peripheralType>_BASE_PTRS.
 **
 ** ###################################################################
 */
 
 /**
  * @file MK20D5.h
- * @version 3.0
- * @date 2012-03-19
+ * @version 3.1
+ * @date 2012-04-13
  * @brief Peripheral memory map for MK20D5
  *
  * This header file implements peripheral memory map for MK20D5 processor.
@@ -62,7 +65,7 @@
  * compatible) */
 #define MCU_MEM_MAP_VERSION 0x0300u
 /** Memory map minor version */
-#define MCU_MEM_MAP_VERSION_MINOR 0x0000u
+#define MCU_MEM_MAP_VERSION_MINOR 0x0001u
 
 /**
  * @brief Macro to access a single bit of a peripheral register (bit band region
@@ -151,76 +154,6 @@ typedef enum {
 /**
  * @}
  */ /* end of group Interrupt_vector_numbers */
-
-/** Interrupt Number Definitions */
-typedef enum IRQn {
-  /* Core interrupts */
-  NonMaskableInt_IRQn          = -14,              /**< Non Maskable Interrupt */
-  MemoryManagement_IRQn        = -12,              /**< Cortex-M4 Memory Management Interrupt */
-  BusFault_IRQn                = -11,              /**< Cortex-M4 Bus Fault Interrupt */
-  UsageFault_IRQn              = -10,              /**< Cortex-M4 Usage Fault Interrupt */
-  SVCall_IRQn                  = -5,               /**< Cortex-M4 SV Call Interrupt */
-  DebugMonitor_IRQn            = -4,               /**< Cortex-M4 Debug Monitor Interrupt */
-  PendSV_IRQn                  = -2,               /**< Cortex-M4 Pend SV Interrupt */
-  SysTick_IRQn                 = -1,               /**< Cortex-M4 System Tick Interrupt */
-
-  /* Device specific interrupts */
-  DMA0_IRQn                    = 0,                /**< DMA channel 0 transfer complete interrupt */
-  DMA1_IRQn                    = 1,                /**< DMA channel 1 transfer complete interrupt */
-  DMA2_IRQn                    = 2,                /**< DMA channel 2 transfer complete interrupt */
-  DMA3_IRQn                    = 3,                /**< DMA channel 3 transfer complete interrupt */
-  DMA_Error_IRQn               = 4,                /**< DMA error interrupt */
-  Reserved21_IRQn              = 5,                /**< Reserved interrupt 21 */
-  FTFL_IRQn                    = 6,                /**< FTFL interrupt */
-  Read_Collision_IRQn          = 7,                /**< Read collision interrupt */
-  LVD_LVW_IRQn                 = 8,                /**< Low Voltage Detect, Low Voltage Warning */
-  LLW_IRQn                     = 9,                /**< Low Leakage Wakeup */
-  Watchdog_IRQn                = 10,               /**< WDOG interrupt */
-  I2C0_IRQn                    = 11,               /**< I2C0 interrupt */
-  SPI0_IRQn                    = 12,               /**< SPI0 interrupt */
-  I2S0_Tx_IRQn                 = 13,               /**< I2S0 transmit interrupt */
-  I2S0_Rx_IRQn                 = 14,               /**< I2S0 receive interrupt */
-  UART0_LON_IRQn               = 15,               /**< UART0 LON interrupt */
-  UART0_RX_TX_IRQn             = 16,               /**< UART0 receive/transmit interrupt */
-  UART0_ERR_IRQn               = 17,               /**< UART0 error interrupt */
-  UART1_RX_TX_IRQn             = 18,               /**< UART1 receive/transmit interrupt */
-  UART1_ERR_IRQn               = 19,               /**< UART1 error interrupt */
-  UART2_RX_TX_IRQn             = 20,               /**< UART2 receive/transmit interrupt */
-  UART2_ERR_IRQn               = 21,               /**< UART2 error interrupt */
-  ADC0_IRQn                    = 22,               /**< ADC0 interrupt */
-  CMP0_IRQn                    = 23,               /**< CMP0 interrupt */
-  CMP1_IRQn                    = 24,               /**< CMP1 interrupt */
-  FTM0_IRQn                    = 25,               /**< FTM0 fault, overflow and channels interrupt */
-  FTM1_IRQn                    = 26,               /**< FTM1 fault, overflow and channels interrupt */
-  CMT_IRQn                     = 27,               /**< CMT interrupt */
-  RTC_IRQn                     = 28,               /**< RTC interrupt */
-  RTC_Seconds_IRQn             = 29,               /**< RTC seconds interrupt */
-  PIT0_IRQn                    = 30,               /**< PIT timer channel 0 interrupt */
-  PIT1_IRQn                    = 31,               /**< PIT timer channel 1 interrupt */
-  PIT2_IRQn                    = 32,               /**< PIT timer channel 2 interrupt */
-  PIT3_IRQn                    = 33,               /**< PIT timer channel 3 interrupt */
-  PDB0_IRQn                    = 34,               /**< PDB0 interrupt */
-  USB0_IRQn                    = 35,               /**< USB0 interrupt */
-  USBDCD_IRQn                  = 36,               /**< USBDCD interrupt */
-  TSI0_IRQn                    = 37,               /**< TSI0 interrupt */
-  MCG_IRQn                     = 38,               /**< MCG interrupt */
-  LPTimer_IRQn                 = 39,               /**< LPTimer interrupt */
-  PORTA_IRQn                   = 40,               /**< Port A interrupt */
-  PORTB_IRQn                   = 41,               /**< Port B interrupt */
-  PORTC_IRQn                   = 42,               /**< Port C interrupt */
-  PORTD_IRQn                   = 43,               /**< Port D interrupt */
-  PORTE_IRQn                   = 44,               /**< Port E interrupt */
-  SWI_IRQn                     = 45                /**< Software interrupt */
-} IRQn_Type;
-
-
-#define __MPU_PRESENT                  0         /**< Defines if an MPU is present or not */
-#define __NVIC_PRIO_BITS               4         /**< Number of priority bits implemented in the NVIC */
-#define __Vendor_SysTickConfig         0         /**< Vendor specific implementation of SysTickConfig is defined */
-
-#include "core_cm4.h"                  /* Core Peripheral Access Layer */
-#include "system_MK20D5.h"             /* Device specific configuration file */
-
 
 
 /* ----------------------------------------------------------------------------
@@ -492,6 +425,8 @@ typedef struct ADC_MemMap {
 /* ADC - Peripheral instance base addresses */
 /** Peripheral ADC0 base pointer */
 #define ADC0_BASE_PTR                            ((ADC_MemMapPtr)0x4003B000u)
+/** Array initializer of ADC peripheral base pointers */
+#define ADC_BASE_PTRS                            { ADC0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- ADC - Register accessor macros
@@ -663,6 +598,8 @@ typedef struct CMP_MemMap {
 #define CMP0_BASE_PTR                            ((CMP_MemMapPtr)0x40073000u)
 /** Peripheral CMP1 base pointer */
 #define CMP1_BASE_PTR                            ((CMP_MemMapPtr)0x40073008u)
+/** Array initializer of CMP peripheral base pointers */
+#define CMP_BASE_PTRS                            { CMP0_BASE_PTR, CMP1_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- CMP - Register accessor macros
@@ -834,6 +771,8 @@ typedef struct CMT_MemMap {
 /* CMT - Peripheral instance base addresses */
 /** Peripheral CMT base pointer */
 #define CMT_BASE_PTR                             ((CMT_MemMapPtr)0x40062000u)
+/** Array initializer of CMT peripheral base pointers */
+#define CMT_BASE_PTRS                            { CMT_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- CMT - Register accessor macros
@@ -1061,6 +1000,8 @@ typedef struct CRC_MemMap {
 /* CRC - Peripheral instance base addresses */
 /** Peripheral CRC base pointer */
 #define CRC_BASE_PTR                             ((CRC_MemMapPtr)0x40032000u)
+/** Array initializer of CRC peripheral base pointers */
+#define CRC_BASE_PTRS                            { CRC_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- CRC - Register accessor macros
@@ -1161,6 +1102,8 @@ typedef struct CoreDebug_MemMap {
 /* CoreDebug - Peripheral instance base addresses */
 /** Peripheral CoreDebug base pointer */
 #define CoreDebug_BASE_PTR                       ((CoreDebug_MemMapPtr)0xE000EDF0u)
+/** Array initializer of CoreDebug peripheral base pointers */
+#define CoreDebug_BASE_PTRS                      { CoreDebug_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- CoreDebug - Register accessor macros
@@ -1171,6 +1114,14 @@ typedef struct CoreDebug_MemMap {
  * @{
  */
 
+
+/* CoreDebug - Register instance definitions */
+/* CoreDebug */
+#define DHCSR_Read                               CoreDebug_base_DHCSR_Read_REG(CoreDebug_BASE_PTR)
+#define DHCSR_Write                              CoreDebug_base_DHCSR_Write_REG(CoreDebug_BASE_PTR)
+#define DCRSR                                    CoreDebug_base_DCRSR_REG(CoreDebug_BASE_PTR)
+#define DCRDR                                    CoreDebug_base_DCRDR_REG(CoreDebug_BASE_PTR)
+#define DEMCR                                    CoreDebug_base_DEMCR_REG(CoreDebug_BASE_PTR)
 
 /**
  * @}
@@ -1610,6 +1561,8 @@ typedef struct DMA_MemMap {
 /* DMA - Peripheral instance base addresses */
 /** Peripheral DMA base pointer */
 #define DMA_BASE_PTR                             ((DMA_MemMapPtr)0x40008000u)
+/** Array initializer of DMA peripheral base pointers */
+#define DMA_BASE_PTRS                            { DMA_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- DMA - Register accessor macros
@@ -1741,7 +1694,7 @@ typedef struct DMA_MemMap {
 
 /** DMAMUX - Peripheral register structure */
 typedef struct DMAMUX_MemMap {
-  uint8_t CHCFG[16];                               /**< Channel Configuration Register, array offset: 0x0, array step: 0x1 */
+  uint8_t CHCFG[4];                                /**< Channel Configuration Register, array offset: 0x0, array step: 0x1 */
 } volatile *DMAMUX_MemMapPtr;
 
 /* ----------------------------------------------------------------------------
@@ -1788,6 +1741,8 @@ typedef struct DMAMUX_MemMap {
 /* DMAMUX - Peripheral instance base addresses */
 /** Peripheral DMAMUX base pointer */
 #define DMAMUX_BASE_PTR                          ((DMAMUX_MemMapPtr)0x40021000u)
+/** Array initializer of DMAMUX peripheral base pointers */
+#define DMAMUX_BASE_PTRS                         { DMAMUX_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- DMAMUX - Register accessor macros
@@ -1805,18 +1760,6 @@ typedef struct DMAMUX_MemMap {
 #define DMAMUX0_CHCFG1                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,1)
 #define DMAMUX0_CHCFG2                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,2)
 #define DMAMUX0_CHCFG3                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,3)
-#define DMAMUX0_CHCFG4                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,4)
-#define DMAMUX0_CHCFG5                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,5)
-#define DMAMUX0_CHCFG6                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,6)
-#define DMAMUX0_CHCFG7                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,7)
-#define DMAMUX0_CHCFG8                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,8)
-#define DMAMUX0_CHCFG9                           DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,9)
-#define DMAMUX0_CHCFG10                          DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,10)
-#define DMAMUX0_CHCFG11                          DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,11)
-#define DMAMUX0_CHCFG12                          DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,12)
-#define DMAMUX0_CHCFG13                          DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,13)
-#define DMAMUX0_CHCFG14                          DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,14)
-#define DMAMUX0_CHCFG15                          DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,15)
 
 /* DMAMUX - Register array accessors */
 #define DMAMUX_CHCFG(index)                      DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR,index)
@@ -1929,6 +1872,8 @@ typedef struct DWT_MemMap {
 /* DWT - Peripheral instance base addresses */
 /** Peripheral DWT base pointer */
 #define DWT_BASE_PTR                             ((DWT_MemMapPtr)0xE0001000u)
+/** Array initializer of DWT peripheral base pointers */
+#define DWT_BASE_PTRS                            { DWT_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- DWT - Register accessor macros
@@ -2095,6 +2040,8 @@ typedef struct ETF_MemMap {
 /* ETF - Peripheral instance base addresses */
 /** Peripheral ETF base pointer */
 #define ETF_BASE_PTR                             ((ETF_MemMapPtr)0xE0043000u)
+/** Array initializer of ETF peripheral base pointers */
+#define ETF_BASE_PTRS                            { ETF_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- ETF - Register accessor macros
@@ -2222,6 +2169,8 @@ typedef struct EWM_MemMap {
 /* EWM - Peripheral instance base addresses */
 /** Peripheral EWM base pointer */
 #define EWM_BASE_PTR                             ((EWM_MemMapPtr)0x40061000u)
+/** Array initializer of EWM peripheral base pointers */
+#define EWM_BASE_PTRS                            { EWM_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- EWM - Register accessor macros
@@ -2403,6 +2352,8 @@ typedef struct FMC_MemMap {
 /* FMC - Peripheral instance base addresses */
 /** Peripheral FMC base pointer */
 #define FMC_BASE_PTR                             ((FMC_MemMapPtr)0x4001F000u)
+/** Array initializer of FMC peripheral base pointers */
+#define FMC_BASE_PTRS                            { FMC_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- FMC - Register accessor macros
@@ -2531,6 +2482,8 @@ typedef struct FPB_MemMap {
 /* FPB - Peripheral instance base addresses */
 /** Peripheral FPB base pointer */
 #define FPB_BASE_PTR                             ((FPB_MemMapPtr)0xE0002000u)
+/** Array initializer of FPB peripheral base pointers */
+#define FPB_BASE_PTRS                            { FPB_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- FPB - Register accessor macros
@@ -2788,6 +2741,8 @@ typedef struct FTFL_MemMap {
 /* FTFL - Peripheral instance base addresses */
 /** Peripheral FTFL base pointer */
 #define FTFL_BASE_PTR                            ((FTFL_MemMapPtr)0x40020000u)
+/** Array initializer of FTFL peripheral base pointers */
+#define FTFL_BASE_PTRS                           { FTFL_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- FTFL - Register accessor macros
@@ -3339,6 +3294,8 @@ typedef struct FTM_MemMap {
 #define FTM0_BASE_PTR                            ((FTM_MemMapPtr)0x40038000u)
 /** Peripheral FTM1 base pointer */
 #define FTM1_BASE_PTR                            ((FTM_MemMapPtr)0x40039000u)
+/** Array initializer of FTM peripheral base pointers */
+#define FTM_BASE_PTRS                            { FTM0_BASE_PTR, FTM1_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- FTM - Register accessor macros
@@ -3528,6 +3485,8 @@ typedef struct GPIO_MemMap {
 #define PTD_BASE_PTR                             ((GPIO_MemMapPtr)0x400FF0C0u)
 /** Peripheral PTE base pointer */
 #define PTE_BASE_PTR                             ((GPIO_MemMapPtr)0x400FF100u)
+/** Array initializer of GPIO peripheral base pointers */
+#define GPIO_BASE_PTRS                           { PTA_BASE_PTR, PTB_BASE_PTR, PTC_BASE_PTR, PTD_BASE_PTR, PTE_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- GPIO - Register accessor macros
@@ -3758,6 +3717,8 @@ typedef struct I2C_MemMap {
 /* I2C - Peripheral instance base addresses */
 /** Peripheral I2C0 base pointer */
 #define I2C0_BASE_PTR                            ((I2C_MemMapPtr)0x40066000u)
+/** Array initializer of I2C peripheral base pointers */
+#define I2C_BASE_PTRS                            { I2C0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- I2C - Register accessor macros
@@ -4117,6 +4078,8 @@ typedef struct I2S_MemMap {
 /* I2S - Peripheral instance base addresses */
 /** Peripheral I2S0 base pointer */
 #define I2S0_BASE_PTR                            ((I2S_MemMapPtr)0x4002F000u)
+/** Array initializer of I2S peripheral base pointers */
+#define I2S_BASE_PTRS                            { I2S0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- I2S - Register accessor macros
@@ -4264,6 +4227,8 @@ typedef struct ITM_MemMap {
 /* ITM - Peripheral instance base addresses */
 /** Peripheral ITM base pointer */
 #define ITM_BASE_PTR                             ((ITM_MemMapPtr)0xE0000000u)
+/** Array initializer of ITM peripheral base pointers */
+#define ITM_BASE_PTRS                            { ITM_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- ITM - Register accessor macros
@@ -4586,6 +4551,8 @@ typedef struct LLWU_MemMap {
 /* LLWU - Peripheral instance base addresses */
 /** Peripheral LLWU base pointer */
 #define LLWU_BASE_PTR                            ((LLWU_MemMapPtr)0x4007C000u)
+/** Array initializer of LLWU peripheral base pointers */
+#define LLWU_BASE_PTRS                           { LLWU_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- LLWU - Register accessor macros
@@ -4710,6 +4677,8 @@ typedef struct LPTMR_MemMap {
 /* LPTMR - Peripheral instance base addresses */
 /** Peripheral LPTMR0 base pointer */
 #define LPTMR0_BASE_PTR                          ((LPTMR_MemMapPtr)0x40040000u)
+/** Array initializer of LPTMR peripheral base pointers */
+#define LPTMR_BASE_PTRS                          { LPTMR0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- LPTMR - Register accessor macros
@@ -4922,6 +4891,8 @@ typedef struct MCG_MemMap {
 /* MCG - Peripheral instance base addresses */
 /** Peripheral MCG base pointer */
 #define MCG_BASE_PTR                             ((MCG_MemMapPtr)0x40064000u)
+/** Array initializer of MCG peripheral base pointers */
+#define MCG_BASE_PTRS                            { MCG_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- MCG - Register accessor macros
@@ -5112,6 +5083,8 @@ typedef struct NV_MemMap {
 /* NV - Peripheral instance base addresses */
 /** Peripheral FTFL_FlashConfig base pointer */
 #define FTFL_FlashConfig_BASE_PTR                ((NV_MemMapPtr)0x400u)
+/** Array initializer of NV peripheral base pointers */
+#define NV_BASE_PTRS                             { FTFL_FlashConfig_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- NV - Register accessor macros
@@ -5563,6 +5536,8 @@ typedef struct NVIC_MemMap {
 /* NVIC - Peripheral instance base addresses */
 /** Peripheral NVIC base pointer */
 #define NVIC_BASE_PTR                            ((NVIC_MemMapPtr)0xE000E100u)
+/** Array initializer of NVIC peripheral base pointers */
+#define NVIC_BASE_PTRS                           { NVIC_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- NVIC - Register accessor macros
@@ -5786,6 +5761,8 @@ typedef struct OSC_MemMap {
 /* OSC - Peripheral instance base addresses */
 /** Peripheral OSC0 base pointer */
 #define OSC0_BASE_PTR                            ((OSC_MemMapPtr)0x40065000u)
+/** Array initializer of OSC peripheral base pointers */
+#define OSC_BASE_PTRS                            { OSC0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- OSC - Register accessor macros
@@ -5953,6 +5930,8 @@ typedef struct PDB_MemMap {
 /* PDB - Peripheral instance base addresses */
 /** Peripheral PDB0 base pointer */
 #define PDB0_BASE_PTR                            ((PDB_MemMapPtr)0x40036000u)
+/** Array initializer of PDB peripheral base pointers */
+#define PDB_BASE_PTRS                            { PDB0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- PDB - Register accessor macros
@@ -6076,6 +6055,8 @@ typedef struct PIT_MemMap {
 /* PIT - Peripheral instance base addresses */
 /** Peripheral PIT base pointer */
 #define PIT_BASE_PTR                             ((PIT_MemMapPtr)0x40037000u)
+/** Array initializer of PIT peripheral base pointers */
+#define PIT_BASE_PTRS                            { PIT_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- PIT - Register accessor macros
@@ -6206,6 +6187,8 @@ typedef struct PMC_MemMap {
 /* PMC - Peripheral instance base addresses */
 /** Peripheral PMC base pointer */
 #define PMC_BASE_PTR                             ((PMC_MemMapPtr)0x4007D000u)
+/** Array initializer of PMC peripheral base pointers */
+#define PMC_BASE_PTRS                            { PMC_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- PMC - Register accessor macros
@@ -6357,6 +6340,8 @@ typedef struct PORT_MemMap {
 #define PORTD_BASE_PTR                           ((PORT_MemMapPtr)0x4004C000u)
 /** Peripheral PORTE base pointer */
 #define PORTE_BASE_PTR                           ((PORT_MemMapPtr)0x4004D000u)
+/** Array initializer of PORT peripheral base pointers */
+#define PORT_BASE_PTRS                           { PORTA_BASE_PTR, PORTB_BASE_PTR, PORTC_BASE_PTR, PORTD_BASE_PTR, PORTE_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- PORT - Register accessor macros
@@ -6671,6 +6656,8 @@ typedef struct RCM_MemMap {
 /* RCM - Peripheral instance base addresses */
 /** Peripheral RCM base pointer */
 #define RCM_BASE_PTR                             ((RCM_MemMapPtr)0x4007F000u)
+/** Array initializer of RCM peripheral base pointers */
+#define RCM_BASE_PTRS                            { RCM_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- RCM - Register accessor macros
@@ -6763,6 +6750,8 @@ typedef struct RFSYS_MemMap {
 /* RFSYS - Peripheral instance base addresses */
 /** Peripheral RFSYS base pointer */
 #define RFSYS_BASE_PTR                           ((RFSYS_MemMapPtr)0x40041000u)
+/** Array initializer of RFSYS peripheral base pointers */
+#define RFSYS_BASE_PTRS                          { RFSYS_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- RFSYS - Register accessor macros
@@ -6861,6 +6850,8 @@ typedef struct RFVBAT_MemMap {
 /* RFVBAT - Peripheral instance base addresses */
 /** Peripheral RFVBAT base pointer */
 #define RFVBAT_BASE_PTR                          ((RFVBAT_MemMapPtr)0x4003E000u)
+/** Array initializer of RFVBAT peripheral base pointers */
+#define RFVBAT_BASE_PTRS                         { RFVBAT_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- RFVBAT - Register accessor macros
@@ -7072,6 +7063,8 @@ typedef struct RTC_MemMap {
 /* RTC - Peripheral instance base addresses */
 /** Peripheral RTC base pointer */
 #define RTC_BASE_PTR                             ((RTC_MemMapPtr)0x4003D000u)
+/** Array initializer of RTC peripheral base pointers */
+#define RTC_BASE_PTRS                            { RTC_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- RTC - Register accessor macros
@@ -7391,6 +7384,8 @@ typedef struct SCB_MemMap {
 /* SCB - Peripheral instance base addresses */
 /** Peripheral SystemControl base pointer */
 #define SystemControl_BASE_PTR                   ((SCB_MemMapPtr)0xE000E000u)
+/** Array initializer of SCB peripheral base pointers */
+#define SCB_BASE_PTRS                            { SystemControl_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- SCB - Register accessor macros
@@ -7722,6 +7717,8 @@ typedef struct SIM_MemMap {
 /* SIM - Peripheral instance base addresses */
 /** Peripheral SIM base pointer */
 #define SIM_BASE_PTR                             ((SIM_MemMapPtr)0x40047000u)
+/** Array initializer of SIM peripheral base pointers */
+#define SIM_BASE_PTRS                            { SIM_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- SIM - Register accessor macros
@@ -7849,6 +7846,8 @@ typedef struct SMC_MemMap {
 /* SMC - Peripheral instance base addresses */
 /** Peripheral SMC base pointer */
 #define SMC_BASE_PTR                             ((SMC_MemMapPtr)0x4007E000u)
+/** Array initializer of SMC peripheral base pointers */
+#define SMC_BASE_PTRS                            { SMC_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- SMC - Register accessor macros
@@ -8162,6 +8161,8 @@ typedef struct SPI_MemMap {
 /* SPI - Peripheral instance base addresses */
 /** Peripheral SPI0 base pointer */
 #define SPI0_BASE_PTR                            ((SPI_MemMapPtr)0x4002C000u)
+/** Array initializer of SPI peripheral base pointers */
+#define SPI_BASE_PTRS                            { SPI0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- SPI - Register accessor macros
@@ -8289,6 +8290,8 @@ typedef struct SysTick_MemMap {
 /* SysTick - Peripheral instance base addresses */
 /** Peripheral SysTick base pointer */
 #define SysTick_BASE_PTR                         ((SysTick_MemMapPtr)0xE000E010u)
+/** Array initializer of SysTick peripheral base pointers */
+#define SysTick_BASE_PTRS                        { SysTick_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- SysTick - Register accessor macros
@@ -8429,6 +8432,8 @@ typedef struct TPIU_MemMap {
 /* TPIU - Peripheral instance base addresses */
 /** Peripheral TPIU base pointer */
 #define TPIU_BASE_PTR                            ((TPIU_MemMapPtr)0xE0040000u)
+/** Array initializer of TPIU peripheral base pointers */
+#define TPIU_BASE_PTRS                           { TPIU_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- TPIU - Register accessor macros
@@ -8711,6 +8716,8 @@ typedef struct TSI_MemMap {
 /* TSI - Peripheral instance base addresses */
 /** Peripheral TSI0 base pointer */
 #define TSI0_BASE_PTR                            ((TSI_MemMapPtr)0x40045000u)
+/** Array initializer of TSI peripheral base pointers */
+#define TSI_BASE_PTRS                            { TSI0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- TSI - Register accessor macros
@@ -9264,6 +9271,8 @@ typedef struct UART_MemMap {
 #define UART1_BASE_PTR                           ((UART_MemMapPtr)0x4006B000u)
 /** Peripheral UART2 base pointer */
 #define UART2_BASE_PTR                           ((UART_MemMapPtr)0x4006C000u)
+/** Array initializer of UART peripheral base pointers */
+#define UART_BASE_PTRS                           { UART0_BASE_PTR, UART1_BASE_PTR, UART2_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- UART - Register accessor macros
@@ -9750,6 +9759,8 @@ typedef struct USB_MemMap {
 /* USB - Peripheral instance base addresses */
 /** Peripheral USB0 base pointer */
 #define USB0_BASE_PTR                            ((USB_MemMapPtr)0x40072000u)
+/** Array initializer of USB peripheral base pointers */
+#define USB_BASE_PTRS                            { USB0_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- USB - Register accessor macros
@@ -9932,6 +9943,8 @@ typedef struct USBDCD_MemMap {
 /* USBDCD - Peripheral instance base addresses */
 /** Peripheral USBDCD base pointer */
 #define USBDCD_BASE_PTR                          ((USBDCD_MemMapPtr)0x40035000u)
+/** Array initializer of USBDCD peripheral base pointers */
+#define USBDCD_BASE_PTRS                         { USBDCD_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- USBDCD - Register accessor macros
@@ -10030,6 +10043,8 @@ typedef struct VREF_MemMap {
 /* VREF - Peripheral instance base addresses */
 /** Peripheral VREF base pointer */
 #define VREF_BASE_PTR                            ((VREF_MemMapPtr)0x40074000u)
+/** Array initializer of VREF peripheral base pointers */
+#define VREF_BASE_PTRS                           { VREF_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- VREF - Register accessor macros
@@ -10197,6 +10212,8 @@ typedef struct WDOG_MemMap {
 /* WDOG - Peripheral instance base addresses */
 /** Peripheral WDOG base pointer */
 #define WDOG_BASE_PTR                            ((WDOG_MemMapPtr)0x40052000u)
+/** Array initializer of WDOG peripheral base pointers */
+#define WDOG_BASE_PTRS                           { WDOG_BASE_PTR }
 
 /* ----------------------------------------------------------------------------
    -- WDOG - Register accessor macros

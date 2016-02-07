@@ -12,8 +12,8 @@ static void
 timeout_update_time(void)
 {
         /* tell ctr to latch */
-        LPTMR0_CNR = 0;
-        uint16_t now = LPTMR0_CNR;
+        LPTMR0->CNR = 0;
+        uint16_t now = LPTMR0->CNR;
         if (timeout_lazy_now.count > now)
                 timeout_lazy_now.epoch++;
         timeout_lazy_now.count = now;
@@ -56,7 +56,7 @@ timeout_reschedule(void)
                         timeout_schedule_wrap();
                 } else {
                         /* we can stop the timebase */
-                        LPTMR0_CSR &= ~(LPTMR_CSR_TEN_MASK | LPTMR_CSR_TIE_MASK);
+                        LPTMR0->CSR &= ~(LPTMR_CSR_TEN_MASK | LPTMR_CSR_TIE_MASK);
                 }
                 return;
         }
@@ -66,8 +66,8 @@ timeout_reschedule(void)
             timeout_queue->time.epoch > timeout_lazy_now.epoch) {
                 timeout_schedule_wrap();
         }
-        LPTMR0_CMR = timeout_queue->time.count;
-        LPTMR0_CSR |= LPTMR_CSR_TEN_MASK | LPTMR_CSR_TIE_MASK | LPTMR_CSR_TCF_MASK;
+        LPTMR0->CMR = timeout_queue->time.count;
+        LPTMR0->CSR |= LPTMR_CSR_TEN_MASK | LPTMR_CSR_TIE_MASK | LPTMR_CSR_TCF_MASK;
 }
 
 void
@@ -93,10 +93,10 @@ timeout_put_ref()
 void
 timeout_init(void)
 {
-        bf_set_reg(SIM_SCGC5, SIM_SCGC5_LPTMR, 1);
-        LPTMR0_PSR = LPTMR_PSR_PBYP_MASK | LPTMR_PSR_PCS(LPTMR_PCS_LPO);
+        bf_set_reg(SIM->SCGC5, SIM_SCGC5_LPTMR, 1);
+        LPTMR0->PSR = LPTMR_PSR_PBYP_MASK | LPTMR_PSR_PCS(LPTMR_PCS_LPO);
 
-        LPTMR0_CSR = LPTMR_CSR_TCF_MASK | LPTMR_CSR_TFC_MASK;
+        LPTMR0->CSR = LPTMR_CSR_TCF_MASK | LPTMR_CSR_TFC_MASK;
         int_enable(IRQ_LPTMR0);
 }
 
