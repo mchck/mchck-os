@@ -6,6 +6,18 @@
 
 #define FLASH_SECTOR_SIZE 1024
 
+typedef GPIO_Type FGPIO_Type;
+#define FPTA_BASE (PTA_BASE + 0xf8000000 - PTA_BASE)
+#define FPTA ((FGPIO_Type *)FPTA_BASE)
+#define FPTB_BASE (PTB_BASE + 0xf8000000 - PTA_BASE)
+#define FPTB ((FGPIO_Type *)FPTB_BASE)
+#define FPTC_BASE (PTC_BASE + 0xf8000000 - PTA_BASE)
+#define FPTC ((FGPIO_Type *)FPTC_BASE)
+#define FPTD_BASE (PTD_BASE + 0xf8000000 - PTA_BASE)
+#define FPTD ((FGPIO_Type *)FPTD_BASE)
+#define FPTE_BASE (PTE_BASE + 0xf8000000 - PTA_BASE)
+#define FPTE ((FGPIO_Type *)FPTE_BASE)
+
 #include <soc/cortex-m/soc.h>
 #include <soc/cortex-m/sched-m0.h>
 
