@@ -20,13 +20,13 @@ fgpio_physgpio_from_pin(enum gpio_pin_id pin)
 }
 
 void
-fgpio_set(enum gpio_pin_id pin, enum gpio_pin_value val)
+fgpio_set(enum gpio_pin_id pin)
 {
         fgpio_physgpio_from_pin(pin)->PSOR = 1 << pin_physpin_from_pin(pin);
 }
 
 void
-fgpio_clear(enum gpio_pin_id pin, enum gpio_pin_value val)
+fgpio_clear(enum gpio_pin_id pin)
 {
         fgpio_physgpio_from_pin(pin)->PCOR = 1 << pin_physpin_from_pin(pin);
 }
