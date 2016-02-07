@@ -393,7 +393,7 @@ class HIDDesc < FunctionDesc
         direction :in
         type :intr
         wMaxPacketSize (hid.report_max_size || 0)
-        bInterval 0xff          # XXX configurable?
+        bInterval 1
       }
     }
 
