@@ -335,8 +335,9 @@ class HIDDesc < FunctionDesc
 
   @@hid_id = 0
 
-  def initialize(name)
+  def initialize(name, desc=nil)
     @name = name
+    @desc = desc
     super()
 
     init_func :hid_init
@@ -383,11 +384,15 @@ class HIDDesc < FunctionDesc
     end
 
     hid = self
+    desc = @desc
 
     interface(:iface) {
       bInterfaceClass :USB_DEV_CLASS_HID
       bInterfaceSubClass 0      # XXX overwrite when boot
       bInterfaceProtocol 0
+      if desc
+        iInterface desc
+      end
 
       ep(:int_in_ep) {
         direction :in
