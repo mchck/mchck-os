@@ -47,7 +47,8 @@ class CDCDesc < FunctionDesc
   end
 
   def gen_defs
-    s = <<_end_
+    s = super()
+    s += <<_end_
 extern struct cdc_ctx #{@name.to_loc_s};
 _end_
     s += "cdc_data_ready_cb_t #{@data_ready.to_loc_s};\n" if !@data_ready.nil?
