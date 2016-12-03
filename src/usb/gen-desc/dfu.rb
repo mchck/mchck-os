@@ -141,7 +141,7 @@ class DFUAppDesc < FunctionDesc
       iInterface name.to_s if !name.nil?
     }
 
-    init_func :dfu_init
+    init_func :dfu_app_init
     control_func :dfu_app_handle_control
 
     wcid :WINUSB
