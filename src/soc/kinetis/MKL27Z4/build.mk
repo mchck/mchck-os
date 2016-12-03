@@ -25,7 +25,7 @@ LOADER_ADDR=	0
 APP_SIZE=	${FLASH_SIZE}-${LOADER_SIZE}
 APP_ADDR=	${LOADER_SIZE}
 
-SRCS-kinetis=	adc.c cop.c flash.c flashconfig.c ftfa.c fgpio.c gpio.c i2c.c pin.c pit.c rtc.c spi.c timeout.c uart.c usb.c sys-register.c
+SRCS-kinetis=	adc.c cop.c flash.c flashconfig.c ftfa.c fgpio.c gpio.c i2c.c lpuart.c pin.c pit.c rtc.c spi.c timeout.c uart.c usb.c sys-register.c
 SRCS-kinetis.dir=	soc/kinetis
 SRCS.libs+=	kinetis
 

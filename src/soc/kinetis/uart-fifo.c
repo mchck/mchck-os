@@ -4,8 +4,11 @@
  * Kinetis UART with FIFO and bells and whistles.
  */
 
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
-
+static UART_Type *
+c2u(struct uart_ctx *ctx)
+{
+        return ((UART_Type *)ctx->uart);
+}
 
 static void
 init(struct uart_ctx *ctx)
@@ -44,15 +47,15 @@ init(struct uart_ctx *ctx)
         }
 
         // Enable FIFOs
-        bf_set_reg(UART_PFIFO_REG(ctx->uart), UART_PFIFO_RXFE, 1);
-        bf_set_reg(UART_PFIFO_REG(ctx->uart), UART_PFIFO_TXFE, 1);
+        bf_set_reg(UART_PFIFO_REG(c2u(ctx)), UART_PFIFO_RXFE, 1);
+        bf_set_reg(UART_PFIFO_REG(c2u(ctx)), UART_PFIFO_TXFE, 1);
 
         // XXX arbitrary FIFO watermarks
-        bf_set_reg(UART_TWFIFO_REG(ctx->uart), UART_TWFIFO_TXWATER, 8); /* XXX other fifos have only 1 */
-        bf_set_reg(UART_RWFIFO_REG(ctx->uart), UART_RWFIFO_RXWATER, 1); // FIXME: See comment at end of uart_start_rx
+        bf_set_reg(UART_TWFIFO_REG(c2u(ctx)), UART_TWFIFO_TXWATER, 8); /* XXX other fifos have only 1 */
+        bf_set_reg(UART_RWFIFO_REG(c2u(ctx)), UART_RWFIFO_RXWATER, 1); // FIXME: See comment at end of uart_start_rx
 
-        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_RE, 1);
-        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_TE, 1);
+        bf_set_reg(UART_C2_REG(c2u(ctx)), UART_C2_RE, 1);
+        bf_set_reg(UART_C2_REG(c2u(ctx)), UART_C2_TE, 1);
 }
 
 static void
@@ -62,23 +65,23 @@ set_baudrate(struct uart_ctx *ctx, unsigned int baudrate)
         unsigned int sbr = clockrate / 16 / baudrate;
         unsigned int brfa = (2 * clockrate / baudrate) % 32;
 
-        bf_set_reg(UART_BDH_REG(ctx->uart), UART_BDH_SBR, sbr >> 8);
-        bf_set_reg(UART_BDL_REG(ctx->uart), UART_BDL_SBR, sbr & 0xff);
-        bf_set_reg(UART_C4_REG(ctx->uart), UART_C4_BRFA, brfa);
+        bf_set_reg(UART_BDH_REG(c2u(ctx)), UART_BDH_SBR, sbr >> 8);
+        bf_set_reg(UART_BDL_REG(c2u(ctx)), UART_BDL_SBR, sbr & 0xff);
+        bf_set_reg(UART_C4_REG(c2u(ctx)), UART_C4_BRFA, brfa);
 }
 
 static void
 start_tx(struct uart_ctx *ctx)
 {
-        unsigned int depth = 1 << (bf_get_reg(UART_PFIFO_REG(ctx->uart), UART_PFIFO_TXFIFOSIZE) + 1);
+        unsigned int depth = 1 << (bf_get_reg(UART_PFIFO_REG(c2u(ctx)), UART_PFIFO_TXFIFOSIZE) + 1);
         if (depth == 2)
                 depth = 1;
 
-        while (bf_get_reg(UART_TCFIFO_REG(ctx->uart), UART_TCFIFO_TXCOUNT) < depth) {
+        while (bf_get_reg(UART_TCFIFO_REG(c2u(ctx)), UART_TCFIFO_TXCOUNT) < depth) {
                 struct uart_trans_ctx *tctx = ctx->tx_queue;
                 if (!tctx)
                         return;
-                UART_D_REG(ctx->uart) = *tctx->pos;
+                UART_D_REG(c2u(ctx)) = *tctx->pos;
                 tctx->pos++;
                 tctx->remaining--;
                 if (tctx->remaining == 0) {
@@ -94,14 +97,14 @@ start_rx(struct uart_ctx *ctx)
 {
         int remaining;
 
-        while ((remaining = bf_get_reg(UART_RCFIFO_REG(ctx->uart), UART_RCFIFO_RXCOUNT)) != 0) {
+        while ((remaining = bf_get_reg(UART_RCFIFO_REG(c2u(ctx)), UART_RCFIFO_RXCOUNT)) != 0) {
                 struct uart_trans_ctx *rctx = ctx->rx_queue;
                 if (!rctx)
                         return;
                 /* clear flags */
                 if (remaining == 1)
-                        (void)UART_S1_REG(ctx->uart);
-                *rctx->pos = UART_D_REG(ctx->uart);
+                        (void)UART_S1_REG(c2u(ctx));
+                *rctx->pos = UART_D_REG(c2u(ctx));
                 rctx->pos++;
                 rctx->remaining--;
 
@@ -135,35 +138,35 @@ static void
 start(struct uart_ctx *ctx)
 {
         if (ctx->rx_queue)
-                bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_RIE, 1);
+                bf_set_reg(UART_C2_REG(c2u(ctx)), UART_C2_RIE, 1);
         if (ctx->tx_queue)
-                bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_TIE, 1);
+                bf_set_reg(UART_C2_REG(c2u(ctx)), UART_C2_TIE, 1);
 }
 
 static void
 irq_handler(struct uart_ctx *ctx)
 {
-        uint8_t s1 = UART_S1_REG(ctx->uart);
+        uint8_t s1 = UART_S1_REG(c2u(ctx));
 
         if (bf_get_reg(s1, UART_S1_TDRE)) {
                 if (ctx->tx_queue != NULL)
                         start_tx(ctx);
                 else
-                        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_TIE, 0);
+                        bf_set_reg(UART_C2_REG(c2u(ctx)), UART_C2_TIE, 0);
         }
-        if (bf_get_reg(UART_RCFIFO_REG(ctx->uart), UART_RCFIFO_RXCOUNT) > 0) {
+        if (bf_get_reg(UART_RCFIFO_REG(c2u(ctx)), UART_RCFIFO_RXCOUNT) > 0) {
                 if (ctx->rx_queue != NULL)
                         start_rx(ctx);
                 else
-                        bf_set_reg(UART_C2_REG(ctx->uart), UART_C2_RIE, 0);
+                        bf_set_reg(UART_C2_REG(c2u(ctx)), UART_C2_RIE, 0);
         }
         if (bf_get_reg(s1, UART_S1_FE)) {
                 /* simply clear flag and hope for the best */
-                (void)UART_D_REG(ctx->uart);
+                (void)UART_D_REG(c2u(ctx));
         }
 
         /* final clear of watermark flags */
-        (void)UART_S1_REG(ctx->uart);
+        (void)UART_S1_REG(c2u(ctx));
 }
 
 const struct uart_methods uart_fifo_methods = {
@@ -174,7 +177,7 @@ const struct uart_methods uart_fifo_methods = {
 };
 
 
-struct uart_ctx uart0 = {&uart_fifo_methods, UART0_BASE_PTR};
+struct uart_ctx uart0 = {&uart_fifo_methods, (void *)UART0_BASE_PTR};
 
 void
 UART0_RX_TX_Handler(void)
@@ -182,7 +185,7 @@ UART0_RX_TX_Handler(void)
         uart0.methods->irq_handler(&uart0);
 }
 
-struct uart_ctx uart1 = {&uart_fifo_methods, UART1_BASE_PTR};
+struct uart_ctx uart1 = {&uart_fifo_methods, (void *)UART1_BASE_PTR};
 
 void
 UART1_RX_TX_Handler(void)
@@ -190,7 +193,7 @@ UART1_RX_TX_Handler(void)
         uart1.methods->irq_handler(&uart1);
 }
 
-struct uart_ctx uart2 = {&uart_fifo_methods, UART2_BASE_PTR};
+struct uart_ctx uart2 = {&uart_fifo_methods, (void *)UART2_BASE_PTR};
 
 void
 UART2_RX_TX_Handler(void)
@@ -199,7 +202,7 @@ UART2_RX_TX_Handler(void)
 }
 
 #ifdef UART3_BASE_PTR
-struct uart_ctx uart3 = {&uart_fifo_methods, UART3_BASE_PTR};
+struct uart_ctx uart3 = {&uart_fifo_methods, (void *)UART3_BASE_PTR};
 
 void
 UART3_RX_TX_Handler(void)
@@ -209,7 +212,7 @@ UART3_RX_TX_Handler(void)
 #endif
 
 #ifdef UART4_BASE_PTR
-struct uart_ctx uart4 = {&uart_fifo_methods, UART4_BASE_PTR};
+struct uart_ctx uart4 = {&uart_fifo_methods, (void *)UART4_BASE_PTR};
 
 void
 UART4_RX_TX_Handler(void)
@@ -219,7 +222,7 @@ UART4_RX_TX_Handler(void)
 #endif
 
 #ifdef UART5_BASE_PTR
-struct uart_ctx uart5 = {&uart_fifo_methods, UART5_BASE_PTR};
+struct uart_ctx uart5 = {&uart_fifo_methods, (void *)UART5_BASE_PTR};
 
 void
 UART5_RX_TX_Handler(void)

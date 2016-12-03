@@ -161,7 +161,6 @@ typedef volatile struct WDOG_MemMap WDOG_Type;
 #define CMP0 CMP0_BASE_PTR
 #define CMP1 CMP1_BASE_PTR
 #define CMT CMT_BASE_PTR
-#define CRC CRC_BASE_PTR
 #define DMA DMA_BASE_PTR
 #define DMAMUX DMAMUX_BASE_PTR
 #define ETF ETF_BASE_PTR

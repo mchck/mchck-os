@@ -11,7 +11,7 @@ struct uart_methods {
 
 struct uart_ctx {
         const struct uart_methods * const methods;
-        UART_Type * const uart;
+        void * const uart;
         struct uart_trans_ctx *tx_queue;
         struct uart_trans_ctx *rx_queue;
 };
