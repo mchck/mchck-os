@@ -10,6 +10,28 @@
 #define CDC_RX_EP	1
 #define CDC_RX_SIZE 32
 
+enum cdc_ctrl_req_code {
+        USB_CTRL_REQ_CDC_SET_LINE_CODING = 0x20,
+        USB_CTRL_REQ_CDC_GET_LINE_CODING = 0x21,
+};
+
+struct cdc_line_coding {
+        uint32_t dwDTERate;
+        enum {
+                CDC_LINE_CODING_STOP_1 = 0,
+                CDC_LINE_CODING_STOP_1_5 = 1,
+                CDC_LINE_CODING_STOP_2 = 2,
+        } bCharFormat : 8;
+        enum {
+                CDC_LINE_CODING_PARITY_NONE = 0,
+                CDC_LINE_CODING_PARITY_ODD = 1,
+                CDC_LINE_CODING_PARITY_EVEN = 2,
+                CDC_LINE_CODING_PARITY_MARK = 3,
+                CDC_LINE_CODING_PARITY_SPACE = 4,
+        } bParityType : 8;
+        uint8_t bDataBits;
+} __packed;
+
 struct cdc_ctx {
         struct usbd_function_ctx_header header;
 	const struct cdc_function *cdcf;
