@@ -148,7 +148,7 @@ sys_wakeup(uint32_t ident)
                         STAILQ_INSERT_TAIL(q, t, queue);
                 found = 1;
 
-                if (t->prio < curthread->prio)
+                if (curthread == NULL || t->prio < curthread->prio)
                         md_need_reschedule();
         }
         crit_exit();
@@ -158,7 +158,7 @@ sys_wakeup(uint32_t ident)
 int
 sys_setprio(enum thread_prio prio)
 {
-        if (prio < 0 || prio > THREAD_PRIO_MAX)
+        if (prio > THREAD_PRIO_MAX)
                 return (-1);
 
         if (curthread->prio == prio)
