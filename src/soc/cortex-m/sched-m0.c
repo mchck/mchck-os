@@ -11,7 +11,7 @@ struct extended_exception_frame {
         struct exception_frame;
 };
 
-static uint8_t supervisor_stack[512] __attribute__((aligned(8)));
+static uint8_t supervisor_stack[256] __attribute__((aligned(8)));
 
 static uint8_t idle_stack[16*4] __attribute__((aligned(8)));
 static struct thread *idle;
@@ -50,6 +50,7 @@ thread_init(void *stackbase, size_t stacksize, void (*fun)(void *), void *arg)
 static void
 idle_thread(void *arg)
 {
+        (void)arg;
         for (;;)
                 __WFI();
 }
@@ -131,14 +132,16 @@ __attribute__((naked))
 uint32_t
 syscall(enum sys_op op, ...)
 {
+        (void)op;
         __asm__ volatile (
                 "mov r12,r0\n"
                 "mrs r0,IPSR\n"
                 "cmp r0,#0\n"
                 "mov r0,r12\n"
-                "bne md_handler_syscall\n"
+                "bne 1f\n"
                 "svc 0\n"
                 "bx lr\n"
+                "1: b md_handler_syscall\n"
                 :: "i" (md_handler_syscall)
                 );
 }
