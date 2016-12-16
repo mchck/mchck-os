@@ -14,11 +14,9 @@
 #ifdef PRINTF_WITH_64BIT
 #define PRINTF_VAL_T long long
 #define PRINTF_FRAC_T long fract
-const static unsigned long long fract_half = 0x800000000000000ULL;
 #else
 #define PRINTF_VAL_T int
 #define PRINTF_FRAC_T fract
-const static unsigned long fract_half = 0x8000000UL;
 #endif
 
 
