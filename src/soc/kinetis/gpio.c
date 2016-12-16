@@ -8,12 +8,18 @@ gpio_physgpio_from_pin(enum gpio_pin_id pin)
                 return (PTA);
         case PIN_PORTB:
                 return (PTB);
+#if defined(PTC)
         case PIN_PORTC:
                 return (PTC);
+#endif
+#if defined(PTD)
         case PIN_PORTD:
                 return (PTD);
+#endif
+#if defined(PTE)
         case PIN_PORTE:
                 return (PTE);
+#endif
         default:
                 return (NULL);
         }

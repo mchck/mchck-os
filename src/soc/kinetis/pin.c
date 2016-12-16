@@ -8,12 +8,18 @@ pin_physport_from_pin(enum pin_id pin)
                 return (PORTA);
         case PIN_PORTB:
                 return (PORTB);
+#if defined(PORTC)
         case PIN_PORTC:
                 return (PORTC);
+#endif
+#if defined(PORTD)
         case PIN_PORTD:
                 return (PORTD);
+#endif
+#if defined(PORTE)
         case PIN_PORTE:
                 return (PORTE);
+#endif
         default:
                 return (NULL);
         }

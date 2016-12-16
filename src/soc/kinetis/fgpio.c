@@ -8,12 +8,18 @@ fgpio_physgpio_from_pin(enum gpio_pin_id pin)
                 return (FPTA);
         case PIN_PORTB:
                 return (FPTB);
+#if defined(FPTC)
         case PIN_PORTC:
                 return (FPTC);
+#endif
+#if defined(FPTD)
         case PIN_PORTD:
                 return (FPTD);
+#endif
+#if defined(FTPE)
         case PIN_PORTE:
                 return (FPTE);
+#endif
         default:
                 return (NULL);
         }

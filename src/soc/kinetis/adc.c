@@ -32,6 +32,7 @@ adc_calibrate_cb(struct adc_ctx *ctx, uint16_t val, int error, void *cbdata)
         calib += ctx->adc->CLP0;
         ctx->adc->PG = (calib >> 1) | 0x8000;
 
+#if defined(ADC_CLMD_REG)
         calib = 0;
         calib += ctx->adc->CLMD;
         calib += ctx->adc->CLMS;
@@ -41,6 +42,9 @@ adc_calibrate_cb(struct adc_ctx *ctx, uint16_t val, int error, void *cbdata)
         calib += ctx->adc->CLM1;
         calib += ctx->adc->CLM0;
         ctx->adc->MG = (calib >> 1) | 0x8000;
+#endif
+
+        adc_calibration_done(ctx);
 }
 
 static void
@@ -142,11 +146,18 @@ adc_init(struct adc_ctx *ctx)
 void
 adc_sample_prepare(struct adc_ctx *ctx, enum adc_mode mode)
 {
+        /* XXX hack: if we have negative range, we have 16 bits? */
+#if defined(ADC_CLMD_REG)
+        const uint32_t bits = ADC_BIT_16;
+#else
+        const uint32_t bits = ADC_BIT_12;
+#endif
+
         ctx->adc->CFG1 =
                 ((mode & ADC_MODE_POWER_LOW) ? ADC_CFG1_ADLPC_MASK : 0) |
                 ADC_CFG1_ADIV(ADC_DIV_1) |
                 ((mode & ADC_MODE_SAMPLE_LONG) ? ADC_CFG1_ADLSMP_MASK : 0) |
-                ADC_CFG1_MODE(ADC_BIT_16) |
+                ADC_CFG1_MODE(bits) |
                 ADC_CFG1_ADICLK(ADC_CLK_ADACK);
         ctx->adc->CFG2 =
                 ADC_CFG2_MUXSEL_MASK | /* we only have b channels on the K20 */
