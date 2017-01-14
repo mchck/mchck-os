@@ -11,6 +11,10 @@ class Objdump < Array
       end
       s
     end
+
+    def alignedsize
+      (@size + @align - 1) / @align * @align
+    end
   end
 
   def initialize(fs)
@@ -49,10 +53,10 @@ class Knapsack
       nv = []
       (capa + 1).times do |w|
         nsize = nil
-        if e.size <= w
-          nsize = e.size + v[w - e.size]
+        if e.alignedsize <= w
+          nsize = e.alignedsize + v[w - e.alignedsize]
         end
-        if e.size < w && nsize && nsize > v[w]
+        if e.alignedsize < w && nsize && nsize > v[w]
           nv << nsize
           keep[[e, w]] = true
         else
@@ -68,7 +72,7 @@ class Knapsack
     el.reverse.each do |e|
       if keep[[e, k]]
         r << e
-        k -= e.size
+        k -= e.alignedsize
       end
     end
 
