@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 struct sema {
         uint32_t count;
 };

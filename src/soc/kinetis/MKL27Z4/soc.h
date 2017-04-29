@@ -41,7 +41,6 @@ typedef GPIO_Type FGPIO_Type;
 #include <soc/kinetis/fgpio.h>
 #include <soc/kinetis/pit.h>
 #include <soc/kinetis/rtc.h>
-#include <soc/kinetis/spi.h>
 #include <soc/kinetis/timeout.h>
 #include <soc/kinetis/uart.h>
 #include <soc/kinetis/uart-stdio.h>

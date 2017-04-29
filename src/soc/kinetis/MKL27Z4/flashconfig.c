@@ -11,7 +11,6 @@ NV_Type flash_config = {
         NV_FSEC_KEYEN(NV_FSEC_KEYEN_ENABLE),
         .FOPT = (0xff &
                  ~(NV_FOPT_NMI_DIS_MASK |
-                   NV_FOPT_BOOTPIN_OPT_MASK |
                    NV_FOPT_BOOTSRC_SEL_MASK)) |
         NV_FOPT_BOOTSRC_SEL(NV_FOPT_BOOTSRC_FLASH)
 };
