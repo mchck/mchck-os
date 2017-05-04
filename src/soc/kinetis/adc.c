@@ -147,7 +147,7 @@ void
 adc_sample_prepare(struct adc_ctx *ctx, enum adc_mode mode)
 {
         /* XXX hack: if we have negative range, we have 16 bits? */
-#if defined(ADC_CLMD_REG)
+#if defined(ADC_CLMD_CLMD)
         const uint32_t bits = ADC_BIT_16;
 #else
         const uint32_t bits = ADC_BIT_12;
